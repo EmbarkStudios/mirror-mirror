@@ -1,8 +1,8 @@
 use std::any::Any;
 
-use crate::{FieldsIter, FieldsIterMut, FromReflect, Reflect, Struct, StructValue};
+use crate::{FieldsIter, FieldsIterMut, FromReflect, Reflect, Struct, StructValue, Value};
 
-#[derive(Default)]
+#[derive(Default, Clone, Eq, PartialEq, Debug)]
 struct Foo {
     field: i32,
 }
@@ -30,6 +30,17 @@ impl Reflect for Foo {
                 self.field_mut("field").unwrap().patch(field);
             }
         }
+    }
+
+    fn clone_reflect(&self) -> Box<dyn Reflect> {
+        Box::new(self.clone())
+    }
+
+    fn to_value(&self) -> Value {
+        StructValue::builder()
+            .set("field", self.field)
+            .build()
+            .to_value()
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
@@ -65,10 +76,6 @@ impl Struct for Foo {
         }
 
         None
-    }
-
-    fn into_value(self) -> StructValue {
-        StructValue::builder().set("field", self.field).build()
     }
 
     fn fields(&self) -> FieldsIter<'_> {
@@ -119,11 +126,6 @@ fn patching_struct_value() {
     );
 }
 
-// #[test]
-// fn patching_value() {
-//     todo!()
-// }
-
 #[test]
 fn from_reflect() {
     let foo = Foo::default();
@@ -137,11 +139,11 @@ fn from_reflect() {
 #[test]
 fn serialize_deserialize() {
     let foo = Foo::default();
-    let struct_value = foo.into_value();
+    let struct_value = foo.to_value();
 
     let json = serde_json::to_string(&struct_value).unwrap();
 
-    let struct_value = serde_json::from_str::<StructValue>(&json).unwrap();
+    let struct_value = serde_json::from_str::<Value>(&json).unwrap();
     let foo = Foo::from_reflect(&struct_value).unwrap();
 
     assert_eq!(foo.field, 0);
@@ -158,4 +160,50 @@ fn fields() {
             panic!("Unknown field {name:?}");
         }
     }
+}
+
+#[test]
+fn struct_value_from_reflect() {
+    let value = StructValue::builder().set("foo", 42).build();
+    let reflect = value.as_reflect();
+
+    let value = StructValue::from_reflect(reflect).unwrap();
+
+    assert_eq!(
+        value.field("foo").unwrap().downcast_ref::<i32>().unwrap(),
+        &42,
+    );
+}
+
+#[test]
+fn box_dyn_reflect_as_reflect() {
+    let foo = Foo::default();
+    let mut box_dyn_reflect = Box::new(foo) as Box<dyn Reflect>;
+
+    assert_eq!(
+        box_dyn_reflect
+            .as_struct()
+            .unwrap()
+            .field("field")
+            .unwrap()
+            .downcast_ref::<i32>()
+            .unwrap(),
+        &0,
+    );
+
+    box_dyn_reflect.patch(&StructValue::builder().set("field", 42).build());
+
+    assert_eq!(
+        box_dyn_reflect
+            .as_struct()
+            .unwrap()
+            .field("field")
+            .unwrap()
+            .downcast_ref::<i32>()
+            .unwrap(),
+        &42,
+    );
+
+    let foo = Foo::from_reflect(&box_dyn_reflect).unwrap();
+    assert_eq!(foo, Foo { field: 42 });
 }

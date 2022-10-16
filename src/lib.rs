@@ -3,6 +3,14 @@ use std::{any::Any, collections::HashMap, fmt};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
+// TODO(david):
+// - tuple structs
+// - vec
+// - map
+// - enums, including option and result
+// - modifying
+// - derive
+
 #[cfg(test)]
 mod tests;
 
@@ -17,13 +25,13 @@ pub trait Reflect: Any + Send + 'static {
 
     fn patch(&mut self, value: &dyn Reflect);
 
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        None
-    }
+    fn to_value(&self) -> Value;
 
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        None
-    }
+    fn clone_reflect(&self) -> Box<dyn Reflect>;
+
+    fn as_struct(&self) -> Option<&dyn Struct>;
+
+    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct>;
 }
 
 impl dyn Reflect {
@@ -39,6 +47,44 @@ impl dyn Reflect {
         T: Reflect,
     {
         self.as_any_mut().downcast_mut::<T>()
+    }
+}
+
+impl Reflect for Box<dyn Reflect> {
+    fn as_any(&self) -> &dyn Any {
+        <dyn Reflect as Reflect>::as_any(&**self)
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        <dyn Reflect as Reflect>::as_any_mut(&mut **self)
+    }
+
+    fn as_reflect(&self) -> &dyn Reflect {
+        <dyn Reflect as Reflect>::as_reflect(&**self)
+    }
+
+    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        <dyn Reflect as Reflect>::as_reflect_mut(&mut **self)
+    }
+
+    fn patch(&mut self, value: &dyn Reflect) {
+        <dyn Reflect as Reflect>::patch(&mut **self, value)
+    }
+
+    fn to_value(&self) -> Value {
+        <dyn Reflect as Reflect>::to_value(&**self)
+    }
+
+    fn clone_reflect(&self) -> Box<dyn Reflect> {
+        <dyn Reflect as Reflect>::clone_reflect(&**self)
+    }
+
+    fn as_struct(&self) -> Option<&dyn Struct> {
+        <dyn Reflect as Reflect>::as_struct(&**self)
+    }
+
+    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+        <dyn Reflect as Reflect>::as_struct_mut(&mut **self)
     }
 }
 
@@ -64,24 +110,32 @@ macro_rules! impl_for_core_types {
 
                 fn patch(&mut self, value: &dyn Reflect) {
                     if let Some(value) = value.as_any().downcast_ref::<Self>() {
-                        *self = value.to_owned();
+                        *self = value.clone();
                     }
+                }
+
+                fn clone_reflect(&self) -> Box<dyn Reflect> {
+                    Box::new(self.clone())
+                }
+
+                fn to_value(&self) -> Value {
+                    Value::from(self.to_owned())
+                }
+
+                fn as_struct(&self) -> Option<&dyn Struct> {
+                    None
+                }
+
+                fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+                    None
                 }
             }
 
             impl FromReflect for $ty {
                 fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-                    Some(reflect.downcast_ref::<$ty>()?.to_owned())
+                    Some(reflect.downcast_ref::<$ty>()?.clone())
                 }
             }
-
-            impl IntoValue for $ty {
-                fn into_value(self) -> Value {
-                    Value(ValueInner::$ty(self))
-                }
-            }
-
-            impl private::Sealed for $ty {}
         )*
     };
 }
@@ -101,8 +155,6 @@ pub trait Struct: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;
 
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
-
-    fn into_value(self) -> StructValue;
 
     fn fields(&self) -> FieldsIter<'_>;
 
@@ -193,6 +245,14 @@ impl Reflect for StructValue {
         }
     }
 
+    fn clone_reflect(&self) -> Box<dyn Reflect> {
+        Box::new(self.clone())
+    }
+
+    fn to_value(&self) -> Value {
+        Value(ValueInner::StructValue(self.clone()))
+    }
+
     fn as_struct(&self) -> Option<&dyn Struct> {
         Some(self)
     }
@@ -209,10 +269,6 @@ impl Struct for StructValue {
 
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
         Some(self.fields.get_mut(name)?)
-    }
-
-    fn into_value(self) -> StructValue {
-        self
     }
 
     fn fields(&self) -> FieldsIter<'_> {
@@ -232,14 +288,26 @@ impl Struct for StructValue {
     }
 }
 
+impl FromReflect for StructValue {
+    fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+        let struct_ = reflect.as_struct()?;
+        let this = struct_
+            .fields()
+            .fold(StructValue::builder(), |builder, (name, value)| {
+                builder.set(name, value.to_value())
+            });
+        Some(this.build())
+    }
+}
+
 #[derive(Default)]
 pub struct StructValueBuilder {
     fields: HashMap<String, Value>,
 }
 
 impl StructValueBuilder {
-    pub fn set(mut self, name: impl Into<String>, value: impl IntoValue) -> Self {
-        self.fields.insert(name.into(), value.into_value());
+    pub fn set(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
+        self.fields.insert(name.into(), value.into());
         self
     }
 
@@ -270,9 +338,24 @@ impl Reflect for Value {
         self.0.as_reflect_mut()
     }
 
-    #[allow(warnings)]
     fn patch(&mut self, value: &dyn Reflect) {
         self.0.patch(value)
+    }
+
+    fn clone_reflect(&self) -> Box<dyn Reflect> {
+        Box::new(self.clone())
+    }
+
+    fn to_value(&self) -> Value {
+        self.clone()
+    }
+
+    fn as_struct(&self) -> Option<&dyn Struct> {
+        self.0.as_struct()
+    }
+
+    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+        self.0.as_struct_mut()
     }
 }
 
@@ -324,13 +407,45 @@ macro_rules! value_inner {
                     $(
                         Self::$ident(inner) => {
                             if let Some(value) = value.downcast_ref::<$ident>() {
-                                *inner = value.to_owned();
+                                *inner = value.clone();
                             }
                         },
                     )*
                 }
             }
+
+            fn to_value(&self) -> Value {
+                Value(self.clone())
+            }
+
+            fn clone_reflect(&self) -> Box<dyn Reflect> {
+                Box::new(self.clone())
+            }
+
+            fn as_struct(&self) -> Option<&dyn Struct> {
+                if let ValueInner::StructValue(value) = self {
+                    Some(value)
+                } else {
+                    None
+                }
+            }
+
+            fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+                if let ValueInner::StructValue(value) = self {
+                    Some(value)
+                } else {
+                    None
+                }
+            }
         }
+
+        $(
+            impl From<$ident> for Value {
+                fn from(value: $ident) -> Self {
+                    Self(ValueInner::$ident(value))
+                }
+            }
+        )*
     };
 }
 
@@ -357,19 +472,3 @@ value_inner! {
         StructValue,
     }
 }
-
-mod private {
-    pub trait Sealed {}
-}
-
-pub trait IntoValue: private::Sealed {
-    fn into_value(self) -> Value;
-}
-
-impl IntoValue for StructValue {
-    fn into_value(self) -> Value {
-        Value(ValueInner::StructValue(self))
-    }
-}
-
-impl private::Sealed for StructValue {}
