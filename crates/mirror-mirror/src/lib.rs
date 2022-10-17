@@ -10,11 +10,14 @@ use std::{
 // - tuple structs
 // - unit structs
 // - unit enum variants
-// - tuple enum variants
+// - tuple enum variant
+// - type info
 // - vec
 // - map
 // - modifying
+// - Box<T> where T: Reflect
 // - derive
+//   - customize crate path
 
 pub mod enum_;
 pub mod struct_;
@@ -22,12 +25,15 @@ pub mod struct_;
 mod get_field;
 mod value;
 
+#[doc(inline)]
 pub use self::{
     enum_::{Enum, EnumValue},
     get_field::*,
     struct_::{Struct, StructValue},
     value::*,
 };
+
+pub use mirror_mirror_macros::*;
 
 pub trait Reflect: Any + Send + 'static {
     fn as_any(&self) -> &dyn Any;

@@ -175,107 +175,11 @@ impl FromReflect for StructValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::GetField;
 
-    #[derive(Default, Clone, Eq, PartialEq, Debug)]
+    #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]
     struct Foo {
         field: i32,
-    }
-
-    impl Reflect for Foo {
-        fn as_any(&self) -> &dyn Any {
-            self
-        }
-
-        fn as_any_mut(&mut self) -> &mut dyn Any {
-            self
-        }
-
-        fn as_reflect(&self) -> &dyn Reflect {
-            self
-        }
-
-        fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-            self
-        }
-
-        fn patch(&mut self, value: &dyn Reflect) {
-            if let Some(value) = value.as_struct() {
-                if let Some(field) = value.field("field") {
-                    self.field_mut("field").unwrap().patch(field);
-                }
-            }
-        }
-
-        fn to_value(&self) -> Value {
-            StructValue::default()
-                .with_field("field", self.field)
-                .into()
-        }
-
-        fn clone_reflect(&self) -> Box<dyn Reflect> {
-            Box::new(self.clone())
-        }
-
-        fn as_struct(&self) -> Option<&dyn Struct> {
-            Some(self)
-        }
-
-        fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-            Some(self)
-        }
-
-        fn as_enum(&self) -> Option<&dyn Enum> {
-            None
-        }
-
-        fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-            None
-        }
-
-        fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            if f.alternate() {
-                write!(f, "{:#?}", self)
-            } else {
-                write!(f, "{:?}", self)
-            }
-        }
-    }
-
-    impl FromReflect for Foo {
-        fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-            let struct_ = reflect.as_struct()?;
-            Some(Self {
-                field: struct_.field("field")?.downcast_ref::<i32>()?.to_owned(),
-            })
-        }
-    }
-
-    impl Struct for Foo {
-        fn field(&self, name: &str) -> Option<&dyn Reflect> {
-            if name == "field" {
-                return Some(&self.field);
-            }
-
-            None
-        }
-
-        fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
-            if name == "field" {
-                return Some(&mut self.field);
-            }
-
-            None
-        }
-
-        fn fields(&self) -> StructFieldsIter<'_> {
-            let iter = [("field", self.field.as_reflect())];
-            StructFieldsIter::new(iter)
-        }
-
-        fn fields_mut(&mut self) -> StructFieldsIterMut<'_> {
-            let iter = [("field", self.field.as_reflect_mut())];
-            StructFieldsIterMut::new(iter)
-        }
     }
 
     #[test]
@@ -395,5 +299,38 @@ mod tests {
 
         let foo = Foo::from_reflect(&box_dyn_reflect).unwrap();
         assert_eq!(foo, Foo { field: 42 });
+    }
+
+    #[test]
+    fn deeply_nested() {
+        #[derive(Reflect, Clone, Debug)]
+        struct Foo {
+            bar: Bar,
+        }
+
+        #[derive(Reflect, Clone, Debug)]
+        struct Bar {
+            baz: Baz,
+        }
+
+        #[derive(Reflect, Clone, Debug)]
+        struct Baz {
+            qux: i32,
+        }
+
+        let foo = Foo {
+            bar: Bar {
+                baz: Baz { qux: 42 },
+            },
+        };
+
+        let &forty_two = (|| {
+            foo.get_field::<Bar>("bar")?
+                .get_field::<Baz>("baz")?
+                .get_field::<i32>("qux")
+        })()
+        .unwrap();
+
+        assert_eq!(forty_two, 42);
     }
 }
