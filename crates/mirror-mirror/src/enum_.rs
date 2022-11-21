@@ -191,7 +191,7 @@ impl Reflect for EnumValue {
     }
 
     fn to_value(&self) -> Value {
-        Value(ValueInner::EnumValue(self.clone()))
+        Value(ValueInner::EnumValue(Box::new(self.clone())))
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {

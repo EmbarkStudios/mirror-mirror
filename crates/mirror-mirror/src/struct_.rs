@@ -118,7 +118,7 @@ impl Reflect for StructValue {
     }
 
     fn to_value(&self) -> Value {
-        Value(ValueInner::StructValue(self.clone()))
+        Value(ValueInner::StructValue(Box::new(self.clone())))
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {

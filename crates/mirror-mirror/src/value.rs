@@ -67,104 +67,233 @@ impl fmt::Debug for Value {
     }
 }
 
-macro_rules! value_inner {
+#[allow(non_camel_case_types)]
+#[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+pub(crate) enum ValueInner {
+    usize(usize),
+    u8(u8),
+    u16(u16),
+    u32(u32),
+    u64(u64),
+    u128(u128),
+    i8(i8),
+    i16(i16),
+    i32(i32),
+    i64(i64),
+    i128(i128),
+    bool(bool),
+    char(char),
+    f32(f32),
+    f64(f64),
+    String(String),
+    // boxed to have a smaller stack size
+    StructValue(Box<StructValue>),
+    EnumValue(Box<EnumValue>),
+}
+
+impl Reflect for ValueInner {
+    fn as_any(&self) -> &dyn Any {
+        match self {
+            ValueInner::usize(inner) => inner,
+            ValueInner::u8(inner) => inner,
+            ValueInner::u16(inner) => inner,
+            ValueInner::u32(inner) => inner,
+            ValueInner::u64(inner) => inner,
+            ValueInner::u128(inner) => inner,
+            ValueInner::i8(inner) => inner,
+            ValueInner::i16(inner) => inner,
+            ValueInner::i32(inner) => inner,
+            ValueInner::i64(inner) => inner,
+            ValueInner::i128(inner) => inner,
+            ValueInner::bool(inner) => inner,
+            ValueInner::char(inner) => inner,
+            ValueInner::f32(inner) => inner,
+            ValueInner::f64(inner) => inner,
+            ValueInner::String(inner) => inner,
+            ValueInner::StructValue(inner) => inner,
+            ValueInner::EnumValue(inner) => inner,
+        }
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        match self {
+            ValueInner::usize(inner) => inner,
+            ValueInner::u8(inner) => inner,
+            ValueInner::u16(inner) => inner,
+            ValueInner::u32(inner) => inner,
+            ValueInner::u64(inner) => inner,
+            ValueInner::u128(inner) => inner,
+            ValueInner::i8(inner) => inner,
+            ValueInner::i16(inner) => inner,
+            ValueInner::i32(inner) => inner,
+            ValueInner::i64(inner) => inner,
+            ValueInner::i128(inner) => inner,
+            ValueInner::bool(inner) => inner,
+            ValueInner::char(inner) => inner,
+            ValueInner::f32(inner) => inner,
+            ValueInner::f64(inner) => inner,
+            ValueInner::String(inner) => inner,
+            ValueInner::StructValue(inner) => inner,
+            ValueInner::EnumValue(inner) => inner,
+        }
+    }
+
+    fn as_reflect(&self) -> &dyn Reflect {
+        self
+    }
+
+    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        self
+    }
+
+    fn patch(&mut self, value: &dyn Reflect) {
+        match self {
+            ValueInner::usize(inner) => {
+                if let Some(value) = value.downcast_ref::<usize>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::u8(inner) => {
+                if let Some(value) = value.downcast_ref::<u8>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::u16(inner) => {
+                if let Some(value) = value.downcast_ref::<u16>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::u32(inner) => {
+                if let Some(value) = value.downcast_ref::<u32>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::u64(inner) => {
+                if let Some(value) = value.downcast_ref::<u64>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::u128(inner) => {
+                if let Some(value) = value.downcast_ref::<u128>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::i8(inner) => {
+                if let Some(value) = value.downcast_ref::<i8>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::i16(inner) => {
+                if let Some(value) = value.downcast_ref::<i16>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::i32(inner) => {
+                if let Some(value) = value.downcast_ref::<i32>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::i64(inner) => {
+                if let Some(value) = value.downcast_ref::<i64>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::i128(inner) => {
+                if let Some(value) = value.downcast_ref::<i128>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::bool(inner) => {
+                if let Some(value) = value.downcast_ref::<bool>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::char(inner) => {
+                if let Some(value) = value.downcast_ref::<char>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::f32(inner) => {
+                if let Some(value) = value.downcast_ref::<f32>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::f64(inner) => {
+                if let Some(value) = value.downcast_ref::<f64>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::String(inner) => {
+                if let Some(value) = value.downcast_ref::<String>() {
+                    *inner = value.clone();
+                }
+            }
+            ValueInner::StructValue(inner) => {
+                if let Some(value) = value.downcast_ref::<StructValue>() {
+                    *inner = Box::new(value.clone());
+                }
+            }
+            ValueInner::EnumValue(inner) => {
+                if let Some(value) = value.downcast_ref::<EnumValue>() {
+                    *inner = Box::new(value.clone());
+                }
+            }
+        }
+    }
+
+    fn to_value(&self) -> Value {
+        Value(self.clone())
+    }
+
+    fn clone_reflect(&self) -> Box<dyn Reflect> {
+        Box::new(self.clone())
+    }
+
+    fn as_struct(&self) -> Option<&dyn Struct> {
+        if let ValueInner::StructValue(value) = self {
+            Some(&**value)
+        } else {
+            None
+        }
+    }
+
+    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+        if let ValueInner::StructValue(value) = self {
+            Some(&mut **value)
+        } else {
+            None
+        }
+    }
+
+    fn as_enum(&self) -> Option<&dyn Enum> {
+        if let ValueInner::EnumValue(value) = self {
+            Some(&**value)
+        } else {
+            None
+        }
+    }
+
+    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
+        if let ValueInner::EnumValue(value) = self {
+            Some(&mut **value)
+        } else {
+            None
+        }
+    }
+
+    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if f.alternate() {
+            write!(f, "{:#?}", self)
+        } else {
+            write!(f, "{:?}", self)
+        }
+    }
+}
+
+macro_rules! from_impls {
     (
-        $(#[$m:meta])*
-        pub(crate) enum ValueInner {
-            $($ident:ident,)*
-        }
+        $($ident:ident)*
     ) => {
-        $(#[$m])*
-        pub(crate) enum ValueInner {
-            $($ident($ident),)*
-        }
-
-        impl Reflect for ValueInner {
-            fn as_any(&self) -> &dyn Any {
-                match self {
-                    $(
-                        Self::$ident(inner) => inner,
-                    )*
-                }
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn Any {
-                match self {
-                    $(
-                        Self::$ident(inner) => inner,
-                    )*
-                }
-            }
-
-            fn as_reflect(&self) -> &dyn Reflect {
-                self
-            }
-
-            fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-                self
-            }
-
-            fn patch(&mut self, value: &dyn Reflect) {
-                match self {
-                    $(
-                        Self::$ident(inner) => {
-                            if let Some(value) = value.downcast_ref::<$ident>() {
-                                *inner = value.clone();
-                            }
-                        },
-                    )*
-                }
-            }
-
-            fn to_value(&self) -> Value {
-                Value(self.clone())
-            }
-
-            fn clone_reflect(&self) -> Box<dyn Reflect> {
-                Box::new(self.clone())
-            }
-
-            fn as_struct(&self) -> Option<&dyn Struct> {
-                if let ValueInner::StructValue(value) = self {
-                    Some(value)
-                } else {
-                    None
-                }
-            }
-
-            fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-                if let ValueInner::StructValue(value) = self {
-                    Some(value)
-                } else {
-                    None
-                }
-            }
-
-            fn as_enum(&self) -> Option<&dyn Enum> {
-                if let ValueInner::EnumValue(value) = self {
-                    Some(value)
-                } else {
-                    None
-                }
-            }
-
-            fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-                if let ValueInner::EnumValue(value) = self {
-                    Some(value)
-                } else {
-                    None
-                }
-            }
-
-            fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                if f.alternate() {
-                    write!(f, "{:#?}", self)
-                } else {
-                    write!(f, "{:?}", self)
-                }
-            }
-        }
-
         $(
             impl From<$ident> for Value {
                 fn from(value: $ident) -> Self {
@@ -175,27 +304,34 @@ macro_rules! value_inner {
     };
 }
 
-value_inner! {
-    #[allow(non_camel_case_types)]
-    #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
-    pub(crate) enum ValueInner {
-        usize,
-        u8,
-        u16,
-        u32,
-        u64,
-        u128,
-        i8,
-        i16,
-        i32,
-        i64,
-        i128,
-        bool,
-        char,
-        f32,
-        f64,
-        String,
-        StructValue,
-        EnumValue,
+impl From<StructValue> for Value {
+    fn from(value: StructValue) -> Self {
+        Self(ValueInner::StructValue(Box::new(value)))
+    }
+}
+
+impl From<EnumValue> for Value {
+    fn from(value: EnumValue) -> Self {
+        Self(ValueInner::EnumValue(Box::new(value)))
+    }
+}
+
+from_impls! {
+    usize u8 u16 u32 u64 u128
+    i8 i16 i32 i64 i128
+    f32 f64
+    bool char String
+}
+
+#[cfg(test)]
+mod tests {
+    #[allow(unused_imports)]
+    use super::*;
+
+    #[test]
+    fn has_small_stack_size() {
+        // if we can get the value to be smaller than 32 then that'd be cool
+        // but 32 is probably also fine
+        assert_eq!(std::mem::size_of::<Value>(), 32);
     }
 }
