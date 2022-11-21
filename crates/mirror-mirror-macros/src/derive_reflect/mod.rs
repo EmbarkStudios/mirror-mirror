@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote_spanned;
 use syn::{spanned::Spanned, DeriveInput};
 
+mod enum_;
 mod struct_named;
 
 pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
@@ -32,12 +33,7 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
                 ))
             }
         },
-        syn::Data::Enum(_) => {
-            return Err(syn::Error::new(
-                span,
-                "`#[derive(Reflect)]` doesn't support enums",
-            ))
-        }
+        syn::Data::Enum(enum_) => enum_::expand(ident, enum_)?,
         syn::Data::Union(_) => {
             return Err(syn::Error::new(
                 span,
