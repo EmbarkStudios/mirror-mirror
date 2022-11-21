@@ -62,13 +62,13 @@ impl GetField for dyn Enum {
     where
         T: Reflect,
     {
-        self.variant().field(name)?.downcast_ref()
+        self.field(name)?.downcast_ref()
     }
 
     fn get_field_mut<'a, T>(&'a mut self, name: &str) -> Option<&'a mut T>
     where
         T: Reflect,
     {
-        self.variant_mut().into_field_mut(name)?.downcast_mut()
+        self.field_mut(name)?.downcast_mut()
     }
 }

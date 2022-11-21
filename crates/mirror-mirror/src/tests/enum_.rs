@@ -1,14 +1,14 @@
 use std::{any::Any, fmt};
 
 use crate::{
-    enum_::{Variant, VariantFieldsIter, VariantFieldsIterMut, VariantMut},
-    Enum, EnumValue, FromReflect, GetField, Reflect, Struct, StructValue, Value,
+    enum_::{EnumFieldsIter, EnumFieldsIterMut},
+    Enum, EnumValue, FromReflect, GetField, Reflect, Struct, Value,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Foo {
-    A { a: i32 },
-    B { b: bool },
+    Foo { foo: i32, bar: bool },
+    Bar { baz: String },
 }
 
 impl Reflect for Foo {
@@ -30,39 +30,34 @@ impl Reflect for Foo {
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(enum_) = value.as_enum() {
-            let variant = enum_.variant();
             match self {
-                Foo::A { a } => {
-                    if variant.name() == "A" {
-                        if let Some(new_value) = variant.field("a") {
-                            a.patch(new_value);
-                        }
-                        return;
+                Foo::Foo { foo, bar } => {
+                    if let Some(new_value) = enum_.field("foo") {
+                        foo.patch(new_value);
+                    }
+
+                    if let Some(new_value) = enum_.field("bar") {
+                        bar.patch(new_value);
                     }
                 }
-                Foo::B { b } => {
-                    if variant.name() == "B" {
-                        if let Some(new_value) = variant.field("b") {
-                            b.patch(new_value);
-                        }
-                        return;
+                Foo::Bar { baz } => {
+                    if let Some(new_value) = enum_.field("baz") {
+                        baz.patch(new_value);
                     }
                 }
-            }
-            if let Some(new_value) = Self::from_reflect(enum_.as_reflect()) {
-                *self = new_value;
             }
         }
     }
 
     fn to_value(&self) -> Value {
         match self {
-            Foo::A { a } => {
-                EnumValue::new("A", StructValue::default().with_field("a", a.to_owned())).into()
-            }
-            Foo::B { b } => {
-                EnumValue::new("B", StructValue::default().with_field("b", b.to_owned())).into()
-            }
+            Foo::Foo { foo, bar } => EnumValue::new("Foo")
+                .with_field("foo", foo.to_owned())
+                .with_field("bar", bar.to_owned())
+                .to_value(),
+            Foo::Bar { baz } => EnumValue::new("Bar")
+                .with_field("baz", baz.to_owned())
+                .to_value(),
         }
     }
 
@@ -96,109 +91,77 @@ impl Reflect for Foo {
 }
 
 impl Enum for Foo {
-    fn variant(&self) -> Variant<'_> {
+    fn variant_name(&self) -> &str {
         match self {
-            this @ Foo::A { .. } => {
-                fn get_field_on_variant<'a>(
-                    this: &'a dyn Reflect,
-                    name: &str,
-                ) -> Option<&'a dyn Reflect> {
-                    match this.downcast_ref().unwrap() {
-                        Foo::A { a } => (name == "a").then_some(a),
-                        _ => unreachable!(),
-                    }
+            Foo::Foo { .. } => "Foo",
+            Foo::Bar { .. } => "Bar",
+        }
+    }
+
+    fn field(&self, name: &str) -> Option<&dyn Reflect> {
+        match self {
+            Foo::Foo { foo, bar } => {
+                if name == "foo" {
+                    return Some(foo);
                 }
 
-                fn get_fields_iter(this: &dyn Reflect) -> VariantFieldsIter<'_> {
-                    match this.downcast_ref().unwrap() {
-                        Foo::A { a } => {
-                            let iter = [("a", a.as_reflect())];
-                            VariantFieldsIter::new(iter)
-                        }
-                        _ => unreachable!(),
-                    }
+                if name == "bar" {
+                    return Some(bar);
                 }
-
-                Variant::new("A", this, get_field_on_variant, get_fields_iter)
             }
-            this @ Foo::B { .. } => {
-                fn get_field_on_variant<'a>(
-                    this: &'a dyn Reflect,
-                    name: &str,
-                ) -> Option<&'a dyn Reflect> {
-                    match this.downcast_ref().unwrap() {
-                        Foo::B { b } => (name == "b").then_some(b),
-                        _ => unreachable!(),
-                    }
+            Foo::Bar { baz } => {
+                if name == "baz" {
+                    return Some(baz);
+                }
+            }
+        }
+
+        None
+    }
+
+    fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
+        match self {
+            Foo::Foo { foo, bar } => {
+                if name == "foo" {
+                    return Some(foo);
                 }
 
-                fn get_fields_iter(this: &dyn Reflect) -> VariantFieldsIter<'_> {
-                    match this.downcast_ref().unwrap() {
-                        Foo::B { b } => {
-                            let iter = [("b", b.as_reflect())];
-                            VariantFieldsIter::new(iter)
-                        }
-                        _ => unreachable!(),
-                    }
+                if name == "bar" {
+                    return Some(bar);
                 }
+            }
+            Foo::Bar { baz } => {
+                if name == "baz" {
+                    return Some(baz);
+                }
+            }
+        }
 
-                Variant::new("B", this, get_field_on_variant, get_fields_iter)
+        None
+    }
+
+    fn fields(&self) -> EnumFieldsIter<'_> {
+        match self {
+            Foo::Foo { foo, bar } => {
+                let iter = [("foo", foo.as_reflect()), ("bar", bar.as_reflect())];
+                EnumFieldsIter::new(iter)
+            }
+            Foo::Bar { baz } => {
+                let iter = [("baz", baz.as_reflect())];
+                EnumFieldsIter::new(iter)
             }
         }
     }
 
-    fn variant_mut(&mut self) -> VariantMut<'_> {
+    fn fields_mut(&mut self) -> EnumFieldsIterMut<'_> {
         match self {
-            this @ Foo::A { .. } => {
-                fn get_field_on_variant<'a>(
-                    this: &'a mut dyn Reflect,
-                    name: &str,
-                ) -> Option<&'a mut dyn Reflect> {
-                    match this.downcast_mut().unwrap() {
-                        Foo::A { a } => {
-                            if name == "a" {
-                                return Some(a);
-                            }
-                            None
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-
-                fn get_fields_iter(this: &mut dyn Reflect) -> VariantFieldsIterMut<'_> {
-                    match this.downcast_mut().unwrap() {
-                        Foo::A { a } => {
-                            let iter = [("a", a.as_reflect_mut())];
-                            VariantFieldsIterMut::new(iter)
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-
-                VariantMut::new("A", this, get_field_on_variant, get_fields_iter)
+            Foo::Foo { foo, bar } => {
+                let iter = [("foo", foo.as_reflect_mut()), ("bar", bar.as_reflect_mut())];
+                EnumFieldsIterMut::new(iter)
             }
-            this @ Foo::B { .. } => {
-                fn get_field_on_variant<'a>(
-                    this: &'a mut dyn Reflect,
-                    name: &str,
-                ) -> Option<&'a mut dyn Reflect> {
-                    match this.downcast_mut().unwrap() {
-                        Foo::B { b } => (name == "b").then_some(b),
-                        _ => unreachable!(),
-                    }
-                }
-
-                fn get_fields_iter(this: &mut dyn Reflect) -> VariantFieldsIterMut<'_> {
-                    match this.downcast_mut().unwrap() {
-                        Foo::B { b } => {
-                            let iter = [("b", b.as_reflect_mut())];
-                            VariantFieldsIterMut::new(iter)
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-
-                VariantMut::new("B", this, get_field_on_variant, get_fields_iter)
+            Foo::Bar { baz } => {
+                let iter = [("baz", baz.as_reflect_mut())];
+                EnumFieldsIterMut::new(iter)
             }
         }
     }
@@ -207,210 +170,86 @@ impl Enum for Foo {
 impl FromReflect for Foo {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let enum_ = reflect.as_enum()?;
-        let variant = enum_.variant();
-        match variant.name() {
-            "A" => Some(Foo::A {
-                a: variant.field("a")?.downcast_ref::<i32>()?.to_owned(),
+        match enum_.variant_name() {
+            "Foo" => Some(Self::Foo {
+                foo: enum_.get_field::<i32>("foo")?.to_owned(),
+                bar: enum_.get_field::<bool>("bar")?.to_owned(),
             }),
-            "B" => Some(Foo::B {
-                b: variant.field("b")?.downcast_ref::<bool>()?.to_owned(),
+            "Bar" => Some(Self::Bar {
+                baz: enum_.get_field::<String>("baz")?.to_owned(),
             }),
             _ => None,
         }
     }
 }
 
-macro_rules! get_field_on_variant {
-    ($expr:expr, $ident:ident, $ty:ty) => {
-        *$expr.get_field::<$ty>(stringify!($ident)).unwrap()
-    };
-}
-
 #[test]
-fn accessing_variants() {
-    let foo = Foo::A { a: 42 };
-    let enum_ = foo.as_enum().unwrap();
+fn enum_value() {
+    let mut enum_ = EnumValue::new("Foo")
+        .with_field("foo", 1_i32)
+        .with_field("bar", false);
 
-    assert_eq!(get_field_on_variant!(enum_, a, i32), 42);
-}
+    assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &1);
+    assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &false);
 
-#[test]
-fn accessing_variants_mut() {
-    let mut foo = Foo::A { a: 42 };
-    let enum_ = foo.as_enum_mut().unwrap();
-    let mut variant = enum_.variant_mut();
+    *enum_.get_field_mut("foo").unwrap() = 42;
+    assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
 
-    variant.field_mut("a").unwrap().patch(&1337);
+    enum_.patch(&EnumValue::new("DoesntMatter").with_field("bar", true));
+    assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
-    assert!(matches!(dbg!(foo), Foo::A { a: 1337 }));
-}
+    let enum_ = EnumValue::from_reflect(&enum_).unwrap();
+    assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
+    assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
-#[test]
-fn fields_on_variant() {
-    let mut foo = Foo::A { a: 42 };
-
-    for (name, value) in foo.variant().fields() {
-        if name == "a" {
+    let value = enum_.to_value();
+    assert_eq!(value.get_field::<i32>("foo").unwrap(), &42);
+    assert_eq!(value.get_field::<bool>("bar").unwrap(), &true);
+    let mut has_fields = false;
+    for (key, value) in value.as_enum().unwrap().fields() {
+        has_fields = true;
+        if key == "foo" {
             assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
+        } else if key == "bar" {
+            assert_eq!(value.downcast_ref::<bool>().unwrap(), &true);
         } else {
-            panic!("unknown field on variant {name:?}");
+            panic!("unknown field: {key}");
         }
     }
+    assert!(has_fields);
+}
 
-    for (name, value) in foo.variant_mut().into_fields_mut() {
-        if name == "a" {
+#[test]
+fn static_enum() {
+    let mut enum_ = Foo::Foo { foo: 1, bar: false };
+
+    assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &1);
+    assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &false);
+
+    *enum_.get_field_mut("foo").unwrap() = 42;
+    assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
+
+    enum_.patch(&EnumValue::new("DoesntMatter").with_field("bar", true));
+    assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
+
+    assert!(matches!(enum_, Foo::Foo { foo: 42, bar: true }));
+
+    let enum_ = Foo::from_reflect(&enum_).unwrap();
+    assert!(matches!(enum_, Foo::Foo { foo: 42, bar: true }));
+
+    let value = enum_.to_value();
+    assert_eq!(value.get_field::<i32>("foo").unwrap(), &42);
+    assert_eq!(value.get_field::<bool>("bar").unwrap(), &true);
+    let mut has_fields = false;
+    for (key, value) in value.as_enum().unwrap().fields() {
+        has_fields = true;
+        if key == "foo" {
             assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
+        } else if key == "bar" {
+            assert_eq!(value.downcast_ref::<bool>().unwrap(), &true);
         } else {
-            panic!("unknown field on variant {name:?}");
+            panic!("unknown field: {key}");
         }
     }
-}
-
-#[test]
-fn patch() {
-    let mut foo = Foo::A { a: 42 };
-    foo.patch(&Foo::A { a: 1337 });
-    assert!(matches!(dbg!(foo), Foo::A { a: 1337 }));
-
-    let mut foo = Foo::A { a: 1337 };
-    foo.patch(&EnumValue::new(
-        "A",
-        StructValue::default().with_field("a", 42),
-    ));
-    assert!(matches!(dbg!(foo), Foo::A { a: 42 }));
-}
-
-#[test]
-fn patch_value() {
-    let mut value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-    value.patch(&Foo::A { a: 1337 });
-    assert_eq!(get_field_on_variant!(value, a, i32), 1337,);
-
-    let mut value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-    value.patch(&EnumValue::new(
-        "A",
-        StructValue::default().with_field("a", 1337),
-    ));
-    assert_eq!(get_field_on_variant!(value, a, i32), 1337,);
-}
-
-#[test]
-fn patch_change_variant() {
-    let mut foo = Foo::A { a: 42 };
-
-    foo.patch(&Foo::B { b: false });
-    assert!(matches!(dbg!(&foo), Foo::B { b: false }));
-
-    foo.patch(&Foo::A { a: 1337 });
-    assert!(matches!(dbg!(&foo), Foo::A { a: 1337 }));
-
-    foo.patch(&EnumValue::new(
-        "B",
-        StructValue::new().with_field("b", true),
-    ));
-    assert!(matches!(dbg!(&foo), Foo::B { b: true }));
-
-    foo.patch(&EnumValue::new("A", StructValue::new().with_field("a", 42)));
-    assert!(matches!(dbg!(&foo), Foo::A { a: 42 }));
-}
-
-#[test]
-#[allow(clippy::bool_assert_comparison)]
-fn patch_value_change_variant_isnt_allowed() {
-    let mut foo = EnumValue::new("A", StructValue::new().with_field("a", 42));
-
-    foo.patch(&Foo::B { b: false });
-    assert_eq!(false, get_field_on_variant!(&foo, b, bool));
-
-    foo.patch(&Foo::A { a: 1337 });
-    assert_eq!(1337, get_field_on_variant!(&foo, a, i32));
-
-    foo.patch(&EnumValue::new(
-        "B",
-        StructValue::new().with_field("b", true),
-    ));
-    assert_eq!(true, get_field_on_variant!(&foo, b, bool));
-
-    foo.patch(&EnumValue::new("A", StructValue::new().with_field("a", 42)));
-    assert_eq!(42, get_field_on_variant!(&foo, a, i32));
-}
-
-#[test]
-fn to_value() {
-    let foo = Foo::A { a: 42 };
-    let value = foo.to_value();
-    let new_foo = Foo::from_reflect(&value).unwrap();
-    assert_eq!(foo, new_foo);
-}
-
-#[test]
-fn from_reflect() {
-    let value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-    let foo = Foo::from_reflect(&value).unwrap();
-    assert!(matches!(dbg!(foo), Foo::A { a: 42 }));
-}
-
-#[test]
-fn value_from_reflect() {
-    let foo = Foo::A { a: 42 };
-    let value = EnumValue::from_reflect(&foo).unwrap();
-    assert_eq!(get_field_on_variant!(value, a, i32), 42);
-
-    let new_foo = Foo::from_reflect(&value).unwrap();
-    assert_eq!(foo, new_foo);
-}
-
-#[test]
-fn value_field_mut() {
-    let mut value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-    value.variant_mut().field_mut("a").unwrap().patch(&1337);
-    assert_eq!(get_field_on_variant!(value, a, i32), 1337);
-
-    let foo = Foo::from_reflect(&value).unwrap();
-    assert!(matches!(dbg!(foo), Foo::A { a: 1337 }));
-}
-
-#[test]
-fn value_fields() {
-    let mut value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-
-    for (name, value) in value.variant().fields() {
-        if name == "a" {
-            assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
-        } else {
-            panic!("unknown field on variant {name:?}");
-        }
-    }
-
-    for (name, value) in value.variant_mut().into_fields_mut() {
-        if name == "a" {
-            assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
-        } else {
-            panic!("unknown field on variant {name:?}");
-        }
-    }
-}
-
-#[test]
-fn iterating_all_kinds_of_fields() {
-    let mut value = Foo::A { a: 42 };
-    assert_eq!(value.variant().fields().count(), 1);
-    assert_eq!(value.variant_mut().into_fields_mut().count(), 1);
-
-    let mut value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-    assert_eq!(value.variant().fields().count(), 1);
-    assert_eq!(value.variant_mut().into_fields_mut().count(), 1);
-
-    let mut value = EnumValue::from_reflect(&(Foo::A { a: 42 })).unwrap();
-    assert_eq!(value.variant().fields().count(), 1);
-    assert_eq!(value.variant_mut().into_fields_mut().count(), 1);
-}
-
-#[test]
-fn accessing_unknown_field() {
-    let foo = Foo::A { a: 42 };
-    assert!(foo.variant().field("b").is_none());
-
-    let value = EnumValue::new("A", StructValue::default().with_field("a", 42));
-    assert!(value.variant().field("b").is_none());
+    assert!(has_fields);
 }

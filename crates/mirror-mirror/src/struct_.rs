@@ -69,8 +69,12 @@ impl StructValue {
     }
 
     pub fn with_field(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
-        self.fields.insert(name.into(), value.into());
+        self.set_field(name, value);
         self
+    }
+
+    pub fn set_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
+        self.fields.insert(name.into(), value.into());
     }
 }
 

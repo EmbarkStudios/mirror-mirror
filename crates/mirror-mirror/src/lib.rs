@@ -16,6 +16,7 @@ use std::{
 // - map
 // - modifying
 // - Box<T> where T: Reflect
+// - impl FromIterator for StructValue
 // - derive
 //   - customize crate path
 
