@@ -13,20 +13,25 @@ pub(crate) fn expand(ident: &Ident, fields: FieldsNamed) -> syn::Result<TokenStr
     let struct_ = expand_struct(ident, &fields);
 
     Ok(quote! {
-        #reflect
-        #from_reflect
-        #struct_
+        const _: () = {
+            use mirror_mirror::*;
+            use mirror_mirror::__private::*;
 
-        impl From<#ident> for Value {
-            fn from(data: #ident) -> Value {
-                data.to_value()
+            #reflect
+            #from_reflect
+            #struct_
+
+            impl From<#ident> for Value {
+                fn from(data: #ident) -> Value {
+                    data.to_value()
+                }
             }
-        }
 
-        fn trait_bounds()
-        where
-            #ident: std::clone::Clone + std::fmt::Debug,
-        {}
+            fn trait_bounds()
+            where
+                #ident: std::clone::Clone + std::fmt::Debug,
+            {}
+        };
     })
 }
 
@@ -118,7 +123,6 @@ fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
                 }
             }
         }
-
     }
 }
 

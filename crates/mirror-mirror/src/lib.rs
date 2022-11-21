@@ -25,6 +25,9 @@ pub mod struct_;
 mod get_field;
 mod value;
 
+#[cfg(test)]
+mod tests;
+
 #[doc(inline)]
 pub use self::{
     enum_::{Enum, EnumValue},
@@ -214,4 +217,16 @@ impl_for_core_types! {
 
 pub trait FromReflect: Reflect + Sized {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self>;
+}
+
+/// Private. Used by macros
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::struct_::StructFieldsIter;
+    pub use crate::struct_::StructFieldsIterMut;
+    pub use crate::FromReflect;
+    pub use crate::Reflect;
+    pub use crate::Value;
+    pub use std::any::Any;
+    pub use std::fmt;
 }
