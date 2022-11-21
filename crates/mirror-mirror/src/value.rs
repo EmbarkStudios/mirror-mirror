@@ -150,77 +150,77 @@ impl Reflect for ValueInner {
         match self {
             ValueInner::usize(inner) => {
                 if let Some(value) = value.downcast_ref::<usize>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::u8(inner) => {
                 if let Some(value) = value.downcast_ref::<u8>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::u16(inner) => {
                 if let Some(value) = value.downcast_ref::<u16>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::u32(inner) => {
                 if let Some(value) = value.downcast_ref::<u32>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::u64(inner) => {
                 if let Some(value) = value.downcast_ref::<u64>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::u128(inner) => {
                 if let Some(value) = value.downcast_ref::<u128>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::i8(inner) => {
                 if let Some(value) = value.downcast_ref::<i8>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::i16(inner) => {
                 if let Some(value) = value.downcast_ref::<i16>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::i32(inner) => {
                 if let Some(value) = value.downcast_ref::<i32>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::i64(inner) => {
                 if let Some(value) = value.downcast_ref::<i64>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::i128(inner) => {
                 if let Some(value) = value.downcast_ref::<i128>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::bool(inner) => {
                 if let Some(value) = value.downcast_ref::<bool>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::char(inner) => {
                 if let Some(value) = value.downcast_ref::<char>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::f32(inner) => {
                 if let Some(value) = value.downcast_ref::<f32>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::f64(inner) => {
                 if let Some(value) = value.downcast_ref::<f64>() {
-                    *inner = value.clone();
+                    *inner = *value;
                 }
             }
             ValueInner::String(inner) => {
