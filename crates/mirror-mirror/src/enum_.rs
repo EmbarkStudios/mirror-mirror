@@ -1,4 +1,4 @@
-use crate::{FromReflect, Reflect, Struct, StructValue, Value, ValueInner};
+use crate::{FromReflect, Reflect, Struct, StructValue, Tuple, Value};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 use std::{any::Any, fmt};
@@ -65,11 +65,19 @@ impl Reflect for EnumValue {
     }
 
     fn to_value(&self) -> Value {
-        Value(ValueInner::EnumValue(Box::new(self.clone())))
+        self.clone().into()
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
         Box::new(self.clone())
+    }
+
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        None
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        None
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {

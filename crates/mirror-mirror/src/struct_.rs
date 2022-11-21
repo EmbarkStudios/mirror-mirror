@@ -1,6 +1,6 @@
 use std::{any::Any, collections::HashMap, fmt};
 
-use crate::{Enum, FromReflect, Reflect, Value, ValueInner};
+use crate::{Enum, FromReflect, Reflect, Tuple, Value};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
@@ -95,6 +95,14 @@ impl Reflect for StructValue {
         self
     }
 
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        None
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        None
+    }
+
     fn as_struct(&self) -> Option<&dyn Struct> {
         Some(self)
     }
@@ -122,7 +130,7 @@ impl Reflect for StructValue {
     }
 
     fn to_value(&self) -> Value {
-        Value(ValueInner::StructValue(Box::new(self.clone())))
+        self.clone().into()
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {

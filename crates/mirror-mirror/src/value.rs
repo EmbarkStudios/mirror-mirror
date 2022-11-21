@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 use std::{any::Any, fmt};
 
-use crate::{Enum, EnumValue, Reflect, Struct, StructValue};
+use crate::{tuple::TupleValue, Enum, EnumValue, Reflect, Struct, StructValue, Tuple};
 
 #[derive(Readable, Writable, Serialize, Deserialize, Clone)]
 pub struct Value(pub(crate) ValueInner);
@@ -34,6 +34,14 @@ impl Reflect for Value {
 
     fn to_value(&self) -> Value {
         self.clone()
+    }
+
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        self.0.as_tuple()
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        self.0.as_tuple_mut()
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
@@ -86,9 +94,9 @@ pub(crate) enum ValueInner {
     f32(f32),
     f64(f64),
     String(String),
-    // boxed to have a smaller stack size
     StructValue(Box<StructValue>),
     EnumValue(Box<EnumValue>),
+    TupleValue(TupleValue),
 }
 
 impl Reflect for ValueInner {
@@ -112,6 +120,7 @@ impl Reflect for ValueInner {
             ValueInner::String(inner) => inner,
             ValueInner::StructValue(inner) => inner,
             ValueInner::EnumValue(inner) => inner,
+            ValueInner::TupleValue(inner) => inner,
         }
     }
 
@@ -135,6 +144,7 @@ impl Reflect for ValueInner {
             ValueInner::String(inner) => inner,
             ValueInner::StructValue(inner) => inner,
             ValueInner::EnumValue(inner) => inner,
+            ValueInner::TupleValue(inner) => inner,
         }
     }
 
@@ -238,6 +248,11 @@ impl Reflect for ValueInner {
                     *inner = Box::new(value.clone());
                 }
             }
+            ValueInner::TupleValue(inner) => {
+                if let Some(value) = value.downcast_ref::<TupleValue>() {
+                    *inner = value.clone();
+                }
+            }
         }
     }
 
@@ -247,6 +262,22 @@ impl Reflect for ValueInner {
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
         Box::new(self.clone())
+    }
+
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        if let ValueInner::TupleValue(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        if let ValueInner::TupleValue(value) = self {
+            Some(&mut *value)
+        } else {
+            None
+        }
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
@@ -321,6 +352,7 @@ from_impls! {
     i8 i16 i32 i64 i128
     f32 f64
     bool char String
+    TupleValue
 }
 
 #[cfg(test)]

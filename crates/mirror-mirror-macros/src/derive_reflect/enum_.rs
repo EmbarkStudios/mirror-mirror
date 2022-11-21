@@ -120,6 +120,14 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                 Box::new(self.clone())
             }
 
+            fn as_tuple(&self) -> Option<&dyn Tuple> {
+                None
+            }
+
+            fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+                None
+            }
+
             fn as_struct(&self) -> Option<&dyn Struct> {
                 None
             }

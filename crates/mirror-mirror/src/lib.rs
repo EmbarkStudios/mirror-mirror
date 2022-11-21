@@ -11,17 +11,19 @@ use std::{
 // - unit structs
 // - unit enum variants
 // - tuple enum variant
+//     - option
+//     - result
 // - type info
 // - vec
-// - map
+// - hash map/set
+// - btree map/set
 // - modifying
 // - Box<T> where T: Reflect
 // - impl FromIterator for StructValue
-// - derive
-//   - customize crate path
 
 pub mod enum_;
 pub mod struct_;
+pub mod tuple;
 
 mod get_field;
 mod value;
@@ -34,6 +36,7 @@ pub use self::{
     enum_::{Enum, EnumValue},
     get_field::*,
     struct_::{Struct, StructValue},
+    tuple::{Tuple, TupleValue},
     value::*,
 };
 
@@ -45,6 +48,9 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_reflect(&self) -> &dyn Reflect;
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect;
+
+    fn as_tuple(&self) -> Option<&dyn Tuple>;
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple>;
 
     fn as_struct(&self) -> Option<&dyn Struct>;
     fn as_struct_mut(&mut self) -> Option<&mut dyn Struct>;
@@ -106,6 +112,14 @@ impl Reflect for Box<dyn Reflect> {
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         <dyn Reflect as Reflect>::as_reflect_mut(&mut **self)
+    }
+
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        <dyn Reflect as Reflect>::as_tuple(&**self)
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        <dyn Reflect as Reflect>::as_tuple_mut(&mut **self)
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
@@ -173,6 +187,14 @@ macro_rules! impl_for_core_types {
 
                 fn to_value(&self) -> Value {
                     Value::from(self.to_owned())
+                }
+
+                fn as_tuple(&self) -> Option<&dyn Tuple> {
+                    None
+                }
+
+                fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+                    None
                 }
 
                 fn as_struct(&self) -> Option<&dyn Struct> {
