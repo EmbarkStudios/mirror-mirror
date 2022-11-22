@@ -12,17 +12,6 @@ pub(crate) fn expand(ident: &Ident, enum_: DataEnum) -> syn::Result<TokenStream>
         #reflect
         #from_reflect
         #enum_
-
-        impl From<#ident> for Value {
-            fn from(data: #ident) -> Value {
-                data.to_value()
-            }
-        }
-
-        fn trait_bounds()
-        where
-            #ident: std::clone::Clone + std::fmt::Debug,
-        {}
     })
 }
 

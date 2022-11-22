@@ -49,6 +49,17 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
             use mirror_mirror::__private::*;
 
             #tokens
+
+            impl From<#ident> for Value {
+                fn from(data: #ident) -> Value {
+                    data.to_value()
+                }
+            }
+
+            fn trait_bounds()
+            where
+                #ident: std::clone::Clone + std::fmt::Debug,
+            {}
         };
     })
 }

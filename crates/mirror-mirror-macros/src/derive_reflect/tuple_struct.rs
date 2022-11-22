@@ -15,17 +15,6 @@ pub(crate) fn expand(ident: &Ident, fields: FieldsUnnamed) -> syn::Result<TokenS
         #reflect
         #from_reflect
         #tuple_struct
-
-        impl From<#ident> for Value {
-            fn from(data: #ident) -> Value {
-                data.to_value()
-            }
-        }
-
-        fn trait_bounds()
-        where
-            #ident: std::clone::Clone + std::fmt::Debug,
-        {}
     })
 }
 
