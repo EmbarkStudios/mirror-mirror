@@ -1,4 +1,4 @@
-use crate::{FromReflect, Reflect, Struct, StructValue, Tuple, Value};
+use crate::{FromReflect, PairIter, PairIterMut, Reflect, Struct, StructValue, Tuple, Value};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 use std::{any::Any, fmt};
@@ -9,8 +9,8 @@ pub trait Enum: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
 
-    fn fields(&self) -> EnumFieldsIter<'_>;
-    fn fields_mut(&mut self) -> EnumFieldsIterMut<'_>;
+    fn fields(&self) -> PairIter<'_>;
+    fn fields_mut(&mut self) -> PairIterMut<'_>;
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Writable, Readable)]
@@ -118,58 +118,12 @@ impl Enum for EnumValue {
         self.struct_.field_mut(name)
     }
 
-    fn fields(&self) -> EnumFieldsIter<'_> {
-        EnumFieldsIter::new(self.struct_.fields())
+    fn fields(&self) -> PairIter<'_> {
+        PairIter::new(self.struct_.fields())
     }
 
-    fn fields_mut(&mut self) -> EnumFieldsIterMut<'_> {
-        EnumFieldsIterMut::new(self.struct_.fields_mut())
-    }
-}
-
-pub struct EnumFieldsIter<'a> {
-    iter: Box<dyn Iterator<Item = (&'a str, &'a dyn Reflect)> + 'a>,
-}
-
-impl<'a> EnumFieldsIter<'a> {
-    pub fn new<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (&'a str, &'a dyn Reflect)> + 'a,
-    {
-        Self {
-            iter: Box::new(iter.into_iter()),
-        }
-    }
-}
-
-impl<'a> Iterator for EnumFieldsIter<'a> {
-    type Item = (&'a str, &'a dyn Reflect);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-pub struct EnumFieldsIterMut<'a> {
-    iter: Box<dyn Iterator<Item = (&'a str, &'a mut dyn Reflect)> + 'a>,
-}
-
-impl<'a> EnumFieldsIterMut<'a> {
-    pub fn new<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (&'a str, &'a mut dyn Reflect)> + 'a,
-    {
-        Self {
-            iter: Box::new(iter.into_iter()),
-        }
-    }
-}
-
-impl<'a> Iterator for EnumFieldsIterMut<'a> {
-    type Item = (&'a str, &'a mut dyn Reflect);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
+    fn fields_mut(&mut self) -> PairIterMut<'_> {
+        PairIterMut::new(self.struct_.fields_mut())
     }
 }
 

@@ -288,13 +288,13 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
             quote! {
                 Self::#ident { #(#field_names,)* } => {
                     let iter = [#(#code_for_fields)*];
-                    EnumFieldsIter::new(iter)
+                    PairIter::new(iter)
                 }
             }
         });
 
         quote! {
-            fn fields(&self) -> EnumFieldsIter<'_> {
+            fn fields(&self) -> PairIter<'_> {
                 match self {
                     #(#match_arms)*
                 }
@@ -317,13 +317,13 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
             quote! {
                 Self::#ident { #(#field_names,)* } => {
                     let iter = [#(#code_for_fields)*];
-                    EnumFieldsIterMut::new(iter)
+                    PairIterMut::new(iter)
                 }
             }
         });
 
         quote! {
-            fn fields_mut(&mut self) -> EnumFieldsIterMut<'_> {
+            fn fields_mut(&mut self) -> PairIterMut<'_> {
                 match self {
                     #(#match_arms)*
                 }

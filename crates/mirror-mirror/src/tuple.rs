@@ -3,60 +3,14 @@ use std::{any::Any, fmt::Debug};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
-use crate::{Enum, FromReflect, Reflect, Struct, Value};
+use crate::{Enum, FromReflect, Reflect, Struct, Value, ValueIter, ValueIterMut};
 
 pub trait Tuple: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
     fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
-    fn elements(&self) -> TupleFieldsIter<'_>;
-    fn elements_mut(&mut self) -> TupleFieldsIterMut<'_>;
-}
-
-pub struct TupleFieldsIter<'a> {
-    iter: Box<dyn Iterator<Item = &'a dyn Reflect> + 'a>,
-}
-
-impl<'a> TupleFieldsIter<'a> {
-    pub fn new<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = &'a dyn Reflect> + 'a,
-    {
-        Self {
-            iter: Box::new(iter.into_iter()),
-        }
-    }
-}
-
-impl<'a> Iterator for TupleFieldsIter<'a> {
-    type Item = &'a dyn Reflect;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-pub struct TupleFieldsIterMut<'a> {
-    iter: Box<dyn Iterator<Item = &'a mut dyn Reflect> + 'a>,
-}
-
-impl<'a> TupleFieldsIterMut<'a> {
-    pub fn new<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = &'a mut dyn Reflect> + 'a,
-    {
-        Self {
-            iter: Box::new(iter.into_iter()),
-        }
-    }
-}
-
-impl<'a> Iterator for TupleFieldsIterMut<'a> {
-    type Item = &'a mut dyn Reflect;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
+    fn elements(&self) -> ValueIter<'_>;
+    fn elements_mut(&mut self) -> ValueIterMut<'_>;
 }
 
 #[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
@@ -84,14 +38,14 @@ impl Tuple for TupleValue {
         Some(self.elements.get_mut(index)?.as_reflect_mut())
     }
 
-    fn elements(&self) -> TupleFieldsIter<'_> {
+    fn elements(&self) -> ValueIter<'_> {
         let iter = self.elements.iter().map(|value| value.as_reflect());
-        TupleFieldsIter::new(iter)
+        ValueIter::new(iter)
     }
 
-    fn elements_mut(&mut self) -> TupleFieldsIterMut<'_> {
+    fn elements_mut(&mut self) -> ValueIterMut<'_> {
         let iter = self.elements.iter_mut().map(|value| value.as_reflect_mut());
-        TupleFieldsIterMut::new(iter)
+        ValueIterMut::new(iter)
     }
 }
 
@@ -283,14 +237,14 @@ macro_rules! impl_tuple {
                 None
             }
 
-            fn elements(&self) -> TupleFieldsIter<'_> {
+            fn elements(&self) -> ValueIter<'_> {
                 let ($($ident,)*) = self;
-                TupleFieldsIter::new([$($ident.as_reflect(),)*])
+                ValueIter::new([$($ident.as_reflect(),)*])
             }
 
-            fn elements_mut(&mut self) -> TupleFieldsIterMut<'_> {
+            fn elements_mut(&mut self) -> ValueIterMut<'_> {
                 let ($($ident,)*) = self;
-                TupleFieldsIterMut::new([$($ident.as_reflect_mut(),)*])
+                ValueIterMut::new([$($ident.as_reflect_mut(),)*])
             }
         }
 

@@ -1,9 +1,6 @@
 use crate as mirror_mirror;
 
-use mirror_mirror::{
-    enum_::{EnumFieldsIter, EnumFieldsIterMut},
-    EnumValue, FromReflect, GetField, Reflect,
-};
+use mirror_mirror::{EnumValue, FromReflect, GetField, Reflect};
 
 #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
 enum Foo {

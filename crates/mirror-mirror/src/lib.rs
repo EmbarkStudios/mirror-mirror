@@ -26,6 +26,7 @@ pub mod struct_;
 pub mod tuple;
 
 mod get_field;
+mod iter;
 mod value;
 
 #[cfg(test)]
@@ -35,6 +36,7 @@ mod tests;
 pub use self::{
     enum_::{Enum, EnumValue},
     get_field::*,
+    iter::*,
     struct_::{Struct, StructValue},
     tuple::{Tuple, TupleValue},
     value::*,
@@ -245,8 +247,6 @@ pub trait FromReflect: Reflect + Sized {
 /// Private. Used by macros
 #[doc(hidden)]
 pub mod __private {
-    pub use crate::struct_::StructFieldsIter;
-    pub use crate::struct_::StructFieldsIterMut;
     pub use crate::FromReflect;
     pub use crate::Reflect;
     pub use crate::Value;

@@ -211,9 +211,9 @@ fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
         });
 
         quote! {
-            fn fields(&self) -> StructFieldsIter<'_> {
+            fn fields(&self) -> PairIter<'_> {
                 let iter = [#(#code_for_fields)*];
-                StructFieldsIter::new(iter)
+                PairIter::new(iter)
             }
         }
     };
@@ -228,9 +228,9 @@ fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
         });
 
         quote! {
-            fn fields_mut(&mut self) -> StructFieldsIterMut<'_> {
+            fn fields_mut(&mut self) -> PairIterMut<'_> {
                 let iter = [#(#code_for_fields)*];
-                StructFieldsIterMut::new(iter)
+                PairIterMut::new(iter)
             }
         }
     };

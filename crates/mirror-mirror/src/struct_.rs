@@ -1,6 +1,6 @@
 use std::{any::Any, collections::HashMap, fmt};
 
-use crate::{Enum, FromReflect, Reflect, Tuple, Value};
+use crate::{Enum, FromReflect, PairIter, PairIterMut, Reflect, Tuple, Value};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
@@ -8,54 +8,8 @@ pub trait Struct: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
 
-    fn fields(&self) -> StructFieldsIter<'_>;
-    fn fields_mut(&mut self) -> StructFieldsIterMut<'_>;
-}
-
-pub struct StructFieldsIter<'a> {
-    iter: Box<dyn Iterator<Item = (&'a str, &'a dyn Reflect)> + 'a>,
-}
-
-impl<'a> StructFieldsIter<'a> {
-    pub fn new<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (&'a str, &'a dyn Reflect)> + 'a,
-    {
-        Self {
-            iter: Box::new(iter.into_iter()),
-        }
-    }
-}
-
-impl<'a> Iterator for StructFieldsIter<'a> {
-    type Item = (&'a str, &'a dyn Reflect);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-pub struct StructFieldsIterMut<'a> {
-    iter: Box<dyn Iterator<Item = (&'a str, &'a mut dyn Reflect)> + 'a>,
-}
-
-impl<'a> StructFieldsIterMut<'a> {
-    pub fn new<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (&'a str, &'a mut dyn Reflect)> + 'a,
-    {
-        Self {
-            iter: Box::new(iter.into_iter()),
-        }
-    }
-}
-
-impl<'a> Iterator for StructFieldsIterMut<'a> {
-    type Item = (&'a str, &'a mut dyn Reflect);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
+    fn fields(&self) -> PairIter<'_>;
+    fn fields_mut(&mut self) -> PairIterMut<'_>;
 }
 
 #[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
@@ -155,20 +109,20 @@ impl Struct for StructValue {
         Some(self.fields.get_mut(name)?)
     }
 
-    fn fields(&self) -> StructFieldsIter<'_> {
+    fn fields(&self) -> PairIter<'_> {
         let iter = self
             .fields
             .iter()
             .map(|(key, value)| (&**key, value.as_reflect()));
-        StructFieldsIter::new(iter)
+        PairIter::new(iter)
     }
 
-    fn fields_mut(&mut self) -> StructFieldsIterMut<'_> {
+    fn fields_mut(&mut self) -> PairIterMut<'_> {
         let iter = self
             .fields
             .iter_mut()
             .map(|(key, value)| (&**key, value.as_reflect_mut()));
-        StructFieldsIterMut::new(iter)
+        PairIterMut::new(iter)
     }
 }
 
