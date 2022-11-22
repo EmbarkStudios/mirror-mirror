@@ -1,21 +1,20 @@
-use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{punctuated::Punctuated, Field, FieldsNamed, Ident, Token};
+use syn::{punctuated::Punctuated, spanned::Spanned, Field, FieldsUnnamed, Ident, Index, Token};
 
 type Fields = Punctuated<Field, Token![,]>;
 
-pub(crate) fn expand(ident: &Ident, fields: FieldsNamed) -> syn::Result<TokenStream> {
-    let fields = fields.named;
+pub(crate) fn expand(ident: &Ident, fields: FieldsUnnamed) -> syn::Result<TokenStream> {
+    let fields = fields.unnamed;
 
     let reflect = expand_reflect(ident, &fields);
     let from_reflect = expand_from_reflect(ident, &fields);
-    let struct_ = expand_struct(ident, &fields);
+    let tuple_struct = expand_tuple_struct(ident, &fields);
 
     Ok(quote! {
         #reflect
         #from_reflect
-        #struct_
+        #tuple_struct
 
         impl From<#ident> for Value {
             fn from(data: #ident) -> Value {
@@ -32,36 +31,31 @@ pub(crate) fn expand(ident: &Ident, fields: FieldsNamed) -> syn::Result<TokenStr
 
 fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
     let fn_patch = {
-        let code_for_fields = fields.iter().map(|field| {
-            let field = stringify(&field.ident);
-            quote! {
-                if let Some(field) = value.field(#field) {
-                    self.field_mut(#field).unwrap().patch(field);
-                }
-            }
-        });
-
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
-                if let Some(value) = value.as_struct() {
-                    #(#code_for_fields)*
+                if let Some(value) = value.as_tuple_struct() {
+                    for (current, new) in self.elements_mut().zip(value.elements()) {
+                        current.patch(new);
+                    }
                 }
             }
         }
     };
 
     let fn_to_value = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
+        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
+            let field_index = Index {
+                index: idx as u32,
+                span: field.span(),
+            };
             quote! {
-                let value = value.with_field(#field, self.#ident.clone());
+                let value = value.with_element(self.#field_index.clone());
             }
         });
 
         quote! {
             fn to_value(&self) -> Value {
-                let value = StructValue::default();
+                let value = TupleStructValue::default();
                 #(#code_for_fields)*
                 value.into()
             }
@@ -103,19 +97,19 @@ fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
             }
 
             fn as_struct(&self) -> Option<&dyn Struct> {
-                Some(self)
+                None
             }
 
             fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-                Some(self)
+                None
             }
 
             fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-                None
+                Some(self)
             }
 
             fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-                None
+                Some(self)
             }
 
             fn as_enum(&self) -> Option<&dyn Enum> {
@@ -139,18 +133,23 @@ fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
 
 fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
     let fn_from_reflect = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
+        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
+            let field_index = Index {
+                index: idx as u32,
+                span: field.span(),
+            };
             let ty = &field.ty;
-            let field = stringify(ident);
             quote! {
-                #ident: struct_.field(#field)?.downcast_ref::<#ty>()?.to_owned(),
+                #field_index: tuple_struct
+                    .element(#field_index)?
+                    .downcast_ref::<#ty>()?
+                    .to_owned(),
             }
         });
 
         quote! {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-                let struct_ = reflect.as_struct()?;
+                let tuple_struct = reflect.as_tuple_struct()?;
                 Some(Self {
                     #(#code_for_fields)*
                 })
@@ -165,85 +164,93 @@ fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
     }
 }
 
-fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
-    let fn_field = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
+fn expand_tuple_struct(ident: &Ident, fields: &Fields) -> TokenStream {
+    let fn_element = {
+        let match_arms = fields.iter().enumerate().map(|(idx, field)| {
+            let field_index = Index {
+                index: idx as u32,
+                span: field.span(),
+            };
             quote! {
-                if name == #field {
-                    return Some(&self.#ident);
+                #idx => Some(self.#field_index.as_reflect()),
+            }
+        });
+
+        quote! {
+            fn element(&self, index: usize) -> Option<&dyn Reflect> {
+                match index {
+                    #(#match_arms)*
+                    _ => None,
                 }
             }
-        });
-
-        quote! {
-            fn field(&self, name: &str) -> Option<&dyn Reflect> {
-                #(#code_for_fields)*
-                None
-            }
         }
     };
 
-    let fn_field_mut = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
+    let fn_element_mut = {
+        let match_arms = fields.iter().enumerate().map(|(idx, field)| {
+            let field_index = Index {
+                index: idx as u32,
+                span: field.span(),
+            };
             quote! {
-                if name == #field {
-                    return Some(&mut self.#ident);
+                #idx => Some(self.#field_index.as_reflect_mut()),
+            }
+        });
+
+        quote! {
+            fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+                match index {
+                    #(#match_arms)*
+                    _ => None,
                 }
             }
+        }
+    };
+
+    let fn_elements = {
+        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
+            let field_index = Index {
+                index: idx as u32,
+                span: field.span(),
+            };
+            quote! {
+                self.#field_index.as_reflect(),
+            }
         });
 
         quote! {
-            fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
-                #(#code_for_fields)*
-                None
+            fn elements(&self) -> ValueIter<'_> {
+                let iter = [#(#code_for_fields)*];
+                ValueIter::new(iter)
             }
         }
     };
 
-    let fn_fields = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
+    let fn_elements_mut = {
+        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
+            let field_index = Index {
+                index: idx as u32,
+                span: field.span(),
+            };
             quote! {
-                (#field, self.#ident.as_reflect()),
+                self.#field_index.as_reflect_mut(),
             }
         });
 
         quote! {
-            fn fields(&self) -> PairIter<'_> {
+            fn elements_mut(&mut self) -> ValueIterMut<'_> {
                 let iter = [#(#code_for_fields)*];
-                PairIter::new(iter)
-            }
-        }
-    };
-
-    let fn_fields_mut = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
-            quote! {
-                (#field, self.#ident.as_reflect_mut()),
-            }
-        });
-
-        quote! {
-            fn fields_mut(&mut self) -> PairIterMut<'_> {
-                let iter = [#(#code_for_fields)*];
-                PairIterMut::new(iter)
+                ValueIterMut::new(iter)
             }
         }
     };
 
     quote! {
-        impl Struct for #ident {
-            #fn_field
-            #fn_field_mut
-            #fn_fields
-            #fn_fields_mut
+        impl TupleStruct for #ident {
+            #fn_element
+            #fn_element_mut
+            #fn_elements
+            #fn_elements_mut
         }
     }
 }

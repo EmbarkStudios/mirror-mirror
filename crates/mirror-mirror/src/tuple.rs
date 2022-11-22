@@ -3,7 +3,7 @@ use std::{any::Any, fmt::Debug};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
-use crate::{Enum, FromReflect, Reflect, Struct, Value, ValueIter, ValueIterMut};
+use crate::{Enum, FromReflect, Reflect, Struct, TupleStruct, Value, ValueIter, ValueIterMut};
 
 pub trait Tuple: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
@@ -82,6 +82,14 @@ impl Reflect for TupleValue {
         None
     }
 
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        None
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
+        None
+    }
+
     fn as_enum(&self) -> Option<&dyn Enum> {
         None
     }
@@ -131,7 +139,7 @@ impl FromReflect for TupleValue {
 
 macro_rules! impl_tuple {
     ($($ident:ident),* $(,)?) => {
-        #[allow(non_snake_case)]
+        #[allow(non_snake_case, unused_mut, unused_variables)]
         impl<$($ident,)*> Reflect for ($($ident,)*)
         where
             $($ident: Reflect + Clone,)*
@@ -165,6 +173,14 @@ macro_rules! impl_tuple {
             }
 
             fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+                None
+            }
+
+            fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+                None
+            }
+
+            fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
                 None
             }
 
@@ -204,11 +220,11 @@ macro_rules! impl_tuple {
             }
 
             fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", std::any::type_name::<T1>())
+                write!(f, "{}", std::any::type_name::<Self>())
             }
         }
 
-        #[allow(non_snake_case, unused_assignments)]
+        #[allow(non_snake_case, unused_mut, unused_assignments, unused_variables)]
         impl<$($ident,)*> Tuple for ($($ident,)*)
         where
             $($ident: Reflect + Clone,)*
@@ -248,6 +264,7 @@ macro_rules! impl_tuple {
             }
         }
 
+        #[allow(non_snake_case, unused_mut, unused_assignments, unused_variables)]
         impl<$($ident,)*> FromReflect for ($($ident,)*)
         where
             $($ident: FromReflect + Clone,)*
@@ -261,6 +278,7 @@ macro_rules! impl_tuple {
     };
 }
 
+impl_tuple!();
 impl_tuple!(T1);
 impl_tuple!(T1, T2);
 impl_tuple!(T1, T2, T3);

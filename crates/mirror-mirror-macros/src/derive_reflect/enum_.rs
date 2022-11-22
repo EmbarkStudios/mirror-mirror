@@ -9,25 +9,20 @@ pub(crate) fn expand(ident: &Ident, enum_: DataEnum) -> syn::Result<TokenStream>
     let enum_ = expand_enum(ident, &enum_);
 
     Ok(quote! {
-        const _: () = {
-            use mirror_mirror::*;
-            use mirror_mirror::__private::*;
+        #reflect
+        #from_reflect
+        #enum_
 
-            #reflect
-            #from_reflect
-            #enum_
-
-            impl From<#ident> for Value {
-                fn from(data: #ident) -> Value {
-                    data.to_value()
-                }
+        impl From<#ident> for Value {
+            fn from(data: #ident) -> Value {
+                data.to_value()
             }
+        }
 
-            fn trait_bounds()
-            where
-                #ident: std::clone::Clone + std::fmt::Debug,
-            {}
-        };
+        fn trait_bounds()
+        where
+            #ident: std::clone::Clone + std::fmt::Debug,
+        {}
     })
 }
 
@@ -133,6 +128,14 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
             }
 
             fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+                None
+            }
+
+            fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+                None
+            }
+
+            fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
                 None
             }
 

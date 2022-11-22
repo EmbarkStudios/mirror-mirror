@@ -2,7 +2,10 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 use std::{any::Any, fmt};
 
-use crate::{tuple::TupleValue, Enum, EnumValue, Reflect, Struct, StructValue, Tuple};
+use crate::{
+    tuple::TupleValue, Enum, EnumValue, Reflect, Struct, StructValue, Tuple, TupleStruct,
+    TupleStructValue,
+};
 
 #[derive(Readable, Writable, Serialize, Deserialize, Clone)]
 pub struct Value(pub(crate) ValueInner);
@@ -52,6 +55,14 @@ impl Reflect for Value {
         self.0.as_struct_mut()
     }
 
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        self.0.as_tuple_struct()
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
+        self.0.as_tuple_struct_mut()
+    }
+
     fn as_enum(&self) -> Option<&dyn Enum> {
         self.0.as_enum()
     }
@@ -96,6 +107,7 @@ pub(crate) enum ValueInner {
     String(String),
     StructValue(Box<StructValue>),
     EnumValue(Box<EnumValue>),
+    TupleStructValue(TupleStructValue),
     TupleValue(TupleValue),
 }
 
@@ -119,6 +131,7 @@ impl Reflect for ValueInner {
             ValueInner::f64(inner) => inner,
             ValueInner::String(inner) => inner,
             ValueInner::StructValue(inner) => inner,
+            ValueInner::TupleStructValue(inner) => inner,
             ValueInner::EnumValue(inner) => inner,
             ValueInner::TupleValue(inner) => inner,
         }
@@ -143,6 +156,7 @@ impl Reflect for ValueInner {
             ValueInner::f64(inner) => inner,
             ValueInner::String(inner) => inner,
             ValueInner::StructValue(inner) => inner,
+            ValueInner::TupleStructValue(inner) => inner,
             ValueInner::EnumValue(inner) => inner,
             ValueInner::TupleValue(inner) => inner,
         }
@@ -243,6 +257,11 @@ impl Reflect for ValueInner {
                     *inner = Box::new(value.clone());
                 }
             }
+            ValueInner::TupleStructValue(inner) => {
+                if let Some(value) = value.downcast_ref::<TupleStructValue>() {
+                    *inner = value.clone();
+                }
+            }
             ValueInner::EnumValue(inner) => {
                 if let Some(value) = value.downcast_ref::<EnumValue>() {
                     *inner = Box::new(value.clone());
@@ -291,6 +310,22 @@ impl Reflect for ValueInner {
     fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
         if let ValueInner::StructValue(value) = self {
             Some(&mut **value)
+        } else {
+            None
+        }
+    }
+
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        if let ValueInner::TupleStructValue(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
+        if let ValueInner::TupleStructValue(value) = self {
+            Some(value)
         } else {
             None
         }
@@ -352,7 +387,7 @@ from_impls! {
     i8 i16 i32 i64 i128
     f32 f64
     bool char String
-    TupleValue
+    TupleValue TupleStructValue
 }
 
 #[cfg(test)]

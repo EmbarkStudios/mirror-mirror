@@ -8,7 +8,6 @@ use std::{
 
 // TODO(david):
 // - tuple structs
-// - unit structs
 // - unit enum variants
 // - tuple enum variant
 //     - option
@@ -37,7 +36,7 @@ pub use self::{
     enum_::{Enum, EnumValue},
     get_field::*,
     iter::*,
-    struct_::{Struct, StructValue},
+    struct_::{Struct, StructValue, TupleStruct, TupleStructValue},
     tuple::{Tuple, TupleValue},
     value::*,
 };
@@ -56,6 +55,9 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_struct(&self) -> Option<&dyn Struct>;
     fn as_struct_mut(&mut self) -> Option<&mut dyn Struct>;
+
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct>;
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct>;
 
     fn as_enum(&self) -> Option<&dyn Enum>;
     fn as_enum_mut(&mut self) -> Option<&mut dyn Enum>;
@@ -132,6 +134,14 @@ impl Reflect for Box<dyn Reflect> {
         <dyn Reflect as Reflect>::as_struct_mut(&mut **self)
     }
 
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        <dyn Reflect as Reflect>::as_tuple_struct(&**self)
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
+        <dyn Reflect as Reflect>::as_tuple_struct_mut(&mut **self)
+    }
+
     fn as_enum(&self) -> Option<&dyn Enum> {
         <dyn Reflect as Reflect>::as_enum(&**self)
     }
@@ -196,6 +206,14 @@ macro_rules! impl_for_core_types {
                 }
 
                 fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+                    None
+                }
+
+                fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+                    None
+                }
+
+                fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
                     None
                 }
 

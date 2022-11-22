@@ -1,4 +1,6 @@
-use crate::{FromReflect, PairIter, PairIterMut, Reflect, Struct, StructValue, Tuple, Value};
+use crate::{
+    FromReflect, PairIter, PairIterMut, Reflect, Struct, StructValue, Tuple, TupleStruct, Value,
+};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 use std::{any::Any, fmt};
@@ -85,6 +87,14 @@ impl Reflect for EnumValue {
     }
 
     fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+        None
+    }
+
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        None
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
         None
     }
 

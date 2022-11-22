@@ -1,4 +1,4 @@
-use crate::{Enum, Reflect, Struct, Tuple};
+use crate::{Enum, Reflect, Struct, Tuple, TupleStruct};
 
 use self::private::*;
 
@@ -50,6 +50,8 @@ where
     {
         if let Some(struct_) = self.as_struct() {
             struct_.get_field(name)
+        } else if let Some(tuple_struct) = self.as_tuple_struct() {
+            tuple_struct.get_field(name)
         } else if let Some(enum_) = self.as_enum() {
             enum_.get_field(name)
         } else if let Some(tuple) = self.as_tuple() {
@@ -65,6 +67,8 @@ where
     {
         if self.as_struct_mut().is_some() {
             self.as_struct_mut().unwrap().get_field_mut(name)
+        } else if self.as_tuple_struct_mut().is_some() {
+            self.as_tuple_struct_mut().unwrap().get_field_mut(name)
         } else if self.as_enum_mut().is_some() {
             self.as_enum_mut().unwrap().get_field_mut(name)
         } else if self.as_tuple_mut().is_some() {
@@ -93,6 +97,28 @@ impl GetField for dyn Struct {
         match name.as_key() {
             Key::Str(name) => self.field_mut(name)?.downcast_mut(),
             Key::Usize(_) => None,
+        }
+    }
+}
+
+impl GetField for dyn TupleStruct {
+    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
+    where
+        T: Reflect,
+    {
+        match name.as_key() {
+            Key::Str(_) => None,
+            Key::Usize(index) => self.element(index)?.downcast_ref(),
+        }
+    }
+
+    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
+    where
+        T: Reflect,
+    {
+        match name.as_key() {
+            Key::Str(_) => None,
+            Key::Usize(index) => self.element_mut(index)?.downcast_mut(),
         }
     }
 }

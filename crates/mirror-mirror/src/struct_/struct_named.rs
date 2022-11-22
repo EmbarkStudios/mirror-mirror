@@ -1,6 +1,6 @@
 use std::{any::Any, collections::HashMap, fmt};
 
-use crate::{Enum, FromReflect, PairIter, PairIterMut, Reflect, Tuple, Value};
+use crate::{Enum, FromReflect, PairIter, PairIterMut, Reflect, Tuple, TupleStruct, Value};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
@@ -54,6 +54,14 @@ impl Reflect for StructValue {
     }
 
     fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        None
+    }
+
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        None
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
         None
     }
 
