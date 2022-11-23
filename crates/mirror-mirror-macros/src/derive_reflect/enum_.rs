@@ -32,16 +32,25 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
 
             quote! {
                 Self::#ident { #(#field_names,)* } => {
-                    #(#set_fields)*
+                    if variant_matches {
+                        #(#set_fields)*
+                    }
                 }
             }
         });
 
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
-                if let Some(enum_) = value.as_enum() {
-                    match self {
-                        #(#match_arms)*
+                if let Some(new) = value.downcast_ref::<Self>() {
+                    *self = new.clone();
+                } else if let Some(enum_) = value.as_enum() {
+                    if let Some(new) = Self::from_reflect(value) {
+                        *self = new;
+                    } else {
+                        let variant_matches = self.variant_name() == enum_.variant_name();
+                        match self {
+                            #(#match_arms)*
+                        }
                     }
                 }
             }
