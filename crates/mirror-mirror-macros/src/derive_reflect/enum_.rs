@@ -3,8 +3,10 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DataEnum, Ident, Variant};
 
-pub(crate) fn expand(ident: &Ident, enum_: DataEnum) -> syn::Result<TokenStream> {
-    let reflect = expand_reflect(ident, &enum_);
+use super::ItemAttrs;
+
+pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::Result<TokenStream> {
+    let reflect = expand_reflect(ident, &enum_, attrs);
     let from_reflect = expand_from_reflect(ident, &enum_);
     let enum_ = expand_enum(ident, &enum_);
 
@@ -15,7 +17,7 @@ pub(crate) fn expand(ident: &Ident, enum_: DataEnum) -> syn::Result<TokenStream>
     })
 }
 
-fn expand_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
+fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStream {
     let fn_patch = {
         let match_arms = enum_.variants.iter().map(|variant| {
             let (ident, field_names) = variant_parts(variant);
@@ -88,6 +90,8 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
         }
     };
 
+    let fn_debug = attrs.fn_debug_tokens();
+
     quote! {
         impl Reflect for #ident {
             fn as_any(&self) -> &dyn Any {
@@ -145,13 +149,7 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                 Some(self)
             }
 
-            fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                if f.alternate() {
-                    write!(f, "{:#?}", self)
-                } else {
-                    write!(f, "{:?}", self)
-                }
-            }
+            #fn_debug
         }
     }
 }

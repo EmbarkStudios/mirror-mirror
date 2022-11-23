@@ -4,7 +4,7 @@ use syn::parse::Parse;
 
 mod derive_reflect;
 
-#[proc_macro_derive(Reflect)]
+#[proc_macro_derive(Reflect, attributes(reflect))]
 pub fn derive_reflect(item: TokenStream) -> TokenStream {
     expand_with(item, derive_reflect::expand)
 }

@@ -2,12 +2,18 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{punctuated::Punctuated, spanned::Spanned, Field, FieldsUnnamed, Ident, Index, Token};
 
+use super::ItemAttrs;
+
 type Fields = Punctuated<Field, Token![,]>;
 
-pub(crate) fn expand(ident: &Ident, fields: FieldsUnnamed) -> syn::Result<TokenStream> {
+pub(super) fn expand(
+    ident: &Ident,
+    fields: FieldsUnnamed,
+    attrs: ItemAttrs,
+) -> syn::Result<TokenStream> {
     let fields = fields.unnamed;
 
-    let reflect = expand_reflect(ident, &fields);
+    let reflect = expand_reflect(ident, &fields, attrs);
     let from_reflect = expand_from_reflect(ident, &fields);
     let tuple_struct = expand_tuple_struct(ident, &fields);
 
@@ -18,7 +24,7 @@ pub(crate) fn expand(ident: &Ident, fields: FieldsUnnamed) -> syn::Result<TokenS
     })
 }
 
-fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
+fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStream {
     let fn_patch = {
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
@@ -50,6 +56,8 @@ fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
             }
         }
     };
+
+    let fn_debug = attrs.fn_debug_tokens();
 
     quote! {
         impl Reflect for #ident {
@@ -109,13 +117,7 @@ fn expand_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
                 None
             }
 
-            fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                if f.alternate() {
-                    write!(f, "{:#?}", self)
-                } else {
-                    write!(f, "{:?}", self)
-                }
-            }
+            #fn_debug
         }
     }
 }
