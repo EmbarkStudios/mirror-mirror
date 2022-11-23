@@ -1,10 +1,10 @@
-use crate::{self as mirror_mirror, Enum};
+use crate::{self as mirror_mirror, enum_::VariantKind, Enum};
 
 use mirror_mirror::{EnumValue, FromReflect, GetField, Reflect};
 
 #[test]
 fn enum_value() {
-    let mut enum_ = EnumValue::new("Foo")
+    let mut enum_ = EnumValue::new_struct_variant("Foo")
         .with_field("foo", 1_i32)
         .with_field("bar", false);
 
@@ -14,7 +14,7 @@ fn enum_value() {
     *enum_.get_field_mut("foo").unwrap() = 42;
     assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
 
-    enum_.patch(&EnumValue::new("Foo").with_field("bar", true));
+    enum_.patch(&EnumValue::new_struct_variant("Foo").with_field("bar", true));
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
     let enum_ = EnumValue::from_reflect(&enum_).unwrap();
@@ -25,14 +25,19 @@ fn enum_value() {
     assert_eq!(value.get_field::<i32>("foo").unwrap(), &42);
     assert_eq!(value.get_field::<bool>("bar").unwrap(), &true);
     let mut has_fields = false;
-    for (key, value) in value.as_enum().unwrap().fields() {
+    for field in value.as_enum().unwrap().fields() {
         has_fields = true;
-        if key == "foo" {
-            assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
-        } else if key == "bar" {
-            assert_eq!(value.downcast_ref::<bool>().unwrap(), &true);
-        } else {
-            panic!("unknown field: {key}");
+        match field {
+            mirror_mirror::enum_::VariantField::Struct(key, value) => {
+                if key == "foo" {
+                    assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
+                } else if key == "bar" {
+                    assert_eq!(value.downcast_ref::<bool>().unwrap(), &true);
+                } else {
+                    panic!("unknown field: {key}");
+                }
+            }
+            mirror_mirror::enum_::VariantField::Tuple(_) => panic!("bad variant"),
         }
     }
     assert!(has_fields);
@@ -48,17 +53,19 @@ fn static_enum() {
 
     let mut enum_ = Foo::Foo { foo: 1, bar: false };
 
+    assert_eq!(enum_.variant_kind(), VariantKind::Struct);
+
     assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &1);
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &false);
 
     *enum_.get_field_mut("foo").unwrap() = 42;
     assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
 
-    enum_.patch(&EnumValue::new("Foo").with_field("bar", true));
+    enum_.patch(&EnumValue::new_struct_variant("Foo").with_field("bar", true));
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
     // variants with other names are ignored
-    enum_.patch(&EnumValue::new("Ignored").with_field("bar", false));
+    enum_.patch(&EnumValue::new_struct_variant("Ignored").with_field("bar", false));
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
     assert!(matches!(enum_, Foo::Foo { foo: 42, bar: true }));
@@ -70,14 +77,19 @@ fn static_enum() {
     assert_eq!(value.get_field::<i32>("foo").unwrap(), &42);
     assert_eq!(value.get_field::<bool>("bar").unwrap(), &true);
     let mut has_fields = false;
-    for (key, value) in value.as_enum().unwrap().fields() {
+    for field in value.as_enum().unwrap().fields() {
         has_fields = true;
-        if key == "foo" {
-            assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
-        } else if key == "bar" {
-            assert_eq!(value.downcast_ref::<bool>().unwrap(), &true);
-        } else {
-            panic!("unknown field: {key}");
+        match field {
+            mirror_mirror::enum_::VariantField::Struct(key, value) => {
+                if key == "foo" {
+                    assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
+                } else if key == "bar" {
+                    assert_eq!(value.downcast_ref::<bool>().unwrap(), &true);
+                } else {
+                    panic!("unknown field: {key}");
+                }
+            }
+            mirror_mirror::enum_::VariantField::Tuple(_) => panic!("bad variant"),
         }
     }
     assert!(has_fields);
@@ -103,33 +115,38 @@ fn patching() {
 
     // whole: static.patch(value)
     let mut foo = Foo::A { a: 1 };
-    foo.patch(&EnumValue::new("B").with_field("b", false));
+    foo.patch(&EnumValue::new_struct_variant("B").with_field("b", false));
     assert!(matches!(dbg!(foo), Foo::B { b: false }));
 
     // part: static.patch(value)
     let mut foo = Foo::A { a: 1 };
-    foo.patch(&EnumValue::new("A").with_field("a", 42));
+    foo.patch(&EnumValue::new_struct_variant("A").with_field("a", 42));
     assert!(matches!(dbg!(foo), Foo::A { a: 42 }));
 
     // whole: value.patch(static)
-    let mut foo = EnumValue::new("A").with_field("a", 1);
+    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
     foo.patch(&Foo::B { b: false });
     assert_eq!(foo.get_field::<bool>("b").unwrap(), &false);
 
     // part: value.patch(static)
-    let mut foo = EnumValue::new("A").with_field("a", 1);
+    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
     foo.patch(&Foo::A { a: 42 });
     assert_eq!(foo.get_field::<i32>("a").unwrap(), &42);
 
     // whole: value.patch(value)
-    let mut foo = EnumValue::new("A").with_field("a", 1);
-    foo.patch(&EnumValue::new("B").with_field("b", false));
+    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
+    foo.patch(&EnumValue::new_struct_variant("B").with_field("b", false));
     assert_eq!(foo.variant_name(), "B");
     assert!(foo.get_field::<i32>("a").is_none());
     assert_eq!(foo.get_field::<bool>("b").unwrap(), &false);
 
     // part: value.patch(value)
-    let mut foo = EnumValue::new("A").with_field("a", 1);
-    foo.patch(&EnumValue::new("A").with_field("a", 42));
+    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
+    foo.patch(&EnumValue::new_struct_variant("A").with_field("a", 42));
     assert_eq!(foo.get_field::<i32>("a").unwrap(), &42);
+}
+
+#[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+enum Bar {
+    Foo(i32, bool),
 }

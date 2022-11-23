@@ -265,6 +265,9 @@ pub trait FromReflect: Reflect + Sized {
 /// Private. Used by macros
 #[doc(hidden)]
 pub mod __private {
+    pub use crate::enum_::VariantFieldIter;
+    pub use crate::enum_::VariantFieldIterMut;
+    pub use crate::enum_::VariantKind;
     pub use crate::FromReflect;
     pub use crate::Reflect;
     pub use crate::Value;

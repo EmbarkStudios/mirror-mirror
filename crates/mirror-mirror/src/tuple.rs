@@ -24,8 +24,12 @@ impl TupleValue {
     }
 
     pub fn with_element(mut self, value: impl Into<Value>) -> Self {
-        self.elements.push(value.into());
+        self.push_element(value);
         self
+    }
+
+    pub fn push_element(&mut self, value: impl Into<Value>) {
+        self.elements.push(value.into());
     }
 }
 
