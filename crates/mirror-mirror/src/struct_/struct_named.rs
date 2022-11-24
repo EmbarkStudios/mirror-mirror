@@ -145,3 +145,20 @@ impl FromReflect for StructValue {
         Some(this)
     }
 }
+
+impl<S, V> FromIterator<(S, V)> for StructValue
+where
+    S: Into<String>,
+    V: Reflect,
+{
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = (S, V)>,
+    {
+        let mut out = Self::default();
+        for (name, value) in iter {
+            out.set_field(name, value.to_value());
+        }
+        out
+    }
+}

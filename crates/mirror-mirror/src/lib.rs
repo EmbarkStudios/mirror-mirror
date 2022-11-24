@@ -11,7 +11,6 @@ use std::{
 // - vec
 // - hash map/set
 // - btree map/set
-// - impl FromIterator for StructValue
 // - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
 
 pub mod enum_;

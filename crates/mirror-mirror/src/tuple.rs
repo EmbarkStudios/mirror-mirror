@@ -299,3 +299,19 @@ impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13);
 impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14);
 impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15);
 impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16);
+
+impl<V> FromIterator<V> for TupleValue
+where
+    V: Reflect,
+{
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = V>,
+    {
+        let mut out = Self::default();
+        for value in iter {
+            out.push_element(value.to_value());
+        }
+        out
+    }
+}

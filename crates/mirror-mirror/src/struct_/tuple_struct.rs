@@ -30,6 +30,10 @@ impl TupleStructValue {
             tuple: self.tuple.with_element(value),
         }
     }
+
+    pub fn push_element(&mut self, value: impl Into<Value>) {
+        self.tuple.push_element(value);
+    }
 }
 
 impl Reflect for TupleStructValue {
@@ -135,5 +139,21 @@ impl FromReflect for TupleStructValue {
                 builder.with_element(value.to_value())
             });
         Some(this)
+    }
+}
+
+impl<V> FromIterator<V> for TupleStructValue
+where
+    V: Reflect,
+{
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = V>,
+    {
+        let mut out = Self::default();
+        for value in iter {
+            out.push_element(value.to_value());
+        }
+        out
     }
 }
