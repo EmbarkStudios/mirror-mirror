@@ -93,6 +93,12 @@ fn static_enum() {
         }
     }
     assert!(has_fields);
+
+    // the variant name must match, even if it has the right fields
+    assert!(Foo::from_reflect(
+        &EnumValue::new_struct_variant("NotInFoo").with_field("baz", "foo".to_owned()),
+    )
+    .is_none());
 }
 
 #[test]
@@ -146,7 +152,63 @@ fn patching() {
     assert_eq!(foo.get_field::<i32>("a").unwrap(), &42);
 }
 
-#[derive(Reflect, Clone, Debug, PartialEq, Eq)]
-enum Bar {
-    Foo(i32, bool),
+#[test]
+fn static_tuple_enum() {
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    enum Foo {
+        A(i32, bool),
+        B(String),
+    }
+
+    let mut foo = Foo::A(1, true);
+
+    assert_eq!(foo.get_field::<i32>(0).unwrap(), &1);
+    assert_eq!(foo.get_field::<bool>(1).unwrap(), &true);
+    assert!(foo.element(2).is_none());
+
+    assert_eq!(foo.get_field_mut::<i32>(0).unwrap(), &1);
+    assert_eq!(foo.get_field_mut::<bool>(1).unwrap(), &true);
+    foo.get_field_mut::<bool>(1).unwrap().patch(&false);
+    assert_eq!(foo.get_field_mut::<bool>(1).unwrap(), &false);
+    assert!(foo.element_mut(2).is_none());
+
+    // whole: static.patch(static)
+    let mut foo = Foo::A(1, true);
+    foo.patch(&Foo::B("foo".to_owned()));
+    assert!(matches!(dbg!(foo), Foo::B(s) if s == "foo"));
+
+    // part: static.patch(static)
+    let mut foo = Foo::A(1, true);
+    foo.patch(&Foo::A(42, true));
+    assert!(matches!(dbg!(foo), Foo::A(42, true)));
+
+    // whole: static.patch(value)
+    let mut foo = Foo::A(1, true);
+    foo.patch(&EnumValue::new_tuple_variant("B").with_element("foo"));
+    assert!(matches!(dbg!(foo), Foo::B(s) if s == "foo"));
+
+    // part: static.patch(value)
+    let mut foo = Foo::A(1, true);
+    foo.patch(&EnumValue::new_tuple_variant("A").with_element(42));
+    assert!(matches!(dbg!(foo), Foo::A(42, true)));
+
+    // whole: value.patch(static)
+    let mut foo = EnumValue::new_tuple_variant("A")
+        .with_element(1)
+        .with_element(true);
+    foo.patch(&Foo::B("foo".to_owned()));
+    assert_eq!(foo.get_field::<String>(0).unwrap(), &"foo");
+    assert!(foo.element(1).is_none());
+
+    // part: value.patch(static)
+    let mut foo = EnumValue::new_tuple_variant("A")
+        .with_element(1_i32)
+        .with_element(true)
+        .with_element("foo");
+    foo.patch(&Foo::A(42, true));
+    dbg!(&foo);
+    assert_eq!(foo.get_field::<i32>(0).unwrap(), &42);
+    assert_eq!(foo.get_field::<bool>(1).unwrap(), &true);
+    assert_eq!(foo.get_field::<String>(2).unwrap(), &"foo");
+    assert!(foo.element(3).is_none());
 }

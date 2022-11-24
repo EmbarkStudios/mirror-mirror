@@ -382,6 +382,12 @@ impl From<EnumValue> for Value {
     }
 }
 
+impl From<&str> for Value {
+    fn from(value: &str) -> Self {
+        value.to_owned().into()
+    }
+}
+
 from_impls! {
     usize u8 u16 u32 u64 u128
     i8 i16 i32 i64 i128

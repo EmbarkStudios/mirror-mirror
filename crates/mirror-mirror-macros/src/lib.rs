@@ -23,11 +23,7 @@ where
     T: ToTokens,
 {
     match result {
-        Ok(tokens) => {
-            let tokens = quote! { #tokens }.into();
-            println!("{tokens}");
-            tokens
-        }
+        Ok(tokens) => quote! { #tokens }.into(),
         Err(err) => err.into_compile_error().into(),
     }
 }

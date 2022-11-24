@@ -130,7 +130,7 @@ impl GetField for dyn Enum {
     {
         match name.as_key() {
             Key::Str(name) => self.field(name)?.downcast_ref(),
-            Key::Usize(_) => None,
+            Key::Usize(index) => self.element(index)?.downcast_ref(),
         }
     }
 
@@ -140,7 +140,7 @@ impl GetField for dyn Enum {
     {
         match name.as_key() {
             Key::Str(name) => self.field_mut(name)?.downcast_mut(),
-            Key::Usize(_) => None,
+            Key::Usize(index) => self.element_mut(index)?.downcast_mut(),
         }
     }
 }

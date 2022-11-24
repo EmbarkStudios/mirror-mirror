@@ -108,14 +108,18 @@ impl Reflect for EnumValue {
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(enum_) = value.as_enum() {
             if self.variant_name() == enum_.variant_name() {
-                for field in self.fields_mut() {
+                for (idx, field) in self.fields_mut().enumerate() {
                     match field {
                         VariantFieldMut::Struct(name, value) => {
                             if let Some(new_value) = enum_.field(name) {
                                 value.patch(new_value);
                             }
                         }
-                        VariantFieldMut::Tuple(_) => {}
+                        VariantFieldMut::Tuple(value) => {
+                            if let Some(new_value) = enum_.element(idx) {
+                                value.patch(new_value);
+                            }
+                        }
                     }
                 }
             } else if let Some(new) = Self::from_reflect(value) {
