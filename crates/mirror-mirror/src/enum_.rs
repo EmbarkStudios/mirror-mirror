@@ -394,3 +394,172 @@ impl<'a> Iterator for VariantFieldIterMut<'a> {
         }
     }
 }
+
+impl<T> Reflect for Option<T>
+where
+    T: FromReflect,
+{
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn as_reflect(&self) -> &dyn Reflect {
+        self
+    }
+
+    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        self
+    }
+
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        None
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        None
+    }
+
+    fn as_struct(&self) -> Option<&dyn Struct> {
+        None
+    }
+
+    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+        None
+    }
+
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        None
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
+        None
+    }
+
+    fn as_enum(&self) -> Option<&dyn Enum> {
+        Some(self)
+    }
+
+    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
+        Some(self)
+    }
+
+    fn patch(&mut self, value: &dyn Reflect) {
+        if let Some(enum_) = value.as_enum() {
+            if self.variant_name() == enum_.variant_name() {
+                for (index, value) in self.fields_mut().enumerate() {
+                    match value {
+                        VariantFieldMut::Struct(_, _) => {}
+                        VariantFieldMut::Tuple(value) => {
+                            if let Some(new_value) = enum_.element(index) {
+                                value.patch(new_value);
+                            }
+                        }
+                    }
+                }
+            } else if let Some(new) = Self::from_reflect(enum_.as_reflect()) {
+                *self = new;
+            }
+        }
+    }
+
+    fn to_value(&self) -> Value {
+        match self {
+            Some(value) => EnumValue::new_tuple_variant("Some")
+                .with_element(value.to_value())
+                .into(),
+            None => EnumValue::new_unit_variant("None").into(),
+        }
+    }
+
+    fn clone_reflect(&self) -> Box<dyn Reflect> {
+        let value = self.to_value();
+        Box::new(Self::from_reflect(&value).unwrap())
+    }
+
+    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Some(value) => {
+                write!(f, "Some(")?;
+                value.debug(f)?;
+                write!(f, ")")
+            }
+            None => write!(f, "None"),
+        }
+    }
+}
+
+impl<T> Enum for Option<T>
+where
+    T: FromReflect,
+{
+    fn variant_name(&self) -> &str {
+        match self {
+            Some(_) => "Some",
+            None => "None",
+        }
+    }
+
+    fn variant_kind(&self) -> VariantKind {
+        match self {
+            Some(_) => VariantKind::Tuple,
+            None => VariantKind::Unit,
+        }
+    }
+
+    fn field(&self, _name: &str) -> Option<&dyn Reflect> {
+        None
+    }
+
+    fn field_mut(&mut self, _name: &str) -> Option<&mut dyn Reflect> {
+        None
+    }
+
+    fn element(&self, index: usize) -> Option<&dyn Reflect> {
+        match self {
+            Some(value) if index == 0 => Some(value),
+            _ => None,
+        }
+    }
+
+    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+        match self {
+            Some(value) if index == 0 => Some(value),
+            _ => None,
+        }
+    }
+
+    fn fields(&self) -> VariantFieldIter<'_> {
+        match self {
+            Some(value) => VariantFieldIter::new_tuple_variant([value.as_reflect()]),
+            None => VariantFieldIter::empty(),
+        }
+    }
+
+    fn fields_mut(&mut self) -> VariantFieldIterMut<'_> {
+        match self {
+            Some(value) => VariantFieldIterMut::new_tuple_variant([value.as_reflect_mut()]),
+            None => VariantFieldIterMut::empty(),
+        }
+    }
+}
+
+impl<T> FromReflect for Option<T>
+where
+    T: FromReflect,
+{
+    fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+        let enum_ = reflect.as_enum()?;
+        match enum_.variant_name() {
+            "Some" => {
+                let value = enum_.element(0)?;
+                Some(Some(T::from_reflect(value)?))
+            }
+            "None" => Some(None),
+            _ => None,
+        }
+    }
+}

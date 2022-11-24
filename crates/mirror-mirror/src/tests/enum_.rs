@@ -250,3 +250,59 @@ fn unit_variant() {
     assert_eq!(value.variant_kind(), VariantKind::Unit);
     assert_eq!(value.variant_name(), "A");
 }
+
+#[test]
+fn option() {
+    assert_eq!(Some(1).variant_name(), "Some");
+    assert_eq!(Some(1).variant_kind(), VariantKind::Tuple);
+    assert_eq!(format!("{:?}", Some(1).as_reflect()), "Some(1)");
+
+    assert_eq!(None::<i32>.variant_name(), "None");
+    assert_eq!(None::<i32>.variant_kind(), VariantKind::Unit);
+    assert_eq!(format!("{:?}", None::<i32>.as_reflect()), "None");
+
+    let some_value = Some(1).to_value();
+    let some_value = some_value.as_enum().unwrap();
+    assert_eq!(some_value.variant_name(), "Some");
+    assert_eq!(some_value.variant_kind(), VariantKind::Tuple);
+    assert_eq!(some_value.get_field::<i32>(0).unwrap(), &1);
+    assert!(some_value.element(1).is_none());
+
+    let none_value = None::<i32>.to_value();
+    let none_value = none_value.as_enum().unwrap();
+    assert_eq!(none_value.variant_name(), "None");
+    assert_eq!(none_value.variant_kind(), VariantKind::Unit);
+    assert!(none_value.element(0).is_none());
+
+    assert_eq!(
+        Some(1).clone_reflect().as_enum().unwrap().variant_name(),
+        "Some"
+    );
+    assert_eq!(
+        None::<i32>
+            .clone_reflect()
+            .as_enum()
+            .unwrap()
+            .variant_name(),
+        "None"
+    );
+
+    let mut value = Some(1);
+    value.patch(&Some(42));
+    assert_eq!(value, Some(42));
+
+    let mut value = Some(1);
+    value.patch(&None::<i32>);
+    assert_eq!(value, None);
+
+    let mut value = None::<i32>;
+    value.patch(&Some(42));
+    assert_eq!(value, Some(42));
+
+    let mut value = None::<i32>;
+    value.patch(&None::<i32>);
+    assert_eq!(value, None);
+
+    assert_eq!(Option::<i32>::from_reflect(&Some(1)).unwrap(), Some(1));
+    assert_eq!(Option::<i32>::from_reflect(&None::<i32>).unwrap(), None);
+}

@@ -7,17 +7,10 @@ use std::{
 };
 
 // TODO(david):
-// - tuple structs
-// - unit enum variants
-// - tuple enum variant
-//     - option
-//     - result
 // - type info
 // - vec
 // - hash map/set
 // - btree map/set
-// - modifying
-// - Box<T> where T: Reflect
 // - impl FromIterator for StructValue
 // - Should ValueInner be public and be Value, so you can match on it?
 // - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
