@@ -7,88 +7,10 @@ use crate::{
     TupleStructValue,
 };
 
-#[derive(Readable, Writable, Serialize, Deserialize, Clone)]
-pub struct Value(pub(crate) ValueInner);
-
-impl Reflect for Value {
-    fn as_any(&self) -> &dyn Any {
-        self.0.as_any()
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self.0.as_any_mut()
-    }
-
-    fn as_reflect(&self) -> &dyn Reflect {
-        self.0.as_reflect()
-    }
-
-    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self.0.as_reflect_mut()
-    }
-
-    fn patch(&mut self, value: &dyn Reflect) {
-        self.0.patch(value)
-    }
-
-    fn clone_reflect(&self) -> Box<dyn Reflect> {
-        Box::new(self.clone())
-    }
-
-    fn to_value(&self) -> Value {
-        self.clone()
-    }
-
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        self.0.as_tuple()
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        self.0.as_tuple_mut()
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        self.0.as_struct()
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        self.0.as_struct_mut()
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        self.0.as_tuple_struct()
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        self.0.as_tuple_struct_mut()
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        self.0.as_enum()
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        self.0.as_enum_mut()
-    }
-
-    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            write!(f, "{:#?}", self)
-        } else {
-            write!(f, "{:?}", self)
-        }
-    }
-}
-
-impl fmt::Debug for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
+#[non_exhaustive]
 #[allow(non_camel_case_types)]
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
-pub(crate) enum ValueInner {
+pub enum Value {
     usize(usize),
     u8(u8),
     u16(u16),
@@ -111,54 +33,54 @@ pub(crate) enum ValueInner {
     TupleValue(TupleValue),
 }
 
-impl Reflect for ValueInner {
+impl Reflect for Value {
     fn as_any(&self) -> &dyn Any {
         match self {
-            ValueInner::usize(inner) => inner,
-            ValueInner::u8(inner) => inner,
-            ValueInner::u16(inner) => inner,
-            ValueInner::u32(inner) => inner,
-            ValueInner::u64(inner) => inner,
-            ValueInner::u128(inner) => inner,
-            ValueInner::i8(inner) => inner,
-            ValueInner::i16(inner) => inner,
-            ValueInner::i32(inner) => inner,
-            ValueInner::i64(inner) => inner,
-            ValueInner::i128(inner) => inner,
-            ValueInner::bool(inner) => inner,
-            ValueInner::char(inner) => inner,
-            ValueInner::f32(inner) => inner,
-            ValueInner::f64(inner) => inner,
-            ValueInner::String(inner) => inner,
-            ValueInner::StructValue(inner) => inner,
-            ValueInner::TupleStructValue(inner) => inner,
-            ValueInner::EnumValue(inner) => inner,
-            ValueInner::TupleValue(inner) => inner,
+            Value::usize(inner) => inner,
+            Value::u8(inner) => inner,
+            Value::u16(inner) => inner,
+            Value::u32(inner) => inner,
+            Value::u64(inner) => inner,
+            Value::u128(inner) => inner,
+            Value::i8(inner) => inner,
+            Value::i16(inner) => inner,
+            Value::i32(inner) => inner,
+            Value::i64(inner) => inner,
+            Value::i128(inner) => inner,
+            Value::bool(inner) => inner,
+            Value::char(inner) => inner,
+            Value::f32(inner) => inner,
+            Value::f64(inner) => inner,
+            Value::String(inner) => inner,
+            Value::StructValue(inner) => inner,
+            Value::TupleStructValue(inner) => inner,
+            Value::EnumValue(inner) => inner,
+            Value::TupleValue(inner) => inner,
         }
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         match self {
-            ValueInner::usize(inner) => inner,
-            ValueInner::u8(inner) => inner,
-            ValueInner::u16(inner) => inner,
-            ValueInner::u32(inner) => inner,
-            ValueInner::u64(inner) => inner,
-            ValueInner::u128(inner) => inner,
-            ValueInner::i8(inner) => inner,
-            ValueInner::i16(inner) => inner,
-            ValueInner::i32(inner) => inner,
-            ValueInner::i64(inner) => inner,
-            ValueInner::i128(inner) => inner,
-            ValueInner::bool(inner) => inner,
-            ValueInner::char(inner) => inner,
-            ValueInner::f32(inner) => inner,
-            ValueInner::f64(inner) => inner,
-            ValueInner::String(inner) => inner,
-            ValueInner::StructValue(inner) => inner,
-            ValueInner::TupleStructValue(inner) => inner,
-            ValueInner::EnumValue(inner) => inner,
-            ValueInner::TupleValue(inner) => inner,
+            Value::usize(inner) => inner,
+            Value::u8(inner) => inner,
+            Value::u16(inner) => inner,
+            Value::u32(inner) => inner,
+            Value::u64(inner) => inner,
+            Value::u128(inner) => inner,
+            Value::i8(inner) => inner,
+            Value::i16(inner) => inner,
+            Value::i32(inner) => inner,
+            Value::i64(inner) => inner,
+            Value::i128(inner) => inner,
+            Value::bool(inner) => inner,
+            Value::char(inner) => inner,
+            Value::f32(inner) => inner,
+            Value::f64(inner) => inner,
+            Value::String(inner) => inner,
+            Value::StructValue(inner) => inner,
+            Value::TupleStructValue(inner) => inner,
+            Value::EnumValue(inner) => inner,
+            Value::TupleValue(inner) => inner,
         }
     }
 
@@ -172,102 +94,102 @@ impl Reflect for ValueInner {
 
     fn patch(&mut self, value: &dyn Reflect) {
         match self {
-            ValueInner::usize(inner) => {
+            Value::usize(inner) => {
                 if let Some(value) = value.downcast_ref::<usize>() {
                     *inner = *value;
                 }
             }
-            ValueInner::u8(inner) => {
+            Value::u8(inner) => {
                 if let Some(value) = value.downcast_ref::<u8>() {
                     *inner = *value;
                 }
             }
-            ValueInner::u16(inner) => {
+            Value::u16(inner) => {
                 if let Some(value) = value.downcast_ref::<u16>() {
                     *inner = *value;
                 }
             }
-            ValueInner::u32(inner) => {
+            Value::u32(inner) => {
                 if let Some(value) = value.downcast_ref::<u32>() {
                     *inner = *value;
                 }
             }
-            ValueInner::u64(inner) => {
+            Value::u64(inner) => {
                 if let Some(value) = value.downcast_ref::<u64>() {
                     *inner = *value;
                 }
             }
-            ValueInner::u128(inner) => {
+            Value::u128(inner) => {
                 if let Some(value) = value.downcast_ref::<u128>() {
                     *inner = *value;
                 }
             }
-            ValueInner::i8(inner) => {
+            Value::i8(inner) => {
                 if let Some(value) = value.downcast_ref::<i8>() {
                     *inner = *value;
                 }
             }
-            ValueInner::i16(inner) => {
+            Value::i16(inner) => {
                 if let Some(value) = value.downcast_ref::<i16>() {
                     *inner = *value;
                 }
             }
-            ValueInner::i32(inner) => {
+            Value::i32(inner) => {
                 if let Some(value) = value.downcast_ref::<i32>() {
                     *inner = *value;
                 }
             }
-            ValueInner::i64(inner) => {
+            Value::i64(inner) => {
                 if let Some(value) = value.downcast_ref::<i64>() {
                     *inner = *value;
                 }
             }
-            ValueInner::i128(inner) => {
+            Value::i128(inner) => {
                 if let Some(value) = value.downcast_ref::<i128>() {
                     *inner = *value;
                 }
             }
-            ValueInner::bool(inner) => {
+            Value::bool(inner) => {
                 if let Some(value) = value.downcast_ref::<bool>() {
                     *inner = *value;
                 }
             }
-            ValueInner::char(inner) => {
+            Value::char(inner) => {
                 if let Some(value) = value.downcast_ref::<char>() {
                     *inner = *value;
                 }
             }
-            ValueInner::f32(inner) => {
+            Value::f32(inner) => {
                 if let Some(value) = value.downcast_ref::<f32>() {
                     *inner = *value;
                 }
             }
-            ValueInner::f64(inner) => {
+            Value::f64(inner) => {
                 if let Some(value) = value.downcast_ref::<f64>() {
                     *inner = *value;
                 }
             }
-            ValueInner::String(inner) => {
+            Value::String(inner) => {
                 if let Some(value) = value.downcast_ref::<String>() {
                     *inner = value.clone();
                 }
             }
-            ValueInner::StructValue(inner) => {
+            Value::StructValue(inner) => {
                 if let Some(value) = value.downcast_ref::<StructValue>() {
                     *inner = Box::new(value.clone());
                 }
             }
-            ValueInner::TupleStructValue(inner) => {
+            Value::TupleStructValue(inner) => {
                 if let Some(value) = value.downcast_ref::<TupleStructValue>() {
                     *inner = value.clone();
                 }
             }
-            ValueInner::EnumValue(inner) => {
+            Value::EnumValue(inner) => {
                 if let Some(value) = value.downcast_ref::<EnumValue>() {
                     *inner = Box::new(value.clone());
                 }
             }
-            ValueInner::TupleValue(inner) => {
+            Value::TupleValue(inner) => {
                 if let Some(value) = value.downcast_ref::<TupleValue>() {
                     *inner = value.clone();
                 }
@@ -276,7 +198,7 @@ impl Reflect for ValueInner {
     }
 
     fn to_value(&self) -> Value {
-        Value(self.clone())
+        self.clone()
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -284,7 +206,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_tuple(&self) -> Option<&dyn Tuple> {
-        if let ValueInner::TupleValue(value) = self {
+        if let Value::TupleValue(value) = self {
             Some(value)
         } else {
             None
@@ -292,7 +214,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        if let ValueInner::TupleValue(value) = self {
+        if let Value::TupleValue(value) = self {
             Some(&mut *value)
         } else {
             None
@@ -300,7 +222,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
-        if let ValueInner::StructValue(value) = self {
+        if let Value::StructValue(value) = self {
             Some(&**value)
         } else {
             None
@@ -308,7 +230,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        if let ValueInner::StructValue(value) = self {
+        if let Value::StructValue(value) = self {
             Some(&mut **value)
         } else {
             None
@@ -316,7 +238,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        if let ValueInner::TupleStructValue(value) = self {
+        if let Value::TupleStructValue(value) = self {
             Some(value)
         } else {
             None
@@ -324,7 +246,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        if let ValueInner::TupleStructValue(value) = self {
+        if let Value::TupleStructValue(value) = self {
             Some(value)
         } else {
             None
@@ -332,7 +254,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_enum(&self) -> Option<&dyn Enum> {
-        if let ValueInner::EnumValue(value) = self {
+        if let Value::EnumValue(value) = self {
             Some(&**value)
         } else {
             None
@@ -340,7 +262,7 @@ impl Reflect for ValueInner {
     }
 
     fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        if let ValueInner::EnumValue(value) = self {
+        if let Value::EnumValue(value) = self {
             Some(&mut **value)
         } else {
             None
@@ -363,7 +285,7 @@ macro_rules! from_impls {
         $(
             impl From<$ident> for Value {
                 fn from(value: $ident) -> Self {
-                    Self(ValueInner::$ident(value))
+                    Value::$ident(value)
                 }
             }
         )*
@@ -372,13 +294,13 @@ macro_rules! from_impls {
 
 impl From<StructValue> for Value {
     fn from(value: StructValue) -> Self {
-        Self(ValueInner::StructValue(Box::new(value)))
+        Value::StructValue(Box::new(value))
     }
 }
 
 impl From<EnumValue> for Value {
     fn from(value: EnumValue) -> Self {
-        Self(ValueInner::EnumValue(Box::new(value)))
+        Value::EnumValue(Box::new(value))
     }
 }
 

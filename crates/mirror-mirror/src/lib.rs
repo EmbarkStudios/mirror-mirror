@@ -12,7 +12,6 @@ use std::{
 // - hash map/set
 // - btree map/set
 // - impl FromIterator for StructValue
-// - Should ValueInner be public and be Value, so you can match on it?
 // - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
 
 pub mod enum_;
@@ -229,11 +228,11 @@ macro_rules! impl_for_core_types {
                 }
 
                 fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                        if f.alternate() {
-                            write!(f, "{:#?}", self)
-                        } else {
-                            write!(f, "{:?}", self)
-                        }
+                    if f.alternate() {
+                        write!(f, "{:#?}", self)
+                    } else {
+                        write!(f, "{:?}", self)
+                    }
                 }
             }
 
