@@ -59,11 +59,6 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
                     data.to_value()
                 }
             }
-
-            fn trait_bounds()
-            where
-                #ident: std::clone::Clone,
-            {}
         };
     })
 }
@@ -71,6 +66,7 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
 #[derive(Debug, Default, Clone, Copy)]
 struct ItemAttrs {
     debug_opt_out: bool,
+    clone_opt_out: bool,
     #[allow(dead_code)]
     hash_opt_out: bool,
     #[allow(dead_code)]
@@ -98,6 +94,7 @@ impl ItemAttrs {
                 input.parse::<Token![!]>()?;
 
                 let mut debug_opt_out = false;
+                let mut clone_opt_out = false;
                 let mut hash_opt_out = false;
                 let mut partial_eq_opt_out = false;
 
@@ -105,6 +102,9 @@ impl ItemAttrs {
                 if lh.peek(kw::Debug) {
                     input.parse::<kw::Debug>()?;
                     debug_opt_out = true;
+                } else if lh.peek(kw::Clone) {
+                    input.parse::<kw::Clone>()?;
+                    clone_opt_out = true;
                 } else if lh.peek(kw::Hash) {
                     input.parse::<kw::Hash>()?;
                     hash_opt_out = true;
@@ -115,18 +115,31 @@ impl ItemAttrs {
                     return Err(lh.error());
                 }
 
-                Ok((debug_opt_out, hash_opt_out, partial_eq_opt_out))
+                Ok((
+                    debug_opt_out,
+                    clone_opt_out,
+                    hash_opt_out,
+                    partial_eq_opt_out,
+                ))
             })
         })?;
 
-        let (debug_opt_out, hash_opt_out, partial_eq_opt_out) = punctuated
-            .iter()
-            .fold((false, false, false), |acc, &(debug, hash, partial_eq)| {
-                (acc.0 || debug, acc.1 || hash, acc.2 || partial_eq)
-            });
+        let (debug_opt_out, clone_opt_out, hash_opt_out, partial_eq_opt_out) =
+            punctuated.iter().fold(
+                (false, false, false, false),
+                |acc, &(debug, clone, hash, partial_eq)| {
+                    (
+                        acc.0 || debug,
+                        acc.1 || clone,
+                        acc.2 || hash,
+                        acc.3 || partial_eq,
+                    )
+                },
+            );
 
         Ok(ItemAttrs {
             debug_opt_out,
+            clone_opt_out,
             hash_opt_out,
             partial_eq_opt_out,
         })
@@ -151,10 +164,28 @@ impl ItemAttrs {
             }
         }
     }
+
+    fn fn_clone_reflect_tokens(&self) -> TokenStream {
+        if self.clone_opt_out {
+            quote! {
+                fn clone_reflect(&self) -> Box<dyn Reflect> {
+                    let value = self.to_value();
+                    Box::new(Self::from_reflect(&value).unwrap())
+                }
+            }
+        } else {
+            quote! {
+                fn clone_reflect(&self) -> Box<dyn Reflect> {
+                    Box::new(self.clone())
+                }
+            }
+        }
+    }
 }
 
 mod kw {
     syn::custom_keyword!(Debug);
+    syn::custom_keyword!(Clone);
     syn::custom_keyword!(Hash);
     syn::custom_keyword!(PartialEq);
 }

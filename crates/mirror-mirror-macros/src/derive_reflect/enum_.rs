@@ -151,6 +151,7 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
     };
 
     let fn_debug = attrs.fn_debug_tokens();
+    let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
     quote! {
         impl Reflect for #ident {
@@ -172,10 +173,7 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
 
             #fn_patch
             #fn_to_value
-
-            fn clone_reflect(&self) -> Box<dyn Reflect> {
-                Box::new(self.clone())
-            }
+            #fn_clone_reflect
 
             fn as_tuple(&self) -> Option<&dyn Tuple> {
                 None

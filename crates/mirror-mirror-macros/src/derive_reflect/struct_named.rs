@@ -64,6 +64,7 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
     };
 
     let fn_debug = attrs.fn_debug_tokens();
+    let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
     quote! {
         impl Reflect for #ident {
@@ -87,9 +88,7 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
 
             #fn_to_value
 
-            fn clone_reflect(&self) -> Box<dyn Reflect> {
-                Box::new(self.clone())
-            }
+            #fn_clone_reflect
 
             fn as_tuple(&self) -> Option<&dyn Tuple> {
                 None
