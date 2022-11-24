@@ -23,7 +23,13 @@ where
     T: ToTokens,
 {
     match result {
-        Ok(tokens) => quote! { #tokens }.into(),
+        Ok(tokens) => {
+            let tokens = quote! { #tokens }.into();
+            if std::env::var_os("MIRROR_MIRROR_DEBUG").is_some() {
+                eprintln!("{tokens}");
+            }
+            tokens
+        }
         Err(err) => err.into_compile_error().into(),
     }
 }

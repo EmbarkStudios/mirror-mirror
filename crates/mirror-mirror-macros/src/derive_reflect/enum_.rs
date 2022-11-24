@@ -1,7 +1,7 @@
 use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{spanned::Spanned, DataEnum, Ident, Index, Variant};
+use syn::{DataEnum, Ident, Variant};
 
 use super::ItemAttrs;
 
@@ -25,7 +25,10 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
             match &variant.fields {
                 syn::Fields::Named(_) => {
                     let set_fields = variant.fields.iter().map(|field| {
-                        let ident = field.ident.as_ref().expect("named variant with unnamed field");
+                        let ident = field
+                            .ident
+                            .as_ref()
+                            .expect("named variant with unnamed field");
                         let ident_string = stringify(ident);
                         quote! {
                             if let Some(new_value) = enum_.field(#ident_string) {
@@ -61,7 +64,13 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
                         }
                     }
                 }
-                syn::Fields::Unit => todo!("one: {}", line!()),
+                syn::Fields::Unit => {
+                    quote! {
+                        Self::#ident => {
+                            // unit variants don't have any fields to patch
+                        }
+                    }
+                }
             }
         });
 
@@ -91,7 +100,10 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
             match &variant.fields {
                 syn::Fields::Named(_) => {
                     let set_fields = variant.fields.iter().map(|field| {
-                        let ident = field.ident.as_ref().expect("named variant with unnamed field");
+                        let ident = field
+                            .ident
+                            .as_ref()
+                            .expect("named variant with unnamed field");
                         let ident_string = stringify(ident);
                         quote! {
                             value.set_field(#ident_string, #ident.to_owned());
@@ -119,7 +131,13 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
                         }
                     }
                 }
-                syn::Fields::Unit => todo!("two: {}", line!()),
+                syn::Fields::Unit => {
+                    quote! {
+                        Self::#ident => {
+                            EnumValue::new_unit_variant(#ident_string).into()
+                        }
+                    }
+                }
             }
         });
 
@@ -230,7 +248,11 @@ fn expand_from_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                     Some(Self::#ident(#(#set_fields)*)),
                 }
             }
-            syn::Fields::Unit => todo!("three: {}", line!()),
+            syn::Fields::Unit => {
+                quote! {
+                    Some(Self::#ident),
+                }
+            }
         };
 
         quote! {
@@ -277,7 +299,7 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
             let kind = match &variant.fields {
                 syn::Fields::Named(_) => quote! { VariantKind::Struct },
                 syn::Fields::Unnamed(_) => quote! { VariantKind::Tuple },
-                syn::Fields::Unit => quote! { todo!("five: {}", line!()) },
+                syn::Fields::Unit => quote! { VariantKind::Unit },
             };
 
             quote! {
@@ -320,14 +342,13 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                     Self::#ident(..) => return None,
                 },
                 syn::Fields::Unit => quote! {
-                    quote! {
-                        Self::#ident => return None,
-                    }
+                    Self::#ident => return None,
                 },
             }
         });
 
         quote! {
+            #[allow(unused_variables, unreachable_code)]
             fn field(&self, name: &str) -> Option<&dyn Reflect> {
                 match self {
                     #(#match_arms)*
@@ -366,14 +387,13 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                     Self::#ident(..) => return None,
                 },
                 syn::Fields::Unit => quote! {
-                    quote! {
-                        Self::#ident => return None,
-                    }
+                    Self::#ident => return None,
                 },
             }
         });
 
         quote! {
+            #[allow(unused_variables, unreachable_code)]
             fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
                 match self {
                     #(#match_arms)*
@@ -414,14 +434,13 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                     }
                 }
                 syn::Fields::Unit => quote! {
-                    quote! {
-                        Self::#ident => return None,
-                    }
+                    Self::#ident => return None,
                 },
             }
         });
 
         quote! {
+            #[allow(unused_variables, unreachable_code)]
             fn element(&self, index: usize) -> Option<&dyn Reflect> {
                 match self {
                     #(#match_arms)*
@@ -461,14 +480,13 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                     }
                 }
                 syn::Fields::Unit => quote! {
-                    quote! {
-                        Self::#ident => return None,
-                    }
+                    Self::#ident => return None,
                 },
             }
         });
 
         quote! {
+            #[allow(unused_variables, unreachable_code)]
             fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 match self {
                     #(#match_arms)*
@@ -511,7 +529,7 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
                 }
                 syn::Fields::Unit => quote! {
                     Self::#ident => {
-                        VariantFieldIterMut::empty()
+                        VariantFieldIter::empty()
                     },
                 },
             }

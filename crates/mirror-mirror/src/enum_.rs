@@ -24,6 +24,7 @@ pub trait Enum: Reflect {
 pub enum VariantKind {
     Struct,
     Tuple,
+    Unit,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Writable, Readable)]
@@ -36,6 +37,7 @@ pub struct EnumValue {
 enum EnumValueKind {
     Struct(StructValue),
     Tuple(TupleValue),
+    Unit,
 }
 
 impl EnumValue {
@@ -50,6 +52,13 @@ impl EnumValue {
         Self {
             name: name.into(),
             kind: EnumValueKind::Tuple(Default::default()),
+        }
+    }
+
+    pub fn new_unit_variant(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            kind: EnumValueKind::Unit,
         }
     }
 
@@ -72,6 +81,7 @@ impl EnumValue {
                 struct_.set_field(name, value);
             }
             EnumValueKind::Tuple(_) => panic!("Cannot set fields on tuple variants"),
+            EnumValueKind::Unit => panic!("Cannot set fields on unit variants"),
         }
     }
 
@@ -84,6 +94,7 @@ impl EnumValue {
             EnumValueKind::Tuple(tuple) => {
                 tuple.push_element(value);
             }
+            EnumValueKind::Unit => panic!("Cannot set fields on unit variants"),
         }
     }
 }
@@ -186,6 +197,7 @@ impl Enum for EnumValue {
         match &self.kind {
             EnumValueKind::Struct(_) => VariantKind::Struct,
             EnumValueKind::Tuple(_) => VariantKind::Tuple,
+            EnumValueKind::Unit => VariantKind::Unit,
         }
     }
 
@@ -193,6 +205,7 @@ impl Enum for EnumValue {
         match &self.kind {
             EnumValueKind::Struct(struct_) => struct_.field(name),
             EnumValueKind::Tuple(_) => None,
+            EnumValueKind::Unit => None,
         }
     }
 
@@ -200,6 +213,7 @@ impl Enum for EnumValue {
         match &mut self.kind {
             EnumValueKind::Struct(struct_) => struct_.field_mut(name),
             EnumValueKind::Tuple(_) => None,
+            EnumValueKind::Unit => None,
         }
     }
 
@@ -207,6 +221,7 @@ impl Enum for EnumValue {
         match &self.kind {
             EnumValueKind::Struct(_) => None,
             EnumValueKind::Tuple(tuple) => tuple.element(index),
+            EnumValueKind::Unit => None,
         }
     }
 
@@ -214,6 +229,7 @@ impl Enum for EnumValue {
         match &mut self.kind {
             EnumValueKind::Struct(_) => None,
             EnumValueKind::Tuple(tuple) => tuple.element_mut(index),
+            EnumValueKind::Unit => None,
         }
     }
 
@@ -225,6 +241,7 @@ impl Enum for EnumValue {
             EnumValueKind::Tuple(inner) => {
                 VariantFieldIter(VariantFieldIterInner::Tuple(inner.elements()))
             }
+            EnumValueKind::Unit => VariantFieldIter::empty(),
         }
     }
 
@@ -236,6 +253,7 @@ impl Enum for EnumValue {
             EnumValueKind::Tuple(inner) => {
                 VariantFieldIterMut(VariantFieldIterInnerMut::Tuple(inner.elements_mut()))
             }
+            EnumValueKind::Unit => VariantFieldIterMut::empty(),
         }
     }
 }
@@ -273,6 +291,7 @@ impl FromReflect for EnumValue {
                         });
                 EnumValueKind::Tuple(tuple)
             }
+            VariantKind::Unit => EnumValueKind::Unit,
         };
 
         Some(EnumValue {

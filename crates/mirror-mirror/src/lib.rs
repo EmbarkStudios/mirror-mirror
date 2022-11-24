@@ -19,6 +19,8 @@ use std::{
 // - modifying
 // - Box<T> where T: Reflect
 // - impl FromIterator for StructValue
+// - Should ValueInner be public and be Value, so you can match on it?
+// - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
 
 pub mod enum_;
 pub mod struct_;

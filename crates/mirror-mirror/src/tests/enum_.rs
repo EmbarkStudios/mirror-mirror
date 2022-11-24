@@ -206,9 +206,47 @@ fn static_tuple_enum() {
         .with_element(true)
         .with_element("foo");
     foo.patch(&Foo::A(42, true));
-    dbg!(&foo);
     assert_eq!(foo.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(foo.get_field::<bool>(1).unwrap(), &true);
     assert_eq!(foo.get_field::<String>(2).unwrap(), &"foo");
     assert!(foo.element(3).is_none());
+}
+
+#[test]
+fn unit_variant() {
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    enum Foo {
+        A,
+        B,
+    }
+
+    // static.patch(static)
+    let mut foo = Foo::A;
+    foo.patch(&Foo::B);
+    assert!(matches!(dbg!(foo), Foo::B));
+
+    // static.patch(value)
+    let mut foo = Foo::A;
+    foo.patch(&EnumValue::new_unit_variant("B"));
+    assert!(matches!(dbg!(foo), Foo::B));
+
+    // value.patch(static)
+    let mut foo = EnumValue::new_unit_variant("A");
+    foo.patch(&Foo::B);
+    assert_eq!(foo.variant_name(), "B");
+
+    // value.patch(value)
+    let mut foo = EnumValue::new_unit_variant("A");
+    foo.patch(&EnumValue::new_unit_variant("B"));
+    assert_eq!(foo.variant_name(), "B");
+
+    let mut foo = Foo::A;
+
+    foo.patch(&EnumValue::new_unit_variant("Unknown"));
+    assert!(matches!(dbg!(&foo), Foo::A));
+
+    let value = foo.to_value();
+    let value = value.as_enum().unwrap();
+    assert_eq!(value.variant_kind(), VariantKind::Unit);
+    assert_eq!(value.variant_name(), "A");
 }
