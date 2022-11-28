@@ -12,7 +12,6 @@ use std::fmt;
 // - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
 // - patch struct value with real struct, for enum as well
 //   - are the downcasts in ValueData right?
-// - make speedy optional
 
 pub mod iter;
 
@@ -32,7 +31,6 @@ pub use self::enum_::Enum;
 pub use self::enum_::EnumValue;
 #[doc(inline)]
 pub use self::get_field::*;
-#[doc(inline)]
 #[doc(inline)]
 pub use self::list::List;
 #[doc(inline)]

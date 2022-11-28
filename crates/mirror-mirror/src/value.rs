@@ -376,9 +376,16 @@ impl From<EnumValue> for Value {
     }
 }
 
-impl From<Vec<Value>> for Value {
-    fn from(value: Vec<Value>) -> Self {
-        Value::new(ValueData::List(value))
+impl<T> From<Vec<T>> for Value
+where
+    T: Reflect,
+{
+    fn from(value: Vec<T>) -> Self {
+        let list = value
+            .into_iter()
+            .map(|value| value.to_value())
+            .collect::<Vec<_>>();
+        Self::new(ValueData::List(list))
     }
 }
 
