@@ -1,4 +1,4 @@
-use crate::{FromReflect, Reflect, Value, ValueIter, ValueIterMut};
+use crate::{FromReflect, Reflect, Value, ValueIter, ValueIterMut, ValueData};
 
 pub trait List: Reflect {
     fn get(&self, index: usize) -> Option<&dyn Reflect>;
@@ -121,10 +121,10 @@ where
     }
 
     fn to_value(&self) -> Value {
-        self.iter()
+        let data = self.iter()
             .map(Reflect::to_value)
-            .collect::<Vec<_>>()
-            .into()
+            .collect::<Vec<_>>();
+        Value::new(ValueData::List(data))
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -133,12 +133,7 @@ where
     }
 
     fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[")?;
-        for value in self {
-            value.debug(f)?;
-        }
-        write!(f, "]")?;
-        Ok(())
+        f.debug_list().entries(self.iter()).finish()
     }
 }
 
@@ -171,10 +166,24 @@ mod tests {
         assert_eq!(list.get(2).unwrap().downcast_ref::<i32>().unwrap(), &3);
         assert!(list.get(3).is_none());
 
+        let value = list.to_value();
+        let value = value.as_list().unwrap();
+        assert_eq!(value.get(0).unwrap().downcast_ref::<i32>().unwrap(), &1);
+        assert_eq!(value.get(1).unwrap().downcast_ref::<i32>().unwrap(), &2);
+        assert_eq!(value.get(2).unwrap().downcast_ref::<i32>().unwrap(), &3);
+        assert!(value.get(3).is_none());
+
         let mut list = Vec::<i32>::from_reflect(list.as_reflect()).unwrap();
         assert_eq!(list, Vec::from([1, 2, 3]));
 
         list.patch(&Vec::from([42]));
         assert_eq!(list, Vec::from([42, 2, 3]));
+    }
+
+    #[test]
+    fn debug() {
+        let list = Vec::from([1, 2, 3]);
+        assert_eq!(format!("{:?}", list.as_reflect()), format!("{:?}", list));
+        assert_eq!(format!("{:#?}", list.as_reflect()), format!("{:#?}", list));
     }
 }

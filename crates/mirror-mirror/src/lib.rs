@@ -11,6 +11,8 @@ use std::{
 // - hash map/set
 // - btree map/set
 // - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
+// - patch struct value with real struct, for enum as well
+//   - are the downcasts in ValueData right?
 
 pub mod enum_;
 pub mod list;
@@ -203,7 +205,7 @@ macro_rules! impl_for_core_types {
                 }
 
                 fn to_value(&self) -> Value {
-                    Value::from(self.to_owned())
+                    Value::new(ValueData::from(self.to_owned()))
                 }
 
                 fn as_tuple(&self) -> Option<&dyn Tuple> {
