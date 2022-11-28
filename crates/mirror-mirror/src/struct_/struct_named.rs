@@ -1,6 +1,6 @@
+use crate::iter::PairIter;
+use crate::iter::PairIterMut;
 use crate::FromReflect;
-use crate::PairIter;
-use crate::PairIterMut;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;

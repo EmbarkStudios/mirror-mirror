@@ -14,13 +14,13 @@ use std::fmt;
 //   - are the downcasts in ValueData right?
 // - make speedy optional
 
-pub mod enum_;
-pub mod list;
-pub mod struct_;
-pub mod tuple;
+pub mod iter;
 
+mod enum_;
 mod get_field;
-mod iter;
+mod list;
+mod struct_;
+mod tuple;
 mod value;
 
 #[cfg(test)]
@@ -33,7 +33,6 @@ pub use self::enum_::EnumValue;
 #[doc(inline)]
 pub use self::get_field::*;
 #[doc(inline)]
-pub use self::iter::*;
 #[doc(inline)]
 pub use self::list::List;
 #[doc(inline)]
@@ -497,6 +496,7 @@ pub mod __private {
     pub use crate::enum_::VariantFieldIter;
     pub use crate::enum_::VariantFieldIterMut;
     pub use crate::enum_::VariantKind;
+    pub use crate::iter::*;
     pub use crate::FromReflect;
     pub use crate::Reflect;
     pub use crate::ReflectMut;

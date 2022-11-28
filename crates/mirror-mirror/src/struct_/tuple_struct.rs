@@ -1,3 +1,5 @@
+use crate::iter::ValueIter;
+use crate::iter::ValueIterMut;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -5,8 +7,6 @@ use crate::ReflectRef;
 use crate::Tuple;
 use crate::TupleValue;
 use crate::Value;
-use crate::ValueIter;
-use crate::ValueIterMut;
 use serde::Deserialize;
 use serde::Serialize;
 use speedy::Readable;

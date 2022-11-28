@@ -78,7 +78,6 @@ impl FromReflect for Value {
     }
 }
 
-#[non_exhaustive]
 #[allow(non_camel_case_types)]
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
 pub enum ValueData {
