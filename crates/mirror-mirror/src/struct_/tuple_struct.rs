@@ -1,10 +1,10 @@
-use std::any::Any;
+use std::{any::Any, fmt};
 
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use crate::{
-    Enum, FromReflect, List, Reflect, Struct, Tuple, TupleValue, Value, ValueIter, ValueIterMut,
+    FromReflect, Reflect, ReflectMut, ReflectRef, Tuple, TupleValue, Value, ValueIter, ValueIterMut,
 };
 
 pub trait TupleStruct: Reflect {
@@ -13,6 +13,12 @@ pub trait TupleStruct: Reflect {
 
     fn elements(&self) -> ValueIter<'_>;
     fn elements_mut(&mut self) -> ValueIterMut<'_>;
+}
+
+impl fmt::Debug for dyn TupleStruct {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_reflect().debug(f)
+    }
 }
 
 #[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
@@ -53,48 +59,8 @@ impl Reflect for TupleStructValue {
         self
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        None
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        None
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        None
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        None
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        Some(self)
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        Some(self)
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        None
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        None
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        None
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        None
-    }
-
     fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(tuple) = value.as_tuple_struct() {
+        if let Some(tuple) = value.reflect_ref().as_tuple_struct() {
             for (index, value) in self.elements_mut().enumerate() {
                 if let Some(new_value) = tuple.element(index) {
                     value.patch(new_value);
@@ -118,6 +84,14 @@ impl Reflect for TupleStructValue {
             write!(f, "{:?}", self)
         }
     }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        ReflectRef::TupleStruct(self)
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        ReflectMut::TupleStruct(self)
+    }
 }
 
 impl TupleStruct for TupleStructValue {
@@ -140,7 +114,7 @@ impl TupleStruct for TupleStructValue {
 
 impl FromReflect for TupleStructValue {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let tuple_struct = reflect.as_tuple_struct()?;
+        let tuple_struct = reflect.reflect_ref().as_tuple_struct()?;
         let this = tuple_struct
             .elements()
             .fold(TupleStructValue::default(), |builder, value| {

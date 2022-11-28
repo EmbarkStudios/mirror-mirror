@@ -1,4 +1,4 @@
-use crate::{Enum, Reflect, Struct, Tuple, TupleStruct, List};
+use crate::{Enum, List, Reflect, ReflectMut, ReflectRef, Struct, Tuple, TupleStruct};
 
 use self::private::*;
 
@@ -48,18 +48,13 @@ where
     where
         T: Reflect,
     {
-        if let Some(struct_) = self.as_struct() {
-            struct_.get_field(name)
-        } else if let Some(tuple_struct) = self.as_tuple_struct() {
-            tuple_struct.get_field(name)
-        } else if let Some(enum_) = self.as_enum() {
-            enum_.get_field(name)
-        } else if let Some(tuple) = self.as_tuple() {
-            tuple.get_field(name)
-        } else if let Some(list) = self.as_list() {
-            list.get_field(name)
-        } else {
-            None
+        match self.reflect_ref() {
+            ReflectRef::Struct(inner) => inner.get_field(name),
+            ReflectRef::TupleStruct(inner) => inner.get_field(name),
+            ReflectRef::Tuple(inner) => inner.get_field(name),
+            ReflectRef::Enum(inner) => inner.get_field(name),
+            ReflectRef::List(inner) => inner.get_field(name),
+            ReflectRef::Scalar(_) => None,
         }
     }
 
@@ -67,18 +62,13 @@ where
     where
         T: Reflect,
     {
-        if self.as_struct_mut().is_some() {
-            self.as_struct_mut().unwrap().get_field_mut(name)
-        } else if self.as_tuple_struct_mut().is_some() {
-            self.as_tuple_struct_mut().unwrap().get_field_mut(name)
-        } else if self.as_enum_mut().is_some() {
-            self.as_enum_mut().unwrap().get_field_mut(name)
-        } else if self.as_tuple_mut().is_some() {
-            self.as_tuple_mut().unwrap().get_field_mut(name)
-        } else if self.as_list_mut().is_some() {
-            self.as_list_mut().unwrap().get_field_mut(name)
-        } else {
-            None
+        match self.reflect_mut() {
+            ReflectMut::Struct(inner) => inner.get_field_mut(name),
+            ReflectMut::TupleStruct(inner) => inner.get_field_mut(name),
+            ReflectMut::Tuple(inner) => inner.get_field_mut(name),
+            ReflectMut::Enum(inner) => inner.get_field_mut(name),
+            ReflectMut::List(inner) => inner.get_field_mut(name),
+            ReflectMut::Scalar(_) => None,
         }
     }
 }

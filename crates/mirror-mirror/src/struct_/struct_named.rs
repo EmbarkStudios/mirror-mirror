@@ -1,6 +1,6 @@
 use std::{any::Any, collections::HashMap, fmt};
 
-use crate::{Enum, FromReflect, List, PairIter, PairIterMut, Reflect, Tuple, TupleStruct, Value};
+use crate::{FromReflect, PairIter, PairIterMut, Reflect, ReflectMut, ReflectRef, Value};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
@@ -10,6 +10,12 @@ pub trait Struct: Reflect {
 
     fn fields(&self) -> PairIter<'_>;
     fn fields_mut(&mut self) -> PairIterMut<'_>;
+}
+
+impl fmt::Debug for dyn Struct {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_reflect().debug(f)
+    }
 }
 
 #[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
@@ -49,48 +55,8 @@ impl Reflect for StructValue {
         self
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        None
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        None
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        None
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        None
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        Some(self)
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        Some(self)
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        None
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        None
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        None
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        None
-    }
-
     fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(struct_) = value.as_struct() {
+        if let Some(struct_) = value.reflect_ref().as_struct() {
             for (name, value) in self.fields_mut() {
                 if let Some(new_value) = struct_.field(name) {
                     value.patch(new_value);
@@ -113,6 +79,14 @@ impl Reflect for StructValue {
         } else {
             write!(f, "{:?}", self)
         }
+    }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        ReflectRef::Struct(self)
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        ReflectMut::Struct(self)
     }
 }
 
@@ -144,7 +118,7 @@ impl Struct for StructValue {
 
 impl FromReflect for StructValue {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let struct_ = reflect.as_struct()?;
+        let struct_ = reflect.reflect_ref().as_struct()?;
         let this = struct_
             .fields()
             .fold(StructValue::default(), |builder, (name, value)| {

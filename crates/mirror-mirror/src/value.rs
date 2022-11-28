@@ -3,8 +3,8 @@ use speedy::{Readable, Writable};
 use std::{any::Any, fmt};
 
 use crate::{
-    tuple::TupleValue, Enum, EnumValue, FromReflect, List, Reflect, Struct, StructValue, Tuple,
-    TupleStruct, TupleStructValue,
+    tuple::TupleValue, EnumValue, FromReflect, Reflect, ReflectMut, ReflectRef, ScalarMut,
+    ScalarRef, StructValue, TupleStructValue,
 };
 
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
@@ -35,46 +35,6 @@ impl Reflect for Value {
         self.data.as_reflect_mut()
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        self.data.as_tuple()
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        self.data.as_tuple_mut()
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        self.data.as_struct()
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        self.data.as_struct_mut()
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        self.data.as_tuple_struct()
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        self.data.as_tuple_struct_mut()
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        self.data.as_enum()
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        self.data.as_enum_mut()
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        self.data.as_list()
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        self.data.as_list_mut()
-    }
-
     fn patch(&mut self, value: &dyn Reflect) {
         self.data.patch(value);
     }
@@ -93,6 +53,14 @@ impl Reflect for Value {
         } else {
             write!(f, "{:?}", self)
         }
+    }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        self.data.reflect_ref()
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        self.data.reflect_mut()
     }
 }
 
@@ -308,91 +276,63 @@ impl Reflect for ValueData {
         Box::new(self.clone())
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        if let ValueData::TupleValue(value) = self {
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        if let ValueData::TupleValue(value) = self {
-            Some(&mut *value)
-        } else {
-            None
-        }
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        if let ValueData::StructValue(value) = self {
-            Some(&**value)
-        } else {
-            None
-        }
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        if let ValueData::StructValue(value) = self {
-            Some(&mut **value)
-        } else {
-            None
-        }
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        if let ValueData::TupleStructValue(value) = self {
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        if let ValueData::TupleStructValue(value) = self {
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        if let ValueData::EnumValue(value) = self {
-            Some(&**value)
-        } else {
-            None
-        }
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        if let ValueData::EnumValue(value) = self {
-            Some(&mut **value)
-        } else {
-            None
-        }
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        if let ValueData::List(value) = self {
-            Some(value)
-        } else {
-            None
-        }
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        if let ValueData::List(value) = self {
-            Some(&mut *value)
-        } else {
-            None
-        }
-    }
-
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             write!(f, "{:#?}", self)
         } else {
             write!(f, "{:?}", self)
+        }
+    }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        match self {
+            ValueData::usize(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::bool(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::char(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::f32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::f64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::String(inner) => ReflectRef::Scalar(ScalarRef::from(inner)),
+            ValueData::StructValue(inner) => ReflectRef::Struct(&**inner),
+            ValueData::EnumValue(inner) => ReflectRef::Enum(&**inner),
+            ValueData::TupleStructValue(inner) => ReflectRef::TupleStruct(inner),
+            ValueData::TupleValue(inner) => ReflectRef::Tuple(inner),
+            ValueData::List(inner) => ReflectRef::List(inner),
+        }
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        match self {
+            ValueData::usize(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::bool(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::char(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::f32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::f64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::String(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::StructValue(inner) => ReflectMut::Struct(&mut **inner),
+            ValueData::EnumValue(inner) => ReflectMut::Enum(&mut **inner),
+            ValueData::TupleStructValue(inner) => ReflectMut::TupleStruct(inner),
+            ValueData::TupleValue(inner) => ReflectMut::Tuple(inner),
+            ValueData::List(inner) => ReflectMut::List(inner),
         }
     }
 }

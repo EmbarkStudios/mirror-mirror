@@ -78,7 +78,7 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
             fn patch(&mut self, value: &dyn Reflect) {
                 if let Some(new) = value.downcast_ref::<Self>() {
                     *self = new.clone();
-                } else if let Some(enum_) = value.as_enum() {
+                } else if let Some(enum_) = value.reflect_ref().as_enum() {
                     if let Some(new) = Self::from_reflect(value) {
                         *self = new;
                     } else {
@@ -174,48 +174,15 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
             #fn_patch
             #fn_to_value
             #fn_clone_reflect
-
-            fn as_tuple(&self) -> Option<&dyn Tuple> {
-                None
-            }
-
-            fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-                None
-            }
-
-            fn as_struct(&self) -> Option<&dyn Struct> {
-                None
-            }
-
-            fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-                None
-            }
-
-            fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-                None
-            }
-
-            fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-                None
-            }
-
-            fn as_enum(&self) -> Option<&dyn Enum> {
-                Some(self)
-            }
-
-            fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-                Some(self)
-            }
-
-            fn as_list(&self) -> Option<&dyn List> {
-                None
-            }
-
-            fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-                None
-            }
-
             #fn_debug
+
+            fn reflect_ref(&self) -> ReflectRef<'_> {
+                ReflectRef::Enum(self)
+            }
+
+            fn reflect_mut(&mut self) -> ReflectMut<'_> {
+                ReflectMut::Enum(self)
+            }
         }
     }
 }
@@ -269,7 +236,7 @@ fn expand_from_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     quote! {
         impl FromReflect for #ident {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-                let enum_ = reflect.as_enum()?;
+                let enum_ = reflect.reflect_ref().as_enum()?;
                 match enum_.variant_name() {
                     #(#match_arms)*
                     _ => None,

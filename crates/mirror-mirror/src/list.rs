@@ -1,17 +1,24 @@
-use crate::{FromReflect, Reflect, Value, ValueIter, ValueIterMut, ValueData};
+use std::fmt;
+
+use crate::{
+    FromReflect, Reflect, ReflectMut, ReflectRef, Value, ValueData, ValueIter, ValueIterMut,
+};
 
 pub trait List: Reflect {
     fn get(&self, index: usize) -> Option<&dyn Reflect>;
-
     fn get_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn len(&self) -> usize;
-
     fn is_empty(&self) -> bool;
 
     fn iter(&self) -> ValueIter<'_>;
-
     fn iter_mut(&mut self) -> ValueIterMut<'_>;
+}
+
+impl fmt::Debug for dyn List {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_reflect().debug(f)
+    }
 }
 
 impl<T> List for Vec<T>
@@ -70,48 +77,8 @@ where
         self
     }
 
-    fn as_tuple(&self) -> Option<&dyn crate::Tuple> {
-        None
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn crate::Tuple> {
-        None
-    }
-
-    fn as_struct(&self) -> Option<&dyn crate::Struct> {
-        None
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn crate::Struct> {
-        None
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn crate::TupleStruct> {
-        None
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn crate::TupleStruct> {
-        None
-    }
-
-    fn as_enum(&self) -> Option<&dyn crate::Enum> {
-        None
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn crate::Enum> {
-        None
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        Some(self)
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        Some(self)
-    }
-
     fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(list) = value.as_list() {
+        if let Some(list) = value.reflect_ref().as_list() {
             for (idx, new_value) in list.iter().enumerate() {
                 if let Some(value) = self.get_mut(idx) {
                     value.patch(new_value);
@@ -121,9 +88,7 @@ where
     }
 
     fn to_value(&self) -> Value {
-        let data = self.iter()
-            .map(Reflect::to_value)
-            .collect::<Vec<_>>();
+        let data = self.iter().map(Reflect::to_value).collect::<Vec<_>>();
         Value::new(ValueData::List(data))
     }
 
@@ -135,6 +100,14 @@ where
     fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        ReflectRef::List(self)
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        ReflectMut::List(self)
+    }
 }
 
 impl<T> FromReflect for Vec<T>
@@ -142,7 +115,7 @@ where
     T: FromReflect,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let list = reflect.as_list()?;
+        let list = reflect.reflect_ref().as_list()?;
         let mut out = Vec::new();
         for value in list.iter() {
             out.push(T::from_reflect(value)?);
@@ -159,7 +132,7 @@ mod tests {
     #[test]
     fn indexing() {
         let list = Vec::from([1, 2, 3]);
-        let list = list.as_list().unwrap();
+        let list = list.reflect_ref().as_list().unwrap();
 
         assert_eq!(list.get(0).unwrap().downcast_ref::<i32>().unwrap(), &1);
         assert_eq!(list.get(1).unwrap().downcast_ref::<i32>().unwrap(), &2);
@@ -167,7 +140,7 @@ mod tests {
         assert!(list.get(3).is_none());
 
         let value = list.to_value();
-        let value = value.as_list().unwrap();
+        let value = value.reflect_ref().as_list().unwrap();
         assert_eq!(value.get(0).unwrap().downcast_ref::<i32>().unwrap(), &1);
         assert_eq!(value.get(1).unwrap().downcast_ref::<i32>().unwrap(), &2);
         assert_eq!(value.get(2).unwrap().downcast_ref::<i32>().unwrap(), &3);

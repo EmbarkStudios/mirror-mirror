@@ -25,7 +25,7 @@ fn enum_value() {
     assert_eq!(value.get_field::<i32>("foo").unwrap(), &42);
     assert_eq!(value.get_field::<bool>("bar").unwrap(), &true);
     let mut has_fields = false;
-    for field in value.as_enum().unwrap().fields() {
+    for field in value.reflect_ref().as_enum().unwrap().fields() {
         has_fields = true;
         match field {
             mirror_mirror::enum_::VariantField::Struct(key, value) => {
@@ -77,7 +77,7 @@ fn static_enum() {
     assert_eq!(value.get_field::<i32>("foo").unwrap(), &42);
     assert_eq!(value.get_field::<bool>("bar").unwrap(), &true);
     let mut has_fields = false;
-    for field in value.as_enum().unwrap().fields() {
+    for field in value.reflect_ref().as_enum().unwrap().fields() {
         has_fields = true;
         match field {
             mirror_mirror::enum_::VariantField::Struct(key, value) => {
@@ -246,7 +246,7 @@ fn unit_variant() {
     assert!(matches!(dbg!(&foo), Foo::A));
 
     let value = foo.to_value();
-    let value = value.as_enum().unwrap();
+    let value = value.reflect_ref().as_enum().unwrap();
     assert_eq!(value.variant_kind(), VariantKind::Unit);
     assert_eq!(value.variant_name(), "A");
 }
@@ -262,25 +262,31 @@ fn option() {
     assert_eq!(format!("{:?}", None::<i32>.as_reflect()), "None");
 
     let some_value = Some(1).to_value();
-    let some_value = some_value.as_enum().unwrap();
+    let some_value = some_value.reflect_ref().as_enum().unwrap();
     assert_eq!(some_value.variant_name(), "Some");
     assert_eq!(some_value.variant_kind(), VariantKind::Tuple);
     assert_eq!(some_value.get_field::<i32>(0).unwrap(), &1);
     assert!(some_value.element(1).is_none());
 
     let none_value = None::<i32>.to_value();
-    let none_value = none_value.as_enum().unwrap();
+    let none_value = none_value.reflect_ref().as_enum().unwrap();
     assert_eq!(none_value.variant_name(), "None");
     assert_eq!(none_value.variant_kind(), VariantKind::Unit);
     assert!(none_value.element(0).is_none());
 
     assert_eq!(
-        Some(1).clone_reflect().as_enum().unwrap().variant_name(),
+        Some(1)
+            .clone_reflect()
+            .reflect_ref()
+            .as_enum()
+            .unwrap()
+            .variant_name(),
         "Some"
     );
     assert_eq!(
         None::<i32>
             .clone_reflect()
+            .reflect_ref()
             .as_enum()
             .unwrap()
             .variant_name(),

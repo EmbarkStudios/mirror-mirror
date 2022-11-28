@@ -9,7 +9,7 @@ struct Foo {
 #[test]
 fn accessing_fields() {
     let foo = Foo { field: 42 };
-    let struct_ = foo.as_struct().unwrap();
+    let struct_ = foo.reflect_ref().as_struct().unwrap();
 
     let value = struct_
         .field("field")
@@ -99,6 +99,7 @@ fn box_dyn_reflect_as_reflect() {
 
     assert_eq!(
         box_dyn_reflect
+            .reflect_ref()
             .as_struct()
             .unwrap()
             .field("field")
@@ -112,6 +113,7 @@ fn box_dyn_reflect_as_reflect() {
 
     assert_eq!(
         box_dyn_reflect
+            .reflect_ref()
             .as_struct()
             .unwrap()
             .field("field")

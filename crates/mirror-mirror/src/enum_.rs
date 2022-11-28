@@ -1,10 +1,11 @@
+use std::{any::Any, fmt};
+
 use crate::{
-    FromReflect, List, PairIter, PairIterMut, Reflect, Struct, StructValue, Tuple, TupleStruct,
-    TupleValue, Value, ValueIter, ValueIterMut,
+    FromReflect, PairIter, PairIterMut, Reflect, ReflectMut, ReflectRef, Struct, StructValue,
+    Tuple, TupleValue, Value, ValueIter, ValueIterMut,
 };
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
-use std::{any::Any, fmt};
 
 pub trait Enum: Reflect {
     fn variant_name(&self) -> &str;
@@ -18,6 +19,12 @@ pub trait Enum: Reflect {
 
     fn fields(&self) -> VariantFieldIter<'_>;
     fn fields_mut(&mut self) -> VariantFieldIterMut<'_>;
+}
+
+impl fmt::Debug for dyn Enum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_reflect().debug(f)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -117,7 +124,7 @@ impl Reflect for EnumValue {
     }
 
     fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(enum_) = value.as_enum() {
+        if let Some(enum_) = value.reflect_ref().as_enum() {
             if self.variant_name() == enum_.variant_name() {
                 for (idx, field) in self.fields_mut().enumerate() {
                     match field {
@@ -147,52 +154,20 @@ impl Reflect for EnumValue {
         Box::new(self.clone())
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        None
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        None
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        None
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        None
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        None
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        None
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        Some(self)
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        Some(self)
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        None
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        None
-    }
-
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
             write!(f, "{:#?}", self)
         } else {
             write!(f, "{:?}", self)
         }
+    }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        ReflectRef::Enum(self)
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        ReflectMut::Enum(self)
     }
 }
 
@@ -269,7 +244,7 @@ impl Enum for EnumValue {
 impl FromReflect for EnumValue {
     #[track_caller]
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let enum_ = reflect.as_enum()?;
+        let enum_ = reflect.reflect_ref().as_enum()?;
 
         let kind = match enum_.variant_kind() {
             VariantKind::Struct => {
@@ -423,48 +398,8 @@ where
         self
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        None
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        None
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        None
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        None
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        None
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        None
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        Some(self)
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        Some(self)
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        None
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        None
-    }
-
     fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(enum_) = value.as_enum() {
+        if let Some(enum_) = value.reflect_ref().as_enum() {
             if self.variant_name() == enum_.variant_name() {
                 for (index, value) in self.fields_mut().enumerate() {
                     match value {
@@ -505,6 +440,14 @@ where
             }
             None => write!(f, "None"),
         }
+    }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        ReflectRef::Enum(self)
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        ReflectMut::Enum(self)
     }
 }
 
@@ -568,7 +511,7 @@ where
     T: FromReflect,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let enum_ = reflect.as_enum()?;
+        let enum_ = reflect.reflect_ref().as_enum()?;
         match enum_.variant_name() {
             "Some" => {
                 let value = enum_.element(0)?;

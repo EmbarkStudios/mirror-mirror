@@ -38,7 +38,7 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
 
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
-                if let Some(value) = value.as_struct() {
+                if let Some(value) = value.reflect_ref().as_struct() {
                     #(#code_for_fields)*
                 }
             }
@@ -85,52 +85,17 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
             }
 
             #fn_patch
-
             #fn_to_value
-
             #fn_clone_reflect
-
-            fn as_tuple(&self) -> Option<&dyn Tuple> {
-                None
-            }
-
-            fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-                None
-            }
-
-            fn as_struct(&self) -> Option<&dyn Struct> {
-                Some(self)
-            }
-
-            fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-                Some(self)
-            }
-
-            fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-                None
-            }
-
-            fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-                None
-            }
-
-            fn as_enum(&self) -> Option<&dyn Enum> {
-                None
-            }
-
-            fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-                None
-            }
-
-            fn as_list(&self) -> Option<&dyn List> {
-                None
-            }
-
-            fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-                None
-            }
-
             #fn_debug
+
+            fn reflect_ref(&self) -> ReflectRef<'_> {
+                ReflectRef::Struct(self)
+            }
+
+            fn reflect_mut(&mut self) -> ReflectMut<'_> {
+                ReflectMut::Struct(self)
+            }
         }
     }
 }
@@ -148,7 +113,7 @@ fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
 
         quote! {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-                let struct_ = reflect.as_struct()?;
+                let struct_ = reflect.reflect_ref().as_struct()?;
                 Some(Self {
                     #(#code_for_fields)*
                 })

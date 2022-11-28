@@ -1,11 +1,12 @@
-use std::{any::Any, fmt::Debug};
+use std::{
+    any::Any,
+    fmt::{self, Debug},
+};
 
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
-use crate::{
-    Enum, FromReflect, List, Reflect, Struct, TupleStruct, Value, ValueIter, ValueIterMut,
-};
+use crate::{FromReflect, List, Reflect, ReflectMut, ReflectRef, Value, ValueIter, ValueIterMut};
 
 pub trait Tuple: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
@@ -13,6 +14,12 @@ pub trait Tuple: Reflect {
 
     fn elements(&self) -> ValueIter<'_>;
     fn elements_mut(&mut self) -> ValueIterMut<'_>;
+}
+
+impl fmt::Debug for dyn Tuple {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.as_reflect().debug(f)
+    }
 }
 
 #[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
@@ -72,48 +79,8 @@ impl Reflect for TupleValue {
         self
     }
 
-    fn as_tuple(&self) -> Option<&dyn Tuple> {
-        Some(self)
-    }
-
-    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        Some(self)
-    }
-
-    fn as_struct(&self) -> Option<&dyn Struct> {
-        None
-    }
-
-    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        None
-    }
-
-    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-        None
-    }
-
-    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        None
-    }
-
-    fn as_enum(&self) -> Option<&dyn Enum> {
-        None
-    }
-
-    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        None
-    }
-
-    fn as_list(&self) -> Option<&dyn List> {
-        None
-    }
-
-    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        None
-    }
-
     fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(tuple) = value.as_tuple() {
+        if let Some(tuple) = value.reflect_ref().as_tuple() {
             for (index, value) in self.elements_mut().enumerate() {
                 if let Some(new_value) = tuple.element(index) {
                     value.patch(new_value);
@@ -137,11 +104,19 @@ impl Reflect for TupleValue {
             write!(f, "{:?}", self)
         }
     }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        ReflectRef::Tuple(self)
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        ReflectMut::Tuple(self)
+    }
 }
 
 impl FromReflect for TupleValue {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let tuple = reflect.as_tuple()?;
+        let tuple = reflect.reflect_ref().as_tuple()?;
         let this = tuple
             .elements()
             .fold(TupleValue::default(), |builder, value| {
@@ -174,49 +149,9 @@ macro_rules! impl_tuple {
                 self
             }
 
-            fn as_tuple(&self) -> Option<&dyn Tuple> {
-                Some(self)
-            }
-
-            fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-                Some(self)
-            }
-
-            fn as_struct(&self) -> Option<&dyn Struct> {
-                None
-            }
-
-            fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-                None
-            }
-
-            fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
-                None
-            }
-
-            fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-                None
-            }
-
-            fn as_enum(&self) -> Option<&dyn Enum> {
-                None
-            }
-
-            fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-                None
-            }
-
-            fn as_list(&self) -> Option<&dyn List> {
-                None
-            }
-
-            fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-                None
-            }
-
             #[allow(unused_assignments)]
             fn patch(&mut self, value: &dyn Reflect) {
-                if let Some(tuple) = value.as_tuple() {
+                if let Some(tuple) = value.reflect_ref().as_tuple() {
                     let ($($ident,)*) = self;
                     let mut i = 0;
                     $(
@@ -243,6 +178,14 @@ macro_rules! impl_tuple {
 
             fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{}", std::any::type_name::<Self>())
+            }
+
+            fn reflect_ref(&self) -> ReflectRef<'_> {
+                ReflectRef::Tuple(self)
+            }
+
+            fn reflect_mut(&mut self) -> ReflectMut<'_> {
+                ReflectMut::Tuple(self)
             }
         }
 
