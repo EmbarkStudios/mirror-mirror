@@ -60,7 +60,7 @@ where
             ReflectRef::Tuple(inner) => inner.get_field(name),
             ReflectRef::Enum(inner) => inner.get_field(name),
             ReflectRef::List(inner) => inner.get_field(name),
-            ReflectRef::Scalar(_) => None,
+            ReflectRef::Map(_) | ReflectRef::Scalar(_) => None,
         }
     }
 
@@ -74,7 +74,7 @@ where
             ReflectMut::Tuple(inner) => inner.get_field_mut(name),
             ReflectMut::Enum(inner) => inner.get_field_mut(name),
             ReflectMut::List(inner) => inner.get_field_mut(name),
-            ReflectMut::Scalar(_) => None,
+            ReflectMut::Map(_) | ReflectMut::Scalar(_) => None,
         }
     }
 }

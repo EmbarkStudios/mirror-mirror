@@ -7,8 +7,6 @@ use std::fmt;
 
 // TODO(david):
 // - type info
-// - hash map/set
-// - btree map/set
 // - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
 // - patch struct value with real struct, for enum as well
 //   - are the downcasts in ValueData right?
@@ -18,6 +16,7 @@ pub mod iter;
 mod enum_;
 mod get_field;
 mod list;
+mod map;
 mod struct_;
 mod tuple;
 mod value;
@@ -33,6 +32,8 @@ pub use self::enum_::EnumValue;
 pub use self::get_field::*;
 #[doc(inline)]
 pub use self::list::List;
+#[doc(inline)]
+pub use self::map::Map;
 #[doc(inline)]
 pub use self::struct_::Struct;
 #[doc(inline)]
@@ -52,12 +53,15 @@ pub use mirror_mirror_macros::*;
 
 pub trait Reflect: Any + Send + 'static {
     fn as_any(&self) -> &dyn Any;
+
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
     fn as_reflect(&self) -> &dyn Reflect;
+
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect;
 
     fn reflect_ref(&self) -> ReflectRef<'_>;
+
     fn reflect_mut(&mut self) -> ReflectMut<'_>;
 
     fn patch(&mut self, value: &dyn Reflect);
@@ -114,6 +118,14 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_list_mut(&mut self) -> Option<&mut dyn List> {
         self.reflect_mut().as_list()
+    }
+
+    fn as_map(&self) -> Option<&dyn Map> {
+        self.reflect_ref().as_map()
+    }
+
+    fn as_map_mut(&mut self) -> Option<&mut dyn Map> {
+        self.reflect_mut().as_map()
     }
 
     fn as_scalar(&self) -> Option<ScalarRef<'_>> {
@@ -345,6 +357,7 @@ pub enum ReflectRef<'a> {
     Tuple(&'a dyn Tuple),
     Enum(&'a dyn Enum),
     List(&'a dyn List),
+    Map(&'a dyn Map),
     Scalar(ScalarRef<'a>),
 }
 
@@ -380,6 +393,13 @@ impl<'a> ReflectRef<'a> {
     pub fn as_list(self) -> Option<&'a dyn List> {
         match self {
             Self::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_map(self) -> Option<&'a dyn Map> {
+        match self {
+            Self::Map(inner) => Some(inner),
             _ => None,
         }
     }
@@ -420,6 +440,7 @@ pub enum ReflectMut<'a> {
     Tuple(&'a mut dyn Tuple),
     Enum(&'a mut dyn Enum),
     List(&'a mut dyn List),
+    Map(&'a mut dyn Map),
     Scalar(ScalarMut<'a>),
 }
 
@@ -455,6 +476,13 @@ impl<'a> ReflectMut<'a> {
     pub fn as_list(self) -> Option<&'a mut dyn List> {
         match self {
             Self::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_map(self) -> Option<&'a mut dyn Map> {
+        match self {
+            Self::Map(inner) => Some(inner),
             _ => None,
         }
     }
@@ -502,4 +530,6 @@ pub mod __private {
     pub use crate::Value;
     pub use std::any::Any;
     pub use std::fmt;
+    pub use std::hash::Hash;
+    pub use std::hash::Hasher;
 }

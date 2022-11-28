@@ -10,7 +10,7 @@ use serde::Serialize;
 use speedy::Readable;
 use speedy::Writable;
 use std::any::Any;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 
 pub trait Struct: Reflect {
@@ -27,9 +27,22 @@ impl fmt::Debug for dyn Struct {
     }
 }
 
-#[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+#[derive(
+    Default,
+    Readable,
+    Writable,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+)]
 pub struct StructValue {
-    fields: HashMap<String, Value>,
+    // use a `BTreeMap` because `HashMap` isn't `Hash`
+    fields: BTreeMap<String, Value>,
 }
 
 impl StructValue {

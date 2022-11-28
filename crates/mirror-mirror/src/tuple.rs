@@ -28,7 +28,19 @@ impl fmt::Debug for dyn Tuple {
     }
 }
 
-#[derive(Default, Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+#[derive(
+    Default,
+    Readable,
+    Writable,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+)]
 pub struct TupleValue {
     elements: Vec<Value>,
 }

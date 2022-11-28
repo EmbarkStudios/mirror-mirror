@@ -70,10 +70,6 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
 struct ItemAttrs {
     debug_opt_out: bool,
     clone_opt_out: bool,
-    #[allow(dead_code)]
-    hash_opt_out: bool,
-    #[allow(dead_code)]
-    partial_eq_opt_out: bool,
 }
 
 impl ItemAttrs {
@@ -98,8 +94,6 @@ impl ItemAttrs {
 
                 let mut debug_opt_out = false;
                 let mut clone_opt_out = false;
-                let mut hash_opt_out = false;
-                let mut partial_eq_opt_out = false;
 
                 let lh = input.lookahead1();
                 if lh.peek(kw::Debug) {
@@ -108,43 +102,23 @@ impl ItemAttrs {
                 } else if lh.peek(kw::Clone) {
                     input.parse::<kw::Clone>()?;
                     clone_opt_out = true;
-                } else if lh.peek(kw::Hash) {
-                    input.parse::<kw::Hash>()?;
-                    hash_opt_out = true;
-                } else if lh.peek(kw::PartialEq) {
-                    input.parse::<kw::PartialEq>()?;
-                    partial_eq_opt_out = true;
                 } else {
                     return Err(lh.error());
                 }
 
-                Ok((
-                    debug_opt_out,
-                    clone_opt_out,
-                    hash_opt_out,
-                    partial_eq_opt_out,
-                ))
+                Ok((debug_opt_out, clone_opt_out))
             })
         })?;
 
-        let (debug_opt_out, clone_opt_out, hash_opt_out, partial_eq_opt_out) =
-            punctuated.iter().fold(
-                (false, false, false, false),
-                |acc, &(debug, clone, hash, partial_eq)| {
-                    (
-                        acc.0 || debug,
-                        acc.1 || clone,
-                        acc.2 || hash,
-                        acc.3 || partial_eq,
-                    )
-                },
-            );
+        let (debug_opt_out, clone_opt_out) = punctuated
+            .iter()
+            .fold((false, false), |acc, &(debug, clone)| {
+                (acc.0 || debug, acc.1 || clone)
+            });
 
         Ok(ItemAttrs {
             debug_opt_out,
             clone_opt_out,
-            hash_opt_out,
-            partial_eq_opt_out,
         })
     }
 
@@ -189,6 +163,4 @@ impl ItemAttrs {
 mod kw {
     syn::custom_keyword!(Debug);
     syn::custom_keyword!(Clone);
-    syn::custom_keyword!(Hash);
-    syn::custom_keyword!(PartialEq);
 }

@@ -38,20 +38,24 @@ impl fmt::Debug for dyn Enum {
     }
 }
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum VariantKind {
     Struct,
     Tuple,
     Unit,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Writable, Readable)]
+#[derive(
+    Readable, Writable, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd,
+)]
 pub struct EnumValue {
     name: String,
     kind: EnumValueKind,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Writable, Readable)]
+#[derive(
+    Readable, Writable, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd,
+)]
 enum EnumValueKind {
     Struct(StructValue),
     Tuple(TupleValue),

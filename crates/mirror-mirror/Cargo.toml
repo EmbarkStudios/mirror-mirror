@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.0" }
+ordered-float = "3.4.0"
 serde = { version = "1.0", features = ["derive"] }
 speedy = "0.8"
-mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.0" }
 
 [dev-dependencies]
 serde_json = "1.0"

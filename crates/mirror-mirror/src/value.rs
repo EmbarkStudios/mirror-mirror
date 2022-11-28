@@ -8,14 +8,19 @@ use crate::ScalarMut;
 use crate::ScalarRef;
 use crate::StructValue;
 use crate::TupleStructValue;
+use ordered_float::OrderedFloat;
 use serde::Deserialize;
 use serde::Serialize;
 use speedy::Readable;
 use speedy::Writable;
 use std::any::Any;
+use std::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::fmt;
 
-#[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+#[derive(
+    Readable, Writable, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd,
+)]
 pub struct Value {
     data: ValueData,
 }
@@ -102,6 +107,83 @@ pub enum ValueData {
     TupleStructValue(TupleStructValue),
     TupleValue(TupleValue),
     List(Vec<Value>),
+    Map(BTreeMap<Value, Value>),
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Eq, PartialEq, PartialOrd, Ord)]
+enum H<'a> {
+    usize(usize),
+    u8(u8),
+    u16(u16),
+    u32(u32),
+    u64(u64),
+    u128(u128),
+    i8(i8),
+    i16(i16),
+    i32(i32),
+    i64(i64),
+    i128(i128),
+    bool(bool),
+    char(char),
+    f32(OrderedFloat<f32>),
+    f64(OrderedFloat<f64>),
+    String(&'a str),
+    StructValue(&'a StructValue),
+    EnumValue(&'a EnumValue),
+    TupleStructValue(&'a TupleStructValue),
+    TupleValue(&'a TupleValue),
+    List(&'a [Value]),
+    Map(&'a BTreeMap<Value, Value>),
+}
+
+impl<'a> From<&'a ValueData> for H<'a> {
+    fn from(value: &'a ValueData) -> Self {
+        match value {
+            ValueData::usize(inner) => H::usize(*inner),
+            ValueData::u8(inner) => H::u8(*inner),
+            ValueData::u16(inner) => H::u16(*inner),
+            ValueData::u32(inner) => H::u32(*inner),
+            ValueData::u64(inner) => H::u64(*inner),
+            ValueData::u128(inner) => H::u128(*inner),
+            ValueData::i8(inner) => H::i8(*inner),
+            ValueData::i16(inner) => H::i16(*inner),
+            ValueData::i32(inner) => H::i32(*inner),
+            ValueData::i64(inner) => H::i64(*inner),
+            ValueData::i128(inner) => H::i128(*inner),
+            ValueData::bool(inner) => H::bool(*inner),
+            ValueData::char(inner) => H::char(*inner),
+            ValueData::f32(inner) => H::f32(OrderedFloat(*inner)),
+            ValueData::f64(inner) => H::f64(OrderedFloat(*inner)),
+            ValueData::String(inner) => H::String(inner),
+            ValueData::StructValue(inner) => H::StructValue(inner),
+            ValueData::EnumValue(inner) => H::EnumValue(inner),
+            ValueData::TupleStructValue(inner) => H::TupleStructValue(inner),
+            ValueData::TupleValue(inner) => H::TupleValue(inner),
+            ValueData::List(inner) => H::List(inner),
+            ValueData::Map(inner) => H::Map(inner),
+        }
+    }
+}
+
+impl PartialEq for ValueData {
+    fn eq(&self, other: &Self) -> bool {
+        H::from(self) == H::from(other)
+    }
+}
+
+impl Eq for ValueData {}
+
+impl PartialOrd for ValueData {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ValueData {
+    fn cmp(&self, other: &Self) -> Ordering {
+        H::from(self).cmp(&H::from(other))
+    }
 }
 
 impl Reflect for ValueData {
@@ -128,6 +210,7 @@ impl Reflect for ValueData {
             ValueData::EnumValue(inner) => inner,
             ValueData::TupleValue(inner) => inner,
             ValueData::List(inner) => inner,
+            ValueData::Map(inner) => inner,
         }
     }
 
@@ -154,6 +237,7 @@ impl Reflect for ValueData {
             ValueData::EnumValue(inner) => inner,
             ValueData::TupleValue(inner) => inner,
             ValueData::List(inner) => inner,
+            ValueData::Map(inner) => inner,
         }
     }
 
@@ -163,6 +247,60 @@ impl Reflect for ValueData {
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         self
+    }
+
+    fn reflect_ref(&self) -> ReflectRef<'_> {
+        match self {
+            ValueData::usize(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::u128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::i128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::bool(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::char(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::f32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::f64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            ValueData::String(inner) => ReflectRef::Scalar(ScalarRef::from(inner)),
+            ValueData::StructValue(inner) => ReflectRef::Struct(&**inner),
+            ValueData::EnumValue(inner) => ReflectRef::Enum(&**inner),
+            ValueData::TupleStructValue(inner) => ReflectRef::TupleStruct(inner),
+            ValueData::TupleValue(inner) => ReflectRef::Tuple(inner),
+            ValueData::List(inner) => ReflectRef::List(inner),
+            ValueData::Map(inner) => ReflectRef::Map(inner),
+        }
+    }
+
+    fn reflect_mut(&mut self) -> ReflectMut<'_> {
+        match self {
+            ValueData::usize(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::u128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::i128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::bool(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::char(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::f32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::f64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::String(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            ValueData::StructValue(inner) => ReflectMut::Struct(&mut **inner),
+            ValueData::EnumValue(inner) => ReflectMut::Enum(&mut **inner),
+            ValueData::TupleStructValue(inner) => ReflectMut::TupleStruct(inner),
+            ValueData::TupleValue(inner) => ReflectMut::Tuple(inner),
+            ValueData::List(inner) => ReflectMut::List(inner),
+            ValueData::Map(inner) => ReflectMut::Map(inner),
+        }
     }
 
     fn patch(&mut self, value: &dyn Reflect) {
@@ -272,6 +410,11 @@ impl Reflect for ValueData {
                     *inner = value.clone();
                 }
             }
+            ValueData::Map(inner) => {
+                if let Some(value) = value.downcast_ref::<BTreeMap<Value, Value>>() {
+                    *inner = value.clone();
+                }
+            }
         }
     }
 
@@ -288,58 +431,6 @@ impl Reflect for ValueData {
             write!(f, "{:#?}", self)
         } else {
             write!(f, "{:?}", self)
-        }
-    }
-
-    fn reflect_ref(&self) -> ReflectRef<'_> {
-        match self {
-            ValueData::usize(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::bool(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::char(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::f32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::f64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::String(inner) => ReflectRef::Scalar(ScalarRef::from(inner)),
-            ValueData::StructValue(inner) => ReflectRef::Struct(&**inner),
-            ValueData::EnumValue(inner) => ReflectRef::Enum(&**inner),
-            ValueData::TupleStructValue(inner) => ReflectRef::TupleStruct(inner),
-            ValueData::TupleValue(inner) => ReflectRef::Tuple(inner),
-            ValueData::List(inner) => ReflectRef::List(inner),
-        }
-    }
-
-    fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        match self {
-            ValueData::usize(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::bool(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::char(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::f32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::f64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::String(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::StructValue(inner) => ReflectMut::Struct(&mut **inner),
-            ValueData::EnumValue(inner) => ReflectMut::Enum(&mut **inner),
-            ValueData::TupleStructValue(inner) => ReflectMut::TupleStruct(inner),
-            ValueData::TupleValue(inner) => ReflectMut::Tuple(inner),
-            ValueData::List(inner) => ReflectMut::List(inner),
         }
     }
 }
@@ -380,12 +471,26 @@ impl<T> From<Vec<T>> for Value
 where
     T: Reflect,
 {
-    fn from(value: Vec<T>) -> Self {
-        let list = value
+    fn from(list: Vec<T>) -> Self {
+        let list = list
             .into_iter()
             .map(|value| value.to_value())
             .collect::<Vec<_>>();
         Self::new(ValueData::List(list))
+    }
+}
+
+impl<K, V> From<BTreeMap<K, V>> for Value
+where
+    K: Reflect,
+    V: Reflect,
+{
+    fn from(map: BTreeMap<K, V>) -> Self {
+        let map = map
+            .into_iter()
+            .map(|(key, value)| (key.to_value(), value.to_value()))
+            .collect();
+        Self::new(ValueData::Map(map))
     }
 }
 
