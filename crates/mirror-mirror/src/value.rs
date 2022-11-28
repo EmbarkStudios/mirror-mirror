@@ -18,74 +18,9 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt;
 
-#[derive(
-    Readable, Writable, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd,
-)]
-pub struct Value {
-    data: ValueData,
-}
-
-impl Value {
-    pub fn new(data: ValueData) -> Self {
-        Self { data }
-    }
-}
-
-impl Reflect for Value {
-    fn as_any(&self) -> &dyn Any {
-        self.data.as_any()
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self.data.as_any_mut()
-    }
-
-    fn as_reflect(&self) -> &dyn Reflect {
-        self.data.as_reflect()
-    }
-
-    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self.data.as_reflect_mut()
-    }
-
-    fn patch(&mut self, value: &dyn Reflect) {
-        self.data.patch(value);
-    }
-
-    fn to_value(&self) -> Value {
-        self.data.to_value()
-    }
-
-    fn clone_reflect(&self) -> Box<dyn Reflect> {
-        Box::new(self.clone())
-    }
-
-    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            write!(f, "{:#?}", self)
-        } else {
-            write!(f, "{:?}", self)
-        }
-    }
-
-    fn reflect_ref(&self) -> ReflectRef<'_> {
-        self.data.reflect_ref()
-    }
-
-    fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        self.data.reflect_mut()
-    }
-}
-
-impl FromReflect for Value {
-    fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        Some(reflect.to_value())
-    }
-}
-
 #[allow(non_camel_case_types)]
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
-pub enum ValueData {
+pub enum Value {
     usize(usize),
     u8(u8),
     u16(u16),
@@ -108,6 +43,12 @@ pub enum ValueData {
     TupleValue(TupleValue),
     List(Vec<Value>),
     Map(BTreeMap<Value, Value>),
+}
+
+impl FromReflect for Value {
+    fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+        Some(reflect.to_value())
+    }
 }
 
 #[allow(non_camel_case_types)]
@@ -137,107 +78,107 @@ enum H<'a> {
     Map(&'a BTreeMap<Value, Value>),
 }
 
-impl<'a> From<&'a ValueData> for H<'a> {
-    fn from(value: &'a ValueData) -> Self {
+impl<'a> From<&'a Value> for H<'a> {
+    fn from(value: &'a Value) -> Self {
         match value {
-            ValueData::usize(inner) => H::usize(*inner),
-            ValueData::u8(inner) => H::u8(*inner),
-            ValueData::u16(inner) => H::u16(*inner),
-            ValueData::u32(inner) => H::u32(*inner),
-            ValueData::u64(inner) => H::u64(*inner),
-            ValueData::u128(inner) => H::u128(*inner),
-            ValueData::i8(inner) => H::i8(*inner),
-            ValueData::i16(inner) => H::i16(*inner),
-            ValueData::i32(inner) => H::i32(*inner),
-            ValueData::i64(inner) => H::i64(*inner),
-            ValueData::i128(inner) => H::i128(*inner),
-            ValueData::bool(inner) => H::bool(*inner),
-            ValueData::char(inner) => H::char(*inner),
-            ValueData::f32(inner) => H::f32(OrderedFloat(*inner)),
-            ValueData::f64(inner) => H::f64(OrderedFloat(*inner)),
-            ValueData::String(inner) => H::String(inner),
-            ValueData::StructValue(inner) => H::StructValue(inner),
-            ValueData::EnumValue(inner) => H::EnumValue(inner),
-            ValueData::TupleStructValue(inner) => H::TupleStructValue(inner),
-            ValueData::TupleValue(inner) => H::TupleValue(inner),
-            ValueData::List(inner) => H::List(inner),
-            ValueData::Map(inner) => H::Map(inner),
+            Value::usize(inner) => H::usize(*inner),
+            Value::u8(inner) => H::u8(*inner),
+            Value::u16(inner) => H::u16(*inner),
+            Value::u32(inner) => H::u32(*inner),
+            Value::u64(inner) => H::u64(*inner),
+            Value::u128(inner) => H::u128(*inner),
+            Value::i8(inner) => H::i8(*inner),
+            Value::i16(inner) => H::i16(*inner),
+            Value::i32(inner) => H::i32(*inner),
+            Value::i64(inner) => H::i64(*inner),
+            Value::i128(inner) => H::i128(*inner),
+            Value::bool(inner) => H::bool(*inner),
+            Value::char(inner) => H::char(*inner),
+            Value::f32(inner) => H::f32(OrderedFloat(*inner)),
+            Value::f64(inner) => H::f64(OrderedFloat(*inner)),
+            Value::String(inner) => H::String(inner),
+            Value::StructValue(inner) => H::StructValue(inner),
+            Value::EnumValue(inner) => H::EnumValue(inner),
+            Value::TupleStructValue(inner) => H::TupleStructValue(inner),
+            Value::TupleValue(inner) => H::TupleValue(inner),
+            Value::List(inner) => H::List(inner),
+            Value::Map(inner) => H::Map(inner),
         }
     }
 }
 
-impl PartialEq for ValueData {
+impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         H::from(self) == H::from(other)
     }
 }
 
-impl Eq for ValueData {}
+impl Eq for Value {}
 
-impl PartialOrd for ValueData {
+impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for ValueData {
+impl Ord for Value {
     fn cmp(&self, other: &Self) -> Ordering {
         H::from(self).cmp(&H::from(other))
     }
 }
 
-impl Reflect for ValueData {
+impl Reflect for Value {
     fn as_any(&self) -> &dyn Any {
         match self {
-            ValueData::usize(inner) => inner,
-            ValueData::u8(inner) => inner,
-            ValueData::u16(inner) => inner,
-            ValueData::u32(inner) => inner,
-            ValueData::u64(inner) => inner,
-            ValueData::u128(inner) => inner,
-            ValueData::i8(inner) => inner,
-            ValueData::i16(inner) => inner,
-            ValueData::i32(inner) => inner,
-            ValueData::i64(inner) => inner,
-            ValueData::i128(inner) => inner,
-            ValueData::bool(inner) => inner,
-            ValueData::char(inner) => inner,
-            ValueData::f32(inner) => inner,
-            ValueData::f64(inner) => inner,
-            ValueData::String(inner) => inner,
-            ValueData::StructValue(inner) => inner,
-            ValueData::TupleStructValue(inner) => inner,
-            ValueData::EnumValue(inner) => inner,
-            ValueData::TupleValue(inner) => inner,
-            ValueData::List(inner) => inner,
-            ValueData::Map(inner) => inner,
+            Value::usize(inner) => inner,
+            Value::u8(inner) => inner,
+            Value::u16(inner) => inner,
+            Value::u32(inner) => inner,
+            Value::u64(inner) => inner,
+            Value::u128(inner) => inner,
+            Value::i8(inner) => inner,
+            Value::i16(inner) => inner,
+            Value::i32(inner) => inner,
+            Value::i64(inner) => inner,
+            Value::i128(inner) => inner,
+            Value::bool(inner) => inner,
+            Value::char(inner) => inner,
+            Value::f32(inner) => inner,
+            Value::f64(inner) => inner,
+            Value::String(inner) => inner,
+            Value::StructValue(inner) => inner,
+            Value::TupleStructValue(inner) => inner,
+            Value::EnumValue(inner) => inner,
+            Value::TupleValue(inner) => inner,
+            Value::List(inner) => inner,
+            Value::Map(inner) => inner,
         }
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         match self {
-            ValueData::usize(inner) => inner,
-            ValueData::u8(inner) => inner,
-            ValueData::u16(inner) => inner,
-            ValueData::u32(inner) => inner,
-            ValueData::u64(inner) => inner,
-            ValueData::u128(inner) => inner,
-            ValueData::i8(inner) => inner,
-            ValueData::i16(inner) => inner,
-            ValueData::i32(inner) => inner,
-            ValueData::i64(inner) => inner,
-            ValueData::i128(inner) => inner,
-            ValueData::bool(inner) => inner,
-            ValueData::char(inner) => inner,
-            ValueData::f32(inner) => inner,
-            ValueData::f64(inner) => inner,
-            ValueData::String(inner) => inner,
-            ValueData::StructValue(inner) => inner,
-            ValueData::TupleStructValue(inner) => inner,
-            ValueData::EnumValue(inner) => inner,
-            ValueData::TupleValue(inner) => inner,
-            ValueData::List(inner) => inner,
-            ValueData::Map(inner) => inner,
+            Value::usize(inner) => inner,
+            Value::u8(inner) => inner,
+            Value::u16(inner) => inner,
+            Value::u32(inner) => inner,
+            Value::u64(inner) => inner,
+            Value::u128(inner) => inner,
+            Value::i8(inner) => inner,
+            Value::i16(inner) => inner,
+            Value::i32(inner) => inner,
+            Value::i64(inner) => inner,
+            Value::i128(inner) => inner,
+            Value::bool(inner) => inner,
+            Value::char(inner) => inner,
+            Value::f32(inner) => inner,
+            Value::f64(inner) => inner,
+            Value::String(inner) => inner,
+            Value::StructValue(inner) => inner,
+            Value::TupleStructValue(inner) => inner,
+            Value::EnumValue(inner) => inner,
+            Value::TupleValue(inner) => inner,
+            Value::List(inner) => inner,
+            Value::Map(inner) => inner,
         }
     }
 
@@ -251,166 +192,166 @@ impl Reflect for ValueData {
 
     fn reflect_ref(&self) -> ReflectRef<'_> {
         match self {
-            ValueData::usize(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::u128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::i128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::bool(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::char(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::f32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::f64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
-            ValueData::String(inner) => ReflectRef::Scalar(ScalarRef::from(inner)),
-            ValueData::StructValue(inner) => ReflectRef::Struct(&**inner),
-            ValueData::EnumValue(inner) => ReflectRef::Enum(&**inner),
-            ValueData::TupleStructValue(inner) => ReflectRef::TupleStruct(inner),
-            ValueData::TupleValue(inner) => ReflectRef::Tuple(inner),
-            ValueData::List(inner) => ReflectRef::List(inner),
-            ValueData::Map(inner) => ReflectRef::Map(inner),
+            Value::usize(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::u8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::u16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::u32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::u64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::u128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::i8(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::i16(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::i32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::i64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::i128(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::bool(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::char(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::f32(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::f64(inner) => ReflectRef::Scalar(ScalarRef::from(*inner)),
+            Value::String(inner) => ReflectRef::Scalar(ScalarRef::from(inner)),
+            Value::StructValue(inner) => ReflectRef::Struct(&**inner),
+            Value::EnumValue(inner) => ReflectRef::Enum(&**inner),
+            Value::TupleStructValue(inner) => ReflectRef::TupleStruct(inner),
+            Value::TupleValue(inner) => ReflectRef::Tuple(inner),
+            Value::List(inner) => ReflectRef::List(inner),
+            Value::Map(inner) => ReflectRef::Map(inner),
         }
     }
 
     fn reflect_mut(&mut self) -> ReflectMut<'_> {
         match self {
-            ValueData::usize(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::u128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::i128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::bool(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::char(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::f32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::f64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::String(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
-            ValueData::StructValue(inner) => ReflectMut::Struct(&mut **inner),
-            ValueData::EnumValue(inner) => ReflectMut::Enum(&mut **inner),
-            ValueData::TupleStructValue(inner) => ReflectMut::TupleStruct(inner),
-            ValueData::TupleValue(inner) => ReflectMut::Tuple(inner),
-            ValueData::List(inner) => ReflectMut::List(inner),
-            ValueData::Map(inner) => ReflectMut::Map(inner),
+            Value::usize(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::u8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::u16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::u32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::u64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::u128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::i8(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::i16(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::i32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::i64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::i128(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::bool(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::char(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::f32(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::f64(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::String(inner) => ReflectMut::Scalar(ScalarMut::from(inner)),
+            Value::StructValue(inner) => ReflectMut::Struct(&mut **inner),
+            Value::EnumValue(inner) => ReflectMut::Enum(&mut **inner),
+            Value::TupleStructValue(inner) => ReflectMut::TupleStruct(inner),
+            Value::TupleValue(inner) => ReflectMut::Tuple(inner),
+            Value::List(inner) => ReflectMut::List(inner),
+            Value::Map(inner) => ReflectMut::Map(inner),
         }
     }
 
     fn patch(&mut self, value: &dyn Reflect) {
         match self {
-            ValueData::usize(inner) => {
+            Value::usize(inner) => {
                 if let Some(value) = value.downcast_ref::<usize>() {
                     *inner = *value;
                 }
             }
-            ValueData::u8(inner) => {
+            Value::u8(inner) => {
                 if let Some(value) = value.downcast_ref::<u8>() {
                     *inner = *value;
                 }
             }
-            ValueData::u16(inner) => {
+            Value::u16(inner) => {
                 if let Some(value) = value.downcast_ref::<u16>() {
                     *inner = *value;
                 }
             }
-            ValueData::u32(inner) => {
+            Value::u32(inner) => {
                 if let Some(value) = value.downcast_ref::<u32>() {
                     *inner = *value;
                 }
             }
-            ValueData::u64(inner) => {
+            Value::u64(inner) => {
                 if let Some(value) = value.downcast_ref::<u64>() {
                     *inner = *value;
                 }
             }
-            ValueData::u128(inner) => {
+            Value::u128(inner) => {
                 if let Some(value) = value.downcast_ref::<u128>() {
                     *inner = *value;
                 }
             }
-            ValueData::i8(inner) => {
+            Value::i8(inner) => {
                 if let Some(value) = value.downcast_ref::<i8>() {
                     *inner = *value;
                 }
             }
-            ValueData::i16(inner) => {
+            Value::i16(inner) => {
                 if let Some(value) = value.downcast_ref::<i16>() {
                     *inner = *value;
                 }
             }
-            ValueData::i32(inner) => {
+            Value::i32(inner) => {
                 if let Some(value) = value.downcast_ref::<i32>() {
                     *inner = *value;
                 }
             }
-            ValueData::i64(inner) => {
+            Value::i64(inner) => {
                 if let Some(value) = value.downcast_ref::<i64>() {
                     *inner = *value;
                 }
             }
-            ValueData::i128(inner) => {
+            Value::i128(inner) => {
                 if let Some(value) = value.downcast_ref::<i128>() {
                     *inner = *value;
                 }
             }
-            ValueData::bool(inner) => {
+            Value::bool(inner) => {
                 if let Some(value) = value.downcast_ref::<bool>() {
                     *inner = *value;
                 }
             }
-            ValueData::char(inner) => {
+            Value::char(inner) => {
                 if let Some(value) = value.downcast_ref::<char>() {
                     *inner = *value;
                 }
             }
-            ValueData::f32(inner) => {
+            Value::f32(inner) => {
                 if let Some(value) = value.downcast_ref::<f32>() {
                     *inner = *value;
                 }
             }
-            ValueData::f64(inner) => {
+            Value::f64(inner) => {
                 if let Some(value) = value.downcast_ref::<f64>() {
                     *inner = *value;
                 }
             }
-            ValueData::String(inner) => {
+            Value::String(inner) => {
                 if let Some(value) = value.downcast_ref::<String>() {
                     *inner = value.clone();
                 }
             }
-            ValueData::StructValue(inner) => {
+            Value::StructValue(inner) => {
                 if let Some(value) = value.downcast_ref::<StructValue>() {
                     *inner = Box::new(value.clone());
                 }
             }
-            ValueData::TupleStructValue(inner) => {
+            Value::TupleStructValue(inner) => {
                 if let Some(value) = value.downcast_ref::<TupleStructValue>() {
                     *inner = value.clone();
                 }
             }
-            ValueData::EnumValue(inner) => {
+            Value::EnumValue(inner) => {
                 if let Some(value) = value.downcast_ref::<EnumValue>() {
                     *inner = Box::new(value.clone());
                 }
             }
-            ValueData::TupleValue(inner) => {
+            Value::TupleValue(inner) => {
                 if let Some(value) = value.downcast_ref::<TupleValue>() {
                     *inner = value.clone();
                 }
             }
-            ValueData::List(inner) => {
+            Value::List(inner) => {
                 if let Some(value) = value.downcast_ref::<Vec<Value>>() {
                     *inner = value.clone();
                 }
             }
-            ValueData::Map(inner) => {
+            Value::Map(inner) => {
                 if let Some(value) = value.downcast_ref::<BTreeMap<Value, Value>>() {
                     *inner = value.clone();
                 }
@@ -419,7 +360,7 @@ impl Reflect for ValueData {
     }
 
     fn to_value(&self) -> Value {
-        Value::new(self.clone())
+        self.clone()
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -440,15 +381,9 @@ macro_rules! from_impls {
         $($ident:ident)*
     ) => {
         $(
-            impl From<$ident> for ValueData {
-                fn from(value: $ident) -> Self {
-                    ValueData::$ident(value)
-                }
-            }
-
             impl From<$ident> for Value {
                 fn from(value: $ident) -> Self {
-                    Value::new(ValueData::from(value))
+                    Value::$ident(value)
                 }
             }
         )*
@@ -457,13 +392,13 @@ macro_rules! from_impls {
 
 impl From<StructValue> for Value {
     fn from(value: StructValue) -> Self {
-        Value::new(ValueData::StructValue(Box::new(value)))
+        Value::StructValue(Box::new(value))
     }
 }
 
 impl From<EnumValue> for Value {
     fn from(value: EnumValue) -> Self {
-        Value::new(ValueData::EnumValue(Box::new(value)))
+        Value::EnumValue(Box::new(value))
     }
 }
 
@@ -476,7 +411,7 @@ where
             .into_iter()
             .map(|value| value.to_value())
             .collect::<Vec<_>>();
-        Self::new(ValueData::List(list))
+        Value::List(list)
     }
 }
 
@@ -490,13 +425,13 @@ where
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Self::new(ValueData::Map(map))
+        Value::Map(map)
     }
 }
 
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
-        Value::new(value.to_owned().into())
+        value.to_owned().into()
     }
 }
 
@@ -517,6 +452,6 @@ mod tests {
     fn has_small_stack_size() {
         // if we can get the value to be smaller than 32 then that'd be cool
         // but 32 is probably also fine
-        assert_eq!(std::mem::size_of::<ValueData>(), 32);
+        assert_eq!(std::mem::size_of::<Value>(), 32);
     }
 }

@@ -232,7 +232,7 @@ macro_rules! impl_for_core_types {
                 }
 
                 fn to_value(&self) -> Value {
-                    Value::new(ValueData::from(self.to_owned()))
+                    Value::from(self.to_owned())
                 }
 
                 fn reflect_ref(&self) -> ReflectRef<'_> {
@@ -308,7 +308,7 @@ impl Reflect for String {
     }
 
     fn to_value(&self) -> Value {
-        Value::new(ValueData::from(self.to_owned()))
+        Value::from(self.to_owned())
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {

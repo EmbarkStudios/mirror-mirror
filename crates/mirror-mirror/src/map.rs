@@ -5,7 +5,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
 use crate::Value;
-use crate::ValueData;
 use std::any::Any;
 use std::collections::BTreeMap;
 use std::fmt;
@@ -111,7 +110,7 @@ where
             .iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::new(ValueData::Map(data))
+        Value::Map(data)
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {

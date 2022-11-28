@@ -5,7 +5,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
 use crate::Value;
-use crate::ValueData;
 use std::any::Any;
 use std::fmt;
 
@@ -94,7 +93,7 @@ where
 
     fn to_value(&self) -> Value {
         let data = self.iter().map(Reflect::to_value).collect();
-        Value::new(ValueData::List(data))
+        Value::List(data)
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
