@@ -118,6 +118,14 @@ pub trait Reflect: Any + Send + 'static {
     fn as_list_mut(&mut self) -> Option<&mut dyn List> {
         self.reflect_mut().as_list()
     }
+
+    fn as_scalar(&self) -> Option<ScalarRef<'_>> {
+        self.reflect_ref().as_scalar()
+    }
+
+    fn as_scalar_mut(&mut self) -> Option<ScalarMut<'_>> {
+        self.reflect_mut().as_scalar()
+    }
 }
 
 impl dyn Reflect {
