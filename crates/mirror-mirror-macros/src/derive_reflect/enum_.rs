@@ -207,6 +207,14 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
                 Some(self)
             }
 
+            fn as_list(&self) -> Option<&dyn List> {
+                None
+            }
+
+            fn as_list_mut(&mut self) -> Option<&mut dyn List> {
+                None
+            }
+
             #fn_debug
         }
     }

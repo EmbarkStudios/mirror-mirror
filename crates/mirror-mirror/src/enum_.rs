@@ -1,5 +1,5 @@
 use crate::{
-    FromReflect, PairIter, PairIterMut, Reflect, Struct, StructValue, Tuple, TupleStruct,
+    FromReflect, List, PairIter, PairIterMut, Reflect, Struct, StructValue, Tuple, TupleStruct,
     TupleValue, Value, ValueIter, ValueIterMut,
 };
 use serde::{Deserialize, Serialize};
@@ -177,6 +177,14 @@ impl Reflect for EnumValue {
 
     fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
         Some(self)
+    }
+
+    fn as_list(&self) -> Option<&dyn List> {
+        None
+    }
+
+    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
+        None
     }
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -445,6 +453,14 @@ where
 
     fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
         Some(self)
+    }
+
+    fn as_list(&self) -> Option<&dyn List> {
+        None
+    }
+
+    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
+        None
     }
 
     fn patch(&mut self, value: &dyn Reflect) {

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use crate::{
-    Enum, FromReflect, Reflect, Struct, Tuple, TupleValue, Value, ValueIter, ValueIterMut,
+    Enum, FromReflect, List, Reflect, Struct, Tuple, TupleValue, Value, ValueIter, ValueIterMut,
 };
 
 pub trait TupleStruct: Reflect {
@@ -82,6 +82,14 @@ impl Reflect for TupleStructValue {
     }
 
     fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
+        None
+    }
+
+    fn as_list(&self) -> Option<&dyn List> {
+        None
+    }
+
+    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
         None
     }
 

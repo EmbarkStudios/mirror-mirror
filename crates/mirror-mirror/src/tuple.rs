@@ -3,7 +3,9 @@ use std::{any::Any, fmt::Debug};
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
-use crate::{Enum, FromReflect, Reflect, Struct, TupleStruct, Value, ValueIter, ValueIterMut};
+use crate::{
+    Enum, FromReflect, List, Reflect, Struct, TupleStruct, Value, ValueIter, ValueIterMut,
+};
 
 pub trait Tuple: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
@@ -102,6 +104,14 @@ impl Reflect for TupleValue {
         None
     }
 
+    fn as_list(&self) -> Option<&dyn List> {
+        None
+    }
+
+    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
+        None
+    }
+
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(tuple) = value.as_tuple() {
             for (index, value) in self.elements_mut().enumerate() {
@@ -193,6 +203,14 @@ macro_rules! impl_tuple {
             }
 
             fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
+                None
+            }
+
+            fn as_list(&self) -> Option<&dyn List> {
+                None
+            }
+
+            fn as_list_mut(&mut self) -> Option<&mut dyn List> {
                 None
             }
 
