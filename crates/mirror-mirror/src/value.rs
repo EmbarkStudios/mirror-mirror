@@ -1,11 +1,19 @@
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
-use std::{any::Any, fmt};
-
-use crate::{
-    tuple::TupleValue, EnumValue, FromReflect, Reflect, ReflectMut, ReflectRef, ScalarMut,
-    ScalarRef, StructValue, TupleStructValue,
-};
+use crate::tuple::TupleValue;
+use crate::EnumValue;
+use crate::FromReflect;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::ScalarMut;
+use crate::ScalarRef;
+use crate::StructValue;
+use crate::TupleStructValue;
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
+use std::any::Any;
+use std::fmt;
 
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
 pub struct Value {

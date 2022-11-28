@@ -1,6 +1,10 @@
-use crate::{self as mirror_mirror, enum_::VariantKind, Enum};
-
-use mirror_mirror::{EnumValue, FromReflect, GetField, Reflect};
+use crate as mirror_mirror;
+use crate::enum_::VariantKind;
+use crate::Enum;
+use mirror_mirror::EnumValue;
+use mirror_mirror::FromReflect;
+use mirror_mirror::GetField;
+use mirror_mirror::Reflect;
 
 #[test]
 fn enum_value() {

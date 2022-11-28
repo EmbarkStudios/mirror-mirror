@@ -1,11 +1,18 @@
-use std::{any::Any, fmt};
-
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
-
-use crate::{
-    FromReflect, Reflect, ReflectMut, ReflectRef, Tuple, TupleValue, Value, ValueIter, ValueIterMut,
-};
+use crate::FromReflect;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::Tuple;
+use crate::TupleValue;
+use crate::Value;
+use crate::ValueIter;
+use crate::ValueIterMut;
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
+use std::any::Any;
+use std::fmt;
 
 pub trait TupleStruct: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;

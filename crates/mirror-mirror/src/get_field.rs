@@ -1,6 +1,12 @@
-use crate::{Enum, List, Reflect, ReflectMut, ReflectRef, Struct, Tuple, TupleStruct};
-
 use self::private::*;
+use crate::Enum;
+use crate::List;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::Struct;
+use crate::Tuple;
+use crate::TupleStruct;
 
 pub trait GetField {
     fn get_field<T>(&self, name: impl AsKey) -> Option<&T>

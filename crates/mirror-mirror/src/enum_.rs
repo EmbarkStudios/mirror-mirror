@@ -1,11 +1,22 @@
-use std::{any::Any, fmt};
-
-use crate::{
-    FromReflect, PairIter, PairIterMut, Reflect, ReflectMut, ReflectRef, Struct, StructValue,
-    Tuple, TupleValue, Value, ValueIter, ValueIterMut,
-};
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
+use crate::FromReflect;
+use crate::PairIter;
+use crate::PairIterMut;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::Struct;
+use crate::StructValue;
+use crate::Tuple;
+use crate::TupleValue;
+use crate::Value;
+use crate::ValueIter;
+use crate::ValueIterMut;
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
+use std::any::Any;
+use std::fmt;
 
 pub trait Enum: Reflect {
     fn variant_name(&self) -> &str;

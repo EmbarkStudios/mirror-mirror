@@ -1,9 +1,10 @@
+use super::ItemAttrs;
 use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DataEnum, Ident, Variant};
-
-use super::ItemAttrs;
+use syn::DataEnum;
+use syn::Ident;
+use syn::Variant;
 
 pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::Result<TokenStream> {
     let reflect = expand_reflect(ident, &enum_, attrs);

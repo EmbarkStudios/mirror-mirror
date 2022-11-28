@@ -1,10 +1,9 @@
 #![deny(unreachable_pub)]
 #![warn(clippy::todo)]
 
-use std::{
-    any::{Any, TypeId},
-    fmt,
-};
+use std::any::Any;
+use std::any::TypeId;
+use std::fmt;
 
 // TODO(david):
 // - type info
@@ -28,15 +27,29 @@ mod value;
 mod tests;
 
 #[doc(inline)]
-pub use self::{
-    enum_::{Enum, EnumValue},
-    get_field::*,
-    iter::*,
-    list::List,
-    struct_::{Struct, StructValue, TupleStruct, TupleStructValue},
-    tuple::{Tuple, TupleValue},
-    value::*,
-};
+pub use self::enum_::Enum;
+#[doc(inline)]
+pub use self::enum_::EnumValue;
+#[doc(inline)]
+pub use self::get_field::*;
+#[doc(inline)]
+pub use self::iter::*;
+#[doc(inline)]
+pub use self::list::List;
+#[doc(inline)]
+pub use self::struct_::Struct;
+#[doc(inline)]
+pub use self::struct_::StructValue;
+#[doc(inline)]
+pub use self::struct_::TupleStruct;
+#[doc(inline)]
+pub use self::struct_::TupleStructValue;
+#[doc(inline)]
+pub use self::tuple::Tuple;
+#[doc(inline)]
+pub use self::tuple::TupleValue;
+#[doc(inline)]
+pub use self::value::*;
 
 pub use mirror_mirror_macros::*;
 

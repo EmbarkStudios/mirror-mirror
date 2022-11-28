@@ -1,8 +1,12 @@
+use crate::FromReflect;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::Value;
+use crate::ValueData;
+use crate::ValueIter;
+use crate::ValueIterMut;
 use std::fmt;
-
-use crate::{
-    FromReflect, Reflect, ReflectMut, ReflectRef, Value, ValueData, ValueIter, ValueIterMut,
-};
 
 pub trait List: Reflect {
     fn get(&self, index: usize) -> Option<&dyn Reflect>;

@@ -1,8 +1,17 @@
-use std::{any::Any, collections::HashMap, fmt};
-
-use crate::{FromReflect, PairIter, PairIterMut, Reflect, ReflectMut, ReflectRef, Value};
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
+use crate::FromReflect;
+use crate::PairIter;
+use crate::PairIterMut;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::Value;
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
+use std::any::Any;
+use std::collections::HashMap;
+use std::fmt;
 
 pub trait Struct: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;

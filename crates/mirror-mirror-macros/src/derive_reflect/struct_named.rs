@@ -1,9 +1,12 @@
+use super::ItemAttrs;
 use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{punctuated::Punctuated, Field, FieldsNamed, Ident, Token};
-
-use super::ItemAttrs;
+use syn::punctuated::Punctuated;
+use syn::Field;
+use syn::FieldsNamed;
+use syn::Ident;
+use syn::Token;
 
 type Fields = Punctuated<Field, Token![,]>;
 

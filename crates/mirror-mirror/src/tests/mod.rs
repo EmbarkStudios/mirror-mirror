@@ -1,4 +1,5 @@
-use crate::{self as mirror_mirror, Reflect};
+use crate::Reflect;
+use crate::{self as mirror_mirror};
 
 mod enum_;
 mod struct_;

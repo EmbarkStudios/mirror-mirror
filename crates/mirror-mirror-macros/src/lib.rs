@@ -1,5 +1,6 @@
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
+use quote::ToTokens;
 use syn::parse::Parse;
 
 mod derive_reflect;

@@ -1,9 +1,12 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use quote::quote_spanned;
-use syn::{
-    parse::ParseStream, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, Token,
-};
+use syn::parse::ParseStream;
+use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
+use syn::Attribute;
+use syn::DeriveInput;
+use syn::Token;
 
 mod enum_;
 mod struct_named;

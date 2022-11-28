@@ -1,8 +1,13 @@
+use super::ItemAttrs;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{punctuated::Punctuated, spanned::Spanned, Field, FieldsUnnamed, Ident, Index, Token};
-
-use super::ItemAttrs;
+use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
+use syn::Field;
+use syn::FieldsUnnamed;
+use syn::Ident;
+use syn::Index;
+use syn::Token;
 
 type Fields = Punctuated<Field, Token![,]>;
 
