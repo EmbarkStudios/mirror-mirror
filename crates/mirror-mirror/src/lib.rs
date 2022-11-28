@@ -5,12 +5,6 @@ use std::any::Any;
 use std::any::TypeId;
 use std::fmt;
 
-// TODO(david):
-// - type info
-// - `fn into_{struct, enum, etc}(self: Box<Self>) -> Box<dyn Struct ...>` methods
-// - patch struct value with real struct, for enum as well
-//   - are the downcasts in ValueData right?
-
 pub mod iter;
 
 mod enum_;
@@ -19,39 +13,34 @@ mod list;
 mod map;
 mod struct_;
 mod tuple;
+mod type_info;
 mod value;
 
 #[cfg(test)]
 mod tests;
 
 #[doc(inline)]
-pub use self::enum_::Enum;
-#[doc(inline)]
-pub use self::enum_::EnumValue;
+pub use self::enum_::*;
 #[doc(inline)]
 pub use self::get_field::*;
 #[doc(inline)]
-pub use self::list::List;
+pub use self::list::*;
 #[doc(inline)]
-pub use self::map::Map;
+pub use self::map::*;
 #[doc(inline)]
-pub use self::struct_::Struct;
+pub use self::struct_::*;
 #[doc(inline)]
-pub use self::struct_::StructValue;
+pub use self::tuple::*;
 #[doc(inline)]
-pub use self::struct_::TupleStruct;
-#[doc(inline)]
-pub use self::struct_::TupleStructValue;
-#[doc(inline)]
-pub use self::tuple::Tuple;
-#[doc(inline)]
-pub use self::tuple::TupleValue;
+pub use self::type_info::*;
 #[doc(inline)]
 pub use self::value::*;
 
 pub use mirror_mirror_macros::*;
 
 pub trait Reflect: Any + Send + 'static {
+    fn type_info(&self) -> TypeInfo;
+
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -160,6 +149,10 @@ impl fmt::Debug for dyn Reflect {
 }
 
 impl Reflect for Box<dyn Reflect> {
+    fn type_info(&self) -> TypeInfo {
+        <dyn Reflect as Reflect>::type_info(&**self)
+    }
+
     fn as_any(&self) -> &dyn Any {
         <dyn Reflect as Reflect>::as_any(&**self)
     }
@@ -205,6 +198,10 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
+                fn type_info(&self) -> TypeInfo {
+                    ScalarInfo::$ty.into()
+                }
+
                 fn as_any(&self) -> &dyn Any {
                     self
                 }
@@ -281,6 +278,10 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
+    fn type_info(&self) -> TypeInfo {
+        ScalarInfo::String.into()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -519,17 +520,8 @@ pub enum ScalarMut<'a> {
 /// Private. Used by macros
 #[doc(hidden)]
 pub mod __private {
-    pub use crate::enum_::VariantFieldIter;
-    pub use crate::enum_::VariantFieldIterMut;
-    pub use crate::enum_::VariantKind;
     pub use crate::iter::*;
-    pub use crate::FromReflect;
-    pub use crate::Reflect;
-    pub use crate::ReflectMut;
-    pub use crate::ReflectRef;
-    pub use crate::Value;
+    pub use crate::*;
     pub use std::any::Any;
     pub use std::fmt;
-    pub use std::hash::Hash;
-    pub use std::hash::Hasher;
 }

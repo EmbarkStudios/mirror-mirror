@@ -4,6 +4,8 @@ use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::TypeInfo;
+use crate::Typed;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
@@ -15,9 +17,11 @@ use std::fmt;
 
 pub trait Struct: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;
+
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
 
     fn fields(&self) -> PairIter<'_>;
+
     fn fields_mut(&mut self) -> PairIterMut<'_>;
 }
 
@@ -61,6 +65,10 @@ impl StructValue {
 }
 
 impl Reflect for StructValue {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }

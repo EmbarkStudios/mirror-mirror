@@ -1,10 +1,10 @@
+use crate as mirror_mirror;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
 use crate::Struct;
 use crate::StructValue;
 use crate::Value;
-use crate::{self as mirror_mirror};
 
 #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]
 struct Foo {

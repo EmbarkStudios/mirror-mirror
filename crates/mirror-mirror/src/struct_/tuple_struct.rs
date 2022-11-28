@@ -6,6 +6,8 @@ use crate::ReflectMut;
 use crate::ReflectRef;
 use crate::Tuple;
 use crate::TupleValue;
+use crate::TypeInfo;
+use crate::Typed;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
@@ -16,9 +18,11 @@ use std::fmt;
 
 pub trait TupleStruct: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
+
     fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn elements(&self) -> ValueIter<'_>;
+
     fn elements_mut(&mut self) -> ValueIterMut<'_>;
 }
 
@@ -62,6 +66,10 @@ impl TupleStructValue {
 }
 
 impl Reflect for TupleStructValue {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }

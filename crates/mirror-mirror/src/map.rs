@@ -4,6 +4,8 @@ use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::TypeInfo;
+use crate::Typed;
 use crate::Value;
 use std::any::Any;
 use std::collections::BTreeMap;
@@ -11,12 +13,15 @@ use std::fmt;
 
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;
+
     fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect>;
 
     fn len(&self) -> usize;
+
     fn is_empty(&self) -> bool;
 
     fn iter(&self) -> PairIter<'_, dyn Reflect>;
+
     fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect>;
 }
 
@@ -71,6 +76,10 @@ where
     K: FromReflect + Ord,
     V: FromReflect,
 {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }

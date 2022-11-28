@@ -62,6 +62,28 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
         }
     };
 
+    let fn_type_info = {
+        let code_for_fields = fields.iter().map(|field| {
+            let field_ty = &field.ty;
+            quote! {
+                UnnamedField::new::<#field_ty>()
+            }
+        });
+
+        quote! {
+            fn type_info(&self) -> TypeInfo {
+                impl Typed for #ident {
+                    fn type_info() -> TypeInfo {
+                        let fields = &[#(#code_for_fields),*];
+                        TupleStructInfo::new::<Self>(fields).into()
+                    }
+                }
+
+                <Self as Typed>::type_info()
+            }
+        }
+    };
+
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
@@ -83,6 +105,7 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
                 self
             }
 
+            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect

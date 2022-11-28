@@ -2,6 +2,7 @@ use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
+use crate::EnumInfo;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -10,6 +11,11 @@ use crate::Struct;
 use crate::StructValue;
 use crate::Tuple;
 use crate::TupleValue;
+use crate::TupleVariantInfo;
+use crate::TypeInfo;
+use crate::Typed;
+use crate::UnitVariantInfo;
+use crate::UnnamedField;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
@@ -20,15 +26,19 @@ use std::fmt;
 
 pub trait Enum: Reflect {
     fn variant_name(&self) -> &str;
+
     fn variant_kind(&self) -> VariantKind;
 
     fn field(&self, name: &str) -> Option<&dyn Reflect>;
+
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
 
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
+
     fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn fields(&self) -> VariantFieldIter<'_>;
+
     fn fields_mut(&mut self) -> VariantFieldIterMut<'_>;
 }
 
@@ -122,6 +132,10 @@ impl EnumValue {
 }
 
 impl Reflect for EnumValue {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -397,6 +411,14 @@ impl<T> Reflect for Option<T>
 where
     T: FromReflect,
 {
+    fn type_info(&self) -> TypeInfo {
+        let variants = &[
+            TupleVariantInfo::new("Some", &[UnnamedField::new::<T>()]).into(),
+            UnitVariantInfo::new("None").into(),
+        ];
+        EnumInfo::new::<Self>(variants).into()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }

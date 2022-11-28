@@ -8,6 +8,8 @@ use crate::ScalarMut;
 use crate::ScalarRef;
 use crate::StructValue;
 use crate::TupleStructValue;
+use crate::TypeInfo;
+use crate::Typed;
 use ordered_float::OrderedFloat;
 use serde::Deserialize;
 use serde::Serialize;
@@ -128,6 +130,10 @@ impl Ord for Value {
 }
 
 impl Reflect for Value {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         match self {
             Value::usize(inner) => inner,

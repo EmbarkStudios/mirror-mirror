@@ -4,18 +4,23 @@ use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::TypeInfo;
+use crate::Typed;
 use crate::Value;
 use std::any::Any;
 use std::fmt;
 
 pub trait List: Reflect {
     fn get(&self, index: usize) -> Option<&dyn Reflect>;
+
     fn get_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn len(&self) -> usize;
+
     fn is_empty(&self) -> bool;
 
     fn iter(&self) -> ValueIter<'_>;
+
     fn iter_mut(&mut self) -> ValueIterMut<'_>;
 }
 
@@ -65,6 +70,10 @@ impl<T> Reflect for Vec<T>
 where
     T: FromReflect,
 {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }

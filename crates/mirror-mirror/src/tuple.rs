@@ -5,6 +5,10 @@ use crate::List;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::TupleInfo;
+use crate::TypeInfo;
+use crate::Typed;
+use crate::UnnamedField;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
@@ -16,9 +20,11 @@ use std::fmt::Debug;
 
 pub trait Tuple: Reflect {
     fn element(&self, index: usize) -> Option<&dyn Reflect>;
+
     fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn elements(&self) -> ValueIter<'_>;
+
     fn elements_mut(&mut self) -> ValueIterMut<'_>;
 }
 
@@ -81,6 +87,10 @@ impl Tuple for TupleValue {
 }
 
 impl Reflect for TupleValue {
+    fn type_info(&self) -> TypeInfo {
+        <Self as Typed>::type_info()
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -147,10 +157,25 @@ impl FromReflect for TupleValue {
 macro_rules! impl_tuple {
     ($($ident:ident),* $(,)?) => {
         #[allow(non_snake_case, unused_mut, unused_variables)]
+        impl<$($ident,)*> Typed for ($($ident,)*)
+        where
+            $($ident: Reflect + Clone,)*
+        {
+            fn type_info() -> TypeInfo {
+                let fields = &[$(UnnamedField::new::<$ident>()),*];
+                TupleInfo::new::<Self>(fields).into()
+            }
+        }
+
+        #[allow(non_snake_case, unused_mut, unused_variables)]
         impl<$($ident,)*> Reflect for ($($ident,)*)
         where
             $($ident: Reflect + Clone,)*
         {
+            fn type_info(&self) -> TypeInfo {
+                <Self as Typed>::type_info()
+            }
+
             fn as_any(&self) -> &dyn Any {
                 self
             }

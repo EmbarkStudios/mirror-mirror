@@ -151,6 +151,61 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
         }
     };
 
+    let fn_type_info = {
+        let code_for_variants = enum_.variants.iter().map(|variant| {
+            let (ident, _) = variant_parts(variant);
+            let ident_string = stringify(ident);
+
+            match &variant.fields {
+                syn::Fields::Named(_) => {
+                    let fields = variant.fields.iter().map(|field| {
+                        let ident = field
+                            .ident
+                            .as_ref()
+                            .expect("named variant with unnamed field");
+                        let field_name = stringify(ident);
+                        let field_ty = &field.ty;
+                        quote! {
+                            NamedField::new::<#field_ty>(#field_name)
+                        }
+                    });
+
+                    quote! {
+                        StructVariantInfo::new(#ident_string, &[#(#fields),*]).into()
+                    }
+                }
+                syn::Fields::Unnamed(_) => {
+                    let fields = variant.fields.iter().map(|field| {
+                        let field_ty = &field.ty;
+                        quote! {
+                            UnnamedField::new::<#field_ty>()
+                        }
+                    });
+
+                    quote! {
+                        TupleVariantInfo::new(#ident_string, &[#(#fields),*]).into()
+                    }
+                }
+                syn::Fields::Unit => quote! {
+                    UnitVariantInfo::new(#ident_string).into()
+                },
+            }
+        });
+
+        quote! {
+            fn type_info(&self) -> TypeInfo {
+                impl Typed for #ident {
+                    fn type_info() -> TypeInfo {
+                        let variants = &[#(#code_for_variants),*];
+                        EnumInfo::new::<Self>(variants).into()
+                    }
+                }
+
+                <Self as Typed>::type_info()
+            }
+        }
+    };
+
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
@@ -172,6 +227,7 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
                 self
             }
 
+            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect
