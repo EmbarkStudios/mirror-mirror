@@ -60,21 +60,6 @@ pub trait Reflect: Any + Send + 'static {
     fn as_reflect(&self) -> &dyn Reflect;
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect;
 
-    // fn as_tuple(&self) -> Option<&dyn Tuple>;
-    // fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple>;
-
-    // fn as_struct(&self) -> Option<&dyn Struct>;
-    // fn as_struct_mut(&mut self) -> Option<&mut dyn Struct>;
-
-    // fn as_tuple_struct(&self) -> Option<&dyn TupleStruct>;
-    // fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct>;
-
-    // fn as_enum(&self) -> Option<&dyn Enum>;
-    // fn as_enum_mut(&mut self) -> Option<&mut dyn Enum>;
-
-    // fn as_list(&self) -> Option<&dyn List>;
-    // fn as_list_mut(&mut self) -> Option<&mut dyn List>;
-
     fn reflect_ref(&self) -> ReflectRef<'_>;
     fn reflect_mut(&mut self) -> ReflectMut<'_>;
 
@@ -92,6 +77,46 @@ pub trait Reflect: Any + Send + 'static {
 
     fn type_name(&self) -> &str {
         std::any::type_name::<Self>()
+    }
+
+    fn as_tuple(&self) -> Option<&dyn Tuple> {
+        self.reflect_ref().as_tuple()
+    }
+
+    fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
+        self.reflect_mut().as_tuple()
+    }
+
+    fn as_struct(&self) -> Option<&dyn Struct> {
+        self.reflect_ref().as_struct()
+    }
+
+    fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
+        self.reflect_mut().as_struct()
+    }
+
+    fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
+        self.reflect_ref().as_tuple_struct()
+    }
+
+    fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
+        self.reflect_mut().as_tuple_struct()
+    }
+
+    fn as_enum(&self) -> Option<&dyn Enum> {
+        self.reflect_ref().as_enum()
+    }
+
+    fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
+        self.reflect_mut().as_enum()
+    }
+
+    fn as_list(&self) -> Option<&dyn List> {
+        self.reflect_ref().as_list()
+    }
+
+    fn as_list_mut(&mut self) -> Option<&mut dyn List> {
+        self.reflect_mut().as_list()
     }
 }
 
