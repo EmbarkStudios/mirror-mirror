@@ -47,3 +47,38 @@ mod complex_types {
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
     struct D;
 }
+
+mod skip {
+    #![allow(dead_code)]
+
+    use super::*;
+
+    #[derive(Reflect, Debug, Clone)]
+    struct TestStruct {
+        #[reflect(skip)]
+        not_reflect: NotReflect,
+    }
+
+    #[derive(Reflect, Debug, Clone)]
+    struct TestTupleStruct(#[reflect(skip)] NotReflect);
+
+    // TODO(david): support #[reflection(skip)] on fields inside variants
+    #[derive(Reflect, Debug, Clone)]
+    #[allow(clippy::enum_variant_names)]
+    enum TestEnum {
+        #[reflect(skip)]
+        SkipStructVariant { not_reflect: NotReflect },
+        // SkipStructField {
+        //     #[reflect(skip)]
+        //     not_reflect: NotReflect,
+        // },
+        #[reflect(skip)]
+        SkipTupleVariant(NotReflect),
+        // SkipTupleField(#[reflect(skip)] NotReflect),
+        #[reflect(skip)]
+        SkipUnitVariant,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    struct NotReflect;
+}

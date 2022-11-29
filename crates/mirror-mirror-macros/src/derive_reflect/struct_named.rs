@@ -1,8 +1,11 @@
-use super::ItemAttrs;
+use super::attrs::AttrsDatabase;
+use super::attrs::ItemAttrs;
 use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
+use quote::quote_spanned;
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::Field;
 use syn::FieldsNamed;
 use syn::Ident;
@@ -13,13 +16,15 @@ type Fields = Punctuated<Field, Token![,]>;
 pub(super) fn expand(
     ident: &Ident,
     fields: FieldsNamed,
-    attrs: ItemAttrs,
+    item_attrs: ItemAttrs,
 ) -> syn::Result<TokenStream> {
+    let field_attrs = AttrsDatabase::new_from_named(&fields)?;
+
     let fields = fields.named;
 
-    let reflect = expand_reflect(ident, &fields, attrs);
-    let from_reflect = expand_from_reflect(ident, &fields);
-    let struct_ = expand_struct(ident, &fields);
+    let reflect = expand_reflect(ident, &fields, item_attrs, &field_attrs);
+    let from_reflect = expand_from_reflect(ident, &fields, &field_attrs);
+    let struct_ = expand_struct(ident, &fields, &field_attrs);
 
     Ok(quote! {
         #reflect
@@ -28,16 +33,24 @@ pub(super) fn expand(
     })
 }
 
-fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStream {
+fn expand_reflect(
+    ident: &Ident,
+    fields: &Fields,
+    item_attrs: ItemAttrs,
+    field_attrs: &AttrsDatabase<Ident>,
+) -> TokenStream {
     let fn_patch = {
-        let code_for_fields = fields.iter().map(|field| {
-            let field = stringify(&field.ident);
-            quote! {
-                if let Some(field) = value.field(#field) {
-                    self.field_mut(#field).unwrap().patch(field);
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let field = stringify(&field.ident);
+                quote! {
+                    if let Some(field) = value.field(#field) {
+                        self.field_mut(#field).unwrap().patch(field);
+                    }
                 }
-            }
-        });
+            });
 
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
@@ -49,13 +62,16 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
     };
 
     let fn_to_value = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
-            quote! {
-                let value = value.with_field(#field, self.#ident.clone());
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    let value = value.with_field(#field, self.#ident.clone());
+                }
+            });
 
         quote! {
             fn to_value(&self) -> Value {
@@ -67,13 +83,16 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
     };
 
     let fn_type_info = {
-        let code_for_fields = fields.iter().map(|field| {
-            let name = stringify(&field.ident);
-            let field_ty = &field.ty;
-            quote! {
-                NamedField::new::<#field_ty>(#name)
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let name = stringify(&field.ident);
+                let field_ty = &field.ty;
+                quote! {
+                    NamedField::new::<#field_ty>(#name)
+                }
+            });
 
         quote! {
             fn type_info(&self) -> TypeInfo {
@@ -89,8 +108,8 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
         }
     };
 
-    let fn_debug = attrs.fn_debug_tokens();
-    let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
+    let fn_debug = item_attrs.fn_debug_tokens();
+    let fn_clone_reflect = item_attrs.fn_clone_reflect_tokens();
 
     quote! {
         impl Reflect for #ident {
@@ -127,14 +146,27 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
     }
 }
 
-fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
+fn expand_from_reflect(
+    ident: &Ident,
+    fields: &Fields,
+    field_attrs: &AttrsDatabase<Ident>,
+) -> TokenStream {
     let fn_from_reflect = {
         let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let ty = &field.ty;
-            let field = stringify(ident);
-            quote! {
-                #ident: struct_.field(#field)?.downcast_ref::<#ty>()?.to_owned(),
+            let ident = field.ident.as_ref().unwrap();
+            let skip = field_attrs.skip(ident);
+            let span = field.ty.span();
+
+            if skip {
+                quote_spanned! {span=>
+                    #ident: ::std::default::Default::default(),
+                }
+            } else {
+                let ty = &field.ty;
+                let field = stringify(ident);
+                quote_spanned! {span=>
+                    #ident: struct_.field(#field)?.downcast_ref::<#ty>()?.to_owned(),
+                }
             }
         });
 
@@ -155,17 +187,24 @@ fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
     }
 }
 
-fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
+fn expand_struct(
+    ident: &Ident,
+    fields: &Fields,
+    field_attrs: &AttrsDatabase<Ident>,
+) -> TokenStream {
     let fn_field = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
-            quote! {
-                if name == #field {
-                    return Some(&self.#ident);
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    if name == #field {
+                        return Some(&self.#ident);
+                    }
                 }
-            }
-        });
+            });
 
         quote! {
             fn field(&self, name: &str) -> Option<&dyn Reflect> {
@@ -176,15 +215,18 @@ fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
     };
 
     let fn_field_mut = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
-            quote! {
-                if name == #field {
-                    return Some(&mut self.#ident);
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    if name == #field {
+                        return Some(&mut self.#ident);
+                    }
                 }
-            }
-        });
+            });
 
         quote! {
             fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
@@ -195,13 +237,16 @@ fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
     };
 
     let fn_fields = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
-            quote! {
-                (#field, self.#ident.as_reflect()),
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    (#field, self.#ident.as_reflect()),
+                }
+            });
 
         quote! {
             fn fields(&self) -> PairIter<'_> {
@@ -212,13 +257,16 @@ fn expand_struct(ident: &Ident, fields: &Fields) -> TokenStream {
     };
 
     let fn_fields_mut = {
-        let code_for_fields = fields.iter().map(|field| {
-            let ident = &field.ident;
-            let field = stringify(ident);
-            quote! {
-                (#field, self.#ident.as_reflect_mut()),
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    (#field, self.#ident.as_reflect_mut()),
+                }
+            });
 
         quote! {
             fn fields_mut(&mut self) -> PairIterMut<'_> {

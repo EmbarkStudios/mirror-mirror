@@ -1,4 +1,5 @@
-use super::ItemAttrs;
+use super::attrs::AttrsDatabase;
+use super::attrs::ItemAttrs;
 use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -6,10 +7,13 @@ use syn::DataEnum;
 use syn::Ident;
 use syn::Variant;
 
+#[allow(warnings)]
 pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::Result<TokenStream> {
-    let reflect = expand_reflect(ident, &enum_, attrs);
-    let from_reflect = expand_from_reflect(ident, &enum_);
-    let enum_ = expand_enum(ident, &enum_);
+    let variant_attrs = AttrsDatabase::new_from_enum_for_variants(&enum_)?;
+
+    let reflect = expand_reflect(ident, &enum_, attrs, &variant_attrs);
+    let from_reflect = expand_from_reflect(ident, &enum_, &variant_attrs);
+    let enum_ = expand_enum(ident, &enum_, &variant_attrs);
 
     Ok(quote! {
         #reflect
@@ -18,62 +22,71 @@ pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::R
     })
 }
 
-fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStream {
+fn expand_reflect(
+    ident: &Ident,
+    enum_: &DataEnum,
+    attrs: ItemAttrs,
+    variant_attrs: &AttrsDatabase<Ident>,
+) -> TokenStream {
     let fn_patch = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    let set_fields = variant.fields.iter().map(|field| {
-                        let ident = field
-                            .ident
-                            .as_ref()
-                            .expect("named variant with unnamed field");
-                        let ident_string = stringify(ident);
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        let set_fields = variant.fields.iter().map(|field| {
+                            let ident = field
+                                .ident
+                                .as_ref()
+                                .expect("named variant with unnamed field");
+                            let ident_string = stringify(ident);
+                            quote! {
+                                if let Some(new_value) = enum_.field(#ident_string) {
+                                    #ident.patch(new_value);
+                                }
+                            }
+                        });
+
                         quote! {
-                            if let Some(new_value) = enum_.field(#ident_string) {
-                                #ident.patch(new_value);
-                            }
-                        }
-                    });
-
-                    quote! {
-                        Self::#ident { #(#field_names,)* } => {
-                            if variant_matches {
-                                #(#set_fields)*
+                            Self::#ident { #(#field_names,)* } => {
+                                if variant_matches {
+                                    #(#set_fields)*
+                                }
                             }
                         }
                     }
-                }
-                syn::Fields::Unnamed(_) => {
-                    let field_names = field_names.collect::<Vec<_>>();
+                    syn::Fields::Unnamed(_) => {
+                        let field_names = field_names.collect::<Vec<_>>();
 
-                    let set_fields = field_names.iter().enumerate().map(|(index, ident)| {
+                        let set_fields = field_names.iter().enumerate().map(|(index, ident)| {
+                            quote! {
+                                if let Some(new_value) = enum_.element(#index) {
+                                    #ident.patch(new_value);
+                                }
+                            }
+                        });
+
                         quote! {
-                            if let Some(new_value) = enum_.element(#index) {
-                                #ident.patch(new_value);
+                            Self::#ident(#(#field_names,)*) => {
+                                if variant_matches {
+                                    #(#set_fields)*
+                                }
                             }
                         }
-                    });
-
-                    quote! {
-                        Self::#ident(#(#field_names,)*) => {
-                            if variant_matches {
-                                #(#set_fields)*
+                    }
+                    syn::Fields::Unit => {
+                        quote! {
+                            Self::#ident => {
+                                // unit variants don't have any fields to patch
                             }
                         }
                     }
                 }
-                syn::Fields::Unit => {
-                    quote! {
-                        Self::#ident => {
-                            // unit variants don't have any fields to patch
-                        }
-                    }
-                }
-            }
-        });
+            });
 
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
@@ -86,6 +99,7 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
                         let variant_matches = self.variant_name() == enum_.variant_name();
                         match self {
                             #(#match_arms)*
+                            _ => {}
                         }
                     }
                 }
@@ -94,103 +108,114 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
     };
 
     let fn_to_value = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
-            let ident_string = stringify(ident);
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
+                let ident_string = stringify(ident);
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    let set_fields = variant.fields.iter().map(|field| {
-                        let ident = field
-                            .ident
-                            .as_ref()
-                            .expect("named variant with unnamed field");
-                        let ident_string = stringify(ident);
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        let set_fields = variant.fields.iter().map(|field| {
+                            let ident = field
+                                .ident
+                                .as_ref()
+                                .expect("named variant with unnamed field");
+                            let ident_string = stringify(ident);
+                            quote! {
+                                value.set_field(#ident_string, #ident.to_owned());
+                            }
+                        });
+
                         quote! {
-                            value.set_field(#ident_string, #ident.to_owned());
+                            Self::#ident { #(#field_names,)* } => {
+                                let mut value = EnumValue::new_struct_variant(#ident_string);
+                                #(#set_fields)*
+                                value.into()
+                            }
                         }
-                    });
+                    }
+                    syn::Fields::Unnamed(_) => {
+                        let field_names = field_names.collect::<Vec<_>>();
 
-                    quote! {
-                        Self::#ident { #(#field_names,)* } => {
-                            let mut value = EnumValue::new_struct_variant(#ident_string);
-                            #(#set_fields)*
-                            value.into()
+                        quote! {
+                            Self::#ident(#(#field_names,)*) => {
+                                let mut value = EnumValue::new_tuple_variant(#ident_string);
+                                #(
+                                    value.push_element(#field_names.to_owned());
+                                )*
+                                value.into()
+                            }
+                        }
+                    }
+                    syn::Fields::Unit => {
+                        quote! {
+                            Self::#ident => {
+                                EnumValue::new_unit_variant(#ident_string).into()
+                            }
                         }
                     }
                 }
-                syn::Fields::Unnamed(_) => {
-                    let field_names = field_names.collect::<Vec<_>>();
-
-                    quote! {
-                        Self::#ident(#(#field_names,)*) => {
-                            let mut value = EnumValue::new_tuple_variant(#ident_string);
-                            #(
-                                value.push_element(#field_names.to_owned());
-                            )*
-                            value.into()
-                        }
-                    }
-                }
-                syn::Fields::Unit => {
-                    quote! {
-                        Self::#ident => {
-                            EnumValue::new_unit_variant(#ident_string).into()
-                        }
-                    }
-                }
-            }
-        });
+            });
 
         quote! {
             fn to_value(&self) -> Value {
                 match self {
                     #(#match_arms)*
+                    other => {
+                        panic!("`Reflection::to_value` called on `{:?}` which doesn't suport reflection", other.as_reflect())
+                    }
                 }
             }
         }
     };
 
     let fn_type_info = {
-        let code_for_variants = enum_.variants.iter().map(|variant| {
-            let (ident, _) = variant_parts(variant);
-            let ident_string = stringify(ident);
+        let code_for_variants = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, _) = variant_parts(variant);
+                let ident_string = stringify(ident);
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    let fields = variant.fields.iter().map(|field| {
-                        let ident = field
-                            .ident
-                            .as_ref()
-                            .expect("named variant with unnamed field");
-                        let field_name = stringify(ident);
-                        let field_ty = &field.ty;
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        let fields = variant.fields.iter().map(|field| {
+                            let ident = field
+                                .ident
+                                .as_ref()
+                                .expect("named variant with unnamed field");
+                            let field_name = stringify(ident);
+                            let field_ty = &field.ty;
+                            quote! {
+                                NamedField::new::<#field_ty>(#field_name)
+                            }
+                        });
+
                         quote! {
-                            NamedField::new::<#field_ty>(#field_name)
+                            StructVariantInfo::new(#ident_string, &[#(#fields),*]).into()
                         }
-                    });
-
-                    quote! {
-                        StructVariantInfo::new(#ident_string, &[#(#fields),*]).into()
                     }
-                }
-                syn::Fields::Unnamed(_) => {
-                    let fields = variant.fields.iter().map(|field| {
-                        let field_ty = &field.ty;
+                    syn::Fields::Unnamed(_) => {
+                        let fields = variant.fields.iter().map(|field| {
+                            let field_ty = &field.ty;
+                            quote! {
+                                UnnamedField::new::<#field_ty>()
+                            }
+                        });
+
                         quote! {
-                            UnnamedField::new::<#field_ty>()
+                            TupleVariantInfo::new(#ident_string, &[#(#fields),*]).into()
                         }
-                    });
-
-                    quote! {
-                        TupleVariantInfo::new(#ident_string, &[#(#fields),*]).into()
                     }
+                    syn::Fields::Unit => quote! {
+                        UnitVariantInfo::new(#ident_string).into()
+                    },
                 }
-                syn::Fields::Unit => quote! {
-                    UnitVariantInfo::new(#ident_string).into()
-                },
-            }
-        });
+            });
 
         quote! {
             fn type_info(&self) -> TypeInfo {
@@ -244,51 +269,59 @@ fn expand_reflect(ident: &Ident, enum_: &DataEnum, attrs: ItemAttrs) -> TokenStr
     }
 }
 
-fn expand_from_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
-    let match_arms = enum_.variants.iter().map(|variant| {
-        let (ident, _) = variant_parts(variant);
-        let ident_string = stringify(ident);
+fn expand_from_reflect(
+    ident: &Ident,
+    enum_: &DataEnum,
+    variant_attrs: &AttrsDatabase<Ident>,
+) -> TokenStream {
+    let match_arms = enum_
+        .variants
+        .iter()
+        .filter(variant_attrs.filter_out_skipped_variant())
+        .map(|variant| {
+            let (ident, _) = variant_parts(variant);
+            let ident_string = stringify(ident);
 
-        let expr = match &variant.fields {
-            syn::Fields::Named(fields) => {
-                let set_fields = fields.named.iter().map(|field| {
-                    let ident = field.ident.as_ref().unwrap();
-                    let ident_string = stringify(ident);
-                    let ty = &field.ty;
+            let expr = match &variant.fields {
+                syn::Fields::Named(fields) => {
+                    let set_fields = fields.named.iter().map(|field| {
+                        let ident = field.ident.as_ref().unwrap();
+                        let ident_string = stringify(ident);
+                        let ty = &field.ty;
+                        quote! {
+                            #ident: enum_.get_field::<#ty>(#ident_string)?.to_owned(),
+                        }
+                    });
+
                     quote! {
-                        #ident: enum_.get_field::<#ty>(#ident_string)?.to_owned(),
+                        Some(Self::#ident {
+                            #(#set_fields)*
+                        }),
                     }
-                });
-
-                quote! {
-                    Some(Self::#ident {
-                        #(#set_fields)*
-                    }),
                 }
-            }
-            syn::Fields::Unnamed(fields) => {
-                let set_fields = fields.unnamed.iter().enumerate().map(|(idx, field)| {
-                    let ty = &field.ty;
+                syn::Fields::Unnamed(fields) => {
+                    let set_fields = fields.unnamed.iter().enumerate().map(|(idx, field)| {
+                        let ty = &field.ty;
+                        quote! {
+                            enum_.get_field::<#ty>(#idx)?.to_owned(),
+                        }
+                    });
+
                     quote! {
-                        enum_.get_field::<#ty>(#idx)?.to_owned(),
+                        Some(Self::#ident(#(#set_fields)*)),
                     }
-                });
-
-                quote! {
-                    Some(Self::#ident(#(#set_fields)*)),
                 }
-            }
-            syn::Fields::Unit => {
-                quote! {
-                    Some(Self::#ident),
+                syn::Fields::Unit => {
+                    quote! {
+                        Some(Self::#ident),
+                    }
                 }
-            }
-        };
+            };
 
-        quote! {
-            #ident_string => #expr
-        }
-    });
+            quote! {
+                #ident_string => #expr
+            }
+        });
 
     quote! {
         impl FromReflect for #ident {
@@ -303,7 +336,11 @@ fn expand_from_reflect(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     }
 }
 
-fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
+fn expand_enum(
+    ident: &Ident,
+    enum_: &DataEnum,
+    variant_attrs: &AttrsDatabase<Ident>,
+) -> TokenStream {
     let fn_variant_name = {
         let match_arms = enum_.variants.iter().map(|variant| {
             let ident = &variant.ident;
@@ -347,41 +384,46 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     };
 
     let fn_field = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
-            let field_names = field_names.collect::<Vec<_>>();
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
+                let field_names = field_names.collect::<Vec<_>>();
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    let return_if_name_matches = field_names.iter().map(|ident| {
-                        let ident_string = stringify(ident);
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        let return_if_name_matches = field_names.iter().map(|ident| {
+                            let ident_string = stringify(ident);
+                            quote! {
+                                if name == #ident_string {
+                                    return Some(#ident);
+                                }
+                            }
+                        });
+
                         quote! {
-                            if name == #ident_string {
-                                return Some(#ident);
+                            Self::#ident { #(#field_names,)* } => {
+                                #(#return_if_name_matches)*
                             }
                         }
-                    });
-
-                    quote! {
-                        Self::#ident { #(#field_names,)* } => {
-                            #(#return_if_name_matches)*
-                        }
                     }
+                    syn::Fields::Unnamed(_) => quote! {
+                        Self::#ident(..) => return None,
+                    },
+                    syn::Fields::Unit => quote! {
+                        Self::#ident => return None,
+                    },
                 }
-                syn::Fields::Unnamed(_) => quote! {
-                    Self::#ident(..) => return None,
-                },
-                syn::Fields::Unit => quote! {
-                    Self::#ident => return None,
-                },
-            }
-        });
+            });
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
             fn field(&self, name: &str) -> Option<&dyn Reflect> {
                 match self {
                     #(#match_arms)*
+                    _ => {}
                 }
 
                 None
@@ -391,42 +433,47 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     };
 
     let fn_field_mut = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    let field_names = field_names.collect::<Vec<_>>();
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        let field_names = field_names.collect::<Vec<_>>();
 
-                    let return_if_name_matches = field_names.iter().map(|ident| {
-                        let ident_string = stringify(ident);
-                        quote! {
-                            if name == #ident_string {
-                                return Some(#ident);
+                        let return_if_name_matches = field_names.iter().map(|ident| {
+                            let ident_string = stringify(ident);
+                            quote! {
+                                if name == #ident_string {
+                                    return Some(#ident);
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    quote! {
-                        Self::#ident { #(#field_names,)* } => {
-                            #(#return_if_name_matches)*
-                        },
+                        quote! {
+                            Self::#ident { #(#field_names,)* } => {
+                                #(#return_if_name_matches)*
+                            },
+                        }
                     }
+                    syn::Fields::Unnamed(_) => quote! {
+                        Self::#ident(..) => return None,
+                    },
+                    syn::Fields::Unit => quote! {
+                        Self::#ident => return None,
+                    },
                 }
-                syn::Fields::Unnamed(_) => quote! {
-                    Self::#ident(..) => return None,
-                },
-                syn::Fields::Unit => quote! {
-                    Self::#ident => return None,
-                },
-            }
-        });
+            });
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
             fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
                 match self {
                     #(#match_arms)*
+                    _ => {}
                 }
 
                 None
@@ -436,44 +483,49 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     };
 
     let fn_element = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    quote! {
-                        Self::#ident { .. } => return None,
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        quote! {
+                            Self::#ident { .. } => return None,
+                        }
                     }
-                }
-                syn::Fields::Unnamed(_) => {
-                    let field_names = field_names.collect::<Vec<_>>();
+                    syn::Fields::Unnamed(_) => {
+                        let field_names = field_names.collect::<Vec<_>>();
 
-                    let return_if_index_matches =
-                        field_names.iter().enumerate().map(|(idx, field_name)| {
-                            quote! {
-                                if #idx == index {
-                                    return Some(#field_name.as_reflect());
+                        let return_if_index_matches =
+                            field_names.iter().enumerate().map(|(idx, field_name)| {
+                                quote! {
+                                    if #idx == index {
+                                        return Some(#field_name.as_reflect());
+                                    }
                                 }
-                            }
-                        });
+                            });
 
-                    quote! {
-                        Self::#ident(#(#field_names,)*) => {
-                            #(#return_if_index_matches)*
-                        },
+                        quote! {
+                            Self::#ident(#(#field_names,)*) => {
+                                #(#return_if_index_matches)*
+                            },
+                        }
                     }
+                    syn::Fields::Unit => quote! {
+                        Self::#ident => return None,
+                    },
                 }
-                syn::Fields::Unit => quote! {
-                    Self::#ident => return None,
-                },
-            }
-        });
+            });
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
             fn element(&self, index: usize) -> Option<&dyn Reflect> {
                 match self {
                     #(#match_arms)*
+                    _ => {}
                 }
 
                 None
@@ -482,44 +534,49 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     };
 
     let fn_element_mut = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
 
-            match &variant.fields {
-                syn::Fields::Named(_) => {
-                    quote! {
-                        Self::#ident { .. } => return None,
+                match &variant.fields {
+                    syn::Fields::Named(_) => {
+                        quote! {
+                            Self::#ident { .. } => return None,
+                        }
                     }
-                }
-                syn::Fields::Unnamed(_) => {
-                    let field_names = field_names.collect::<Vec<_>>();
+                    syn::Fields::Unnamed(_) => {
+                        let field_names = field_names.collect::<Vec<_>>();
 
-                    let return_if_index_matches =
-                        field_names.iter().enumerate().map(|(idx, field_name)| {
-                            quote! {
-                                if #idx == index {
-                                    return Some(#field_name.as_reflect_mut());
+                        let return_if_index_matches =
+                            field_names.iter().enumerate().map(|(idx, field_name)| {
+                                quote! {
+                                    if #idx == index {
+                                        return Some(#field_name.as_reflect_mut());
+                                    }
                                 }
-                            }
-                        });
+                            });
 
-                    quote! {
-                        Self::#ident(#(#field_names,)*) => {
-                            #(#return_if_index_matches)*
-                        },
+                        quote! {
+                            Self::#ident(#(#field_names,)*) => {
+                                #(#return_if_index_matches)*
+                            },
+                        }
                     }
+                    syn::Fields::Unit => quote! {
+                        Self::#ident => return None,
+                    },
                 }
-                syn::Fields::Unit => quote! {
-                    Self::#ident => return None,
-                },
-            }
-        });
+            });
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
             fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 match self {
                     #(#match_arms)*
+                    _ => {}
                 }
 
                 None
@@ -528,94 +585,104 @@ fn expand_enum(ident: &Ident, enum_: &DataEnum) -> TokenStream {
     };
 
     let fn_fields = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
-            let field_names = field_names.collect::<Vec<_>>();
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
+                let field_names = field_names.collect::<Vec<_>>();
 
-            match &variant.fields {
-                syn::Fields::Named(fields_named) => {
-                    let code_for_fields = fields_named.named.iter().map(|field| {
-                        let ident = &field.ident;
-                        let field = stringify(ident);
+                match &variant.fields {
+                    syn::Fields::Named(fields_named) => {
+                        let code_for_fields = fields_named.named.iter().map(|field| {
+                            let ident = &field.ident;
+                            let field = stringify(ident);
+                            quote! {
+                                (#field, #ident.as_reflect()),
+                            }
+                        });
+
                         quote! {
-                            (#field, #ident.as_reflect()),
+                            Self::#ident { #(#field_names,)* } => {
+                                let iter = [#(#code_for_fields)*];
+                                VariantFieldIter::new_struct_variant(iter)
+                            },
                         }
-                    });
-
-                    quote! {
-                        Self::#ident { #(#field_names,)* } => {
-                            let iter = [#(#code_for_fields)*];
-                            VariantFieldIter::new_struct_variant(iter)
-                        },
                     }
-                }
-                syn::Fields::Unnamed(_) => {
-                    quote! {
-                        Self::#ident(#(#field_names,)*) => {
-                            let iter = [#(#field_names.as_reflect(),)*];
-                            VariantFieldIter::new_tuple_variant(iter)
-                        },
+                    syn::Fields::Unnamed(_) => {
+                        quote! {
+                            Self::#ident(#(#field_names,)*) => {
+                                let iter = [#(#field_names.as_reflect(),)*];
+                                VariantFieldIter::new_tuple_variant(iter)
+                            },
+                        }
                     }
-                }
-                syn::Fields::Unit => quote! {
-                    Self::#ident => {
-                        VariantFieldIter::empty()
+                    syn::Fields::Unit => quote! {
+                        Self::#ident => {
+                            VariantFieldIter::empty()
+                        },
                     },
-                },
-            }
-        });
+                }
+            });
 
         quote! {
             fn fields(&self) -> VariantFieldIter<'_> {
                 match self {
                     #(#match_arms)*
+                    _ => VariantFieldIter::empty(),
                 }
             }
         }
     };
 
     let fn_fields_mut = {
-        let match_arms = enum_.variants.iter().map(|variant| {
-            let (ident, field_names) = variant_parts(variant);
-            let field_names = field_names.collect::<Vec<_>>();
+        let match_arms = enum_
+            .variants
+            .iter()
+            .filter(variant_attrs.filter_out_skipped_variant())
+            .map(|variant| {
+                let (ident, field_names) = variant_parts(variant);
+                let field_names = field_names.collect::<Vec<_>>();
 
-            match &variant.fields {
-                syn::Fields::Named(fields_named) => {
-                    let code_for_fields = fields_named.named.iter().map(|field| {
-                        let ident = &field.ident;
-                        let field = stringify(ident);
+                match &variant.fields {
+                    syn::Fields::Named(fields_named) => {
+                        let code_for_fields = fields_named.named.iter().map(|field| {
+                            let ident = &field.ident;
+                            let field = stringify(ident);
+                            quote! {
+                                (#field, #ident.as_reflect_mut()),
+                            }
+                        });
+
                         quote! {
-                            (#field, #ident.as_reflect_mut()),
+                            Self::#ident { #(#field_names,)* } => {
+                                let iter = [#(#code_for_fields)*];
+                                VariantFieldIterMut::new_struct_variant(iter)
+                            },
                         }
-                    });
-
-                    quote! {
-                        Self::#ident { #(#field_names,)* } => {
-                            let iter = [#(#code_for_fields)*];
-                            VariantFieldIterMut::new_struct_variant(iter)
-                        },
                     }
-                }
-                syn::Fields::Unnamed(_) => {
-                    quote! {
-                        Self::#ident(#(#field_names,)*) => {
-                            let iter = [#(#field_names.as_reflect_mut(),)*];
-                            VariantFieldIterMut::new_tuple_variant(iter)
-                        },
+                    syn::Fields::Unnamed(_) => {
+                        quote! {
+                            Self::#ident(#(#field_names,)*) => {
+                                let iter = [#(#field_names.as_reflect_mut(),)*];
+                                VariantFieldIterMut::new_tuple_variant(iter)
+                            },
+                        }
                     }
-                }
-                syn::Fields::Unit => quote! {
-                    Self::#ident => {
-                        VariantFieldIterMut::empty()
+                    syn::Fields::Unit => quote! {
+                        Self::#ident => {
+                            VariantFieldIterMut::empty()
+                        },
                     },
-                },
-            }
-        });
+                }
+            });
 
         quote! {
             fn fields_mut(&mut self) -> VariantFieldIterMut<'_> {
                 match self {
                     #(#match_arms)*
+                    _ => VariantFieldIterMut::empty(),
                 }
             }
         }

@@ -1,6 +1,8 @@
-use super::ItemAttrs;
+use super::attrs::AttrsDatabase;
+use super::attrs::ItemAttrs;
 use proc_macro2::TokenStream;
 use quote::quote;
+use quote::quote_spanned;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::Field;
@@ -16,11 +18,13 @@ pub(super) fn expand(
     fields: FieldsUnnamed,
     attrs: ItemAttrs,
 ) -> syn::Result<TokenStream> {
+    let field_attrs = AttrsDatabase::new_from_unnamed(&fields)?;
+
     let fields = fields.unnamed;
 
-    let reflect = expand_reflect(ident, &fields, attrs);
-    let from_reflect = expand_from_reflect(ident, &fields);
-    let tuple_struct = expand_tuple_struct(ident, &fields);
+    let reflect = expand_reflect(ident, &fields, attrs, &field_attrs);
+    let from_reflect = expand_from_reflect(ident, &fields, &field_attrs);
+    let tuple_struct = expand_tuple_struct(ident, &fields, &field_attrs);
 
     Ok(quote! {
         #reflect
@@ -29,29 +33,48 @@ pub(super) fn expand(
     })
 }
 
-fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStream {
+fn expand_reflect(
+    ident: &Ident,
+    fields: &Fields,
+    attrs: ItemAttrs,
+    field_attrs: &AttrsDatabase<usize>,
+) -> TokenStream {
     let fn_patch = {
+        let code_for_fields = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(idx, _)| {
+                quote! {
+                    if let Some(new_value) = tuple_struct.element(#idx) {
+                        self.element_mut(#idx).unwrap().patch(new_value);
+                    }
+                }
+            });
+
         quote! {
             fn patch(&mut self, value: &dyn Reflect) {
-                if let Some(value) = value.reflect_ref().as_tuple_struct() {
-                    for (current, new) in self.elements_mut().zip(value.elements()) {
-                        current.patch(new);
-                    }
+                if let Some(tuple_struct) = value.reflect_ref().as_tuple_struct() {
+                    #(#code_for_fields)*
                 }
             }
         }
     };
 
     let fn_to_value = {
-        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
-            let field_index = Index {
-                index: idx as u32,
-                span: field.span(),
-            };
-            quote! {
-                let value = value.with_element(self.#field_index.clone());
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(idx, field)| {
+                let field_index = Index {
+                    index: idx as u32,
+                    span: field.span(),
+                };
+                quote! {
+                    let value = value.with_element(self.#field_index.clone());
+                }
+            });
 
         quote! {
             fn to_value(&self) -> Value {
@@ -63,12 +86,16 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
     };
 
     let fn_type_info = {
-        let code_for_fields = fields.iter().map(|field| {
-            let field_ty = &field.ty;
-            quote! {
-                UnnamedField::new::<#field_ty>()
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(_, field)| {
+                let field_ty = &field.ty;
+                quote! {
+                    UnnamedField::new::<#field_ty>()
+                }
+            });
 
         quote! {
             fn type_info(&self) -> TypeInfo {
@@ -122,7 +149,11 @@ fn expand_reflect(ident: &Ident, fields: &Fields, attrs: ItemAttrs) -> TokenStre
     }
 }
 
-fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
+fn expand_from_reflect(
+    ident: &Ident,
+    fields: &Fields,
+    field_attrs: &AttrsDatabase<usize>,
+) -> TokenStream {
     let fn_from_reflect = {
         let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
             let field_index = Index {
@@ -130,11 +161,18 @@ fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
                 span: field.span(),
             };
             let ty = &field.ty;
-            quote! {
-                #field_index: tuple_struct
-                    .element(#field_index)?
-                    .downcast_ref::<#ty>()?
-                    .to_owned(),
+            let span = ty.span();
+            if field_attrs.skip(&idx) {
+                quote_spanned! {span=>
+                    #field_index: ::std::default::Default::default(),
+                }
+            } else {
+                quote_spanned! {span=>
+                    #field_index: tuple_struct
+                        .element(#field_index)?
+                        .downcast_ref::<#ty>()?
+                        .to_owned(),
+                }
             }
         });
 
@@ -155,17 +193,25 @@ fn expand_from_reflect(ident: &Ident, fields: &Fields) -> TokenStream {
     }
 }
 
-fn expand_tuple_struct(ident: &Ident, fields: &Fields) -> TokenStream {
+fn expand_tuple_struct(
+    ident: &Ident,
+    fields: &Fields,
+    field_attrs: &AttrsDatabase<usize>,
+) -> TokenStream {
     let fn_element = {
-        let match_arms = fields.iter().enumerate().map(|(idx, field)| {
-            let field_index = Index {
-                index: idx as u32,
-                span: field.span(),
-            };
-            quote! {
-                #idx => Some(self.#field_index.as_reflect()),
-            }
-        });
+        let match_arms = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(idx, field)| {
+                let field_index = Index {
+                    index: idx as u32,
+                    span: field.span(),
+                };
+                quote! {
+                    #idx => Some(self.#field_index.as_reflect()),
+                }
+            });
 
         quote! {
             fn element(&self, index: usize) -> Option<&dyn Reflect> {
@@ -178,15 +224,19 @@ fn expand_tuple_struct(ident: &Ident, fields: &Fields) -> TokenStream {
     };
 
     let fn_element_mut = {
-        let match_arms = fields.iter().enumerate().map(|(idx, field)| {
-            let field_index = Index {
-                index: idx as u32,
-                span: field.span(),
-            };
-            quote! {
-                #idx => Some(self.#field_index.as_reflect_mut()),
-            }
-        });
+        let match_arms = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(idx, field)| {
+                let field_index = Index {
+                    index: idx as u32,
+                    span: field.span(),
+                };
+                quote! {
+                    #idx => Some(self.#field_index.as_reflect_mut()),
+                }
+            });
 
         quote! {
             fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
@@ -199,15 +249,19 @@ fn expand_tuple_struct(ident: &Ident, fields: &Fields) -> TokenStream {
     };
 
     let fn_elements = {
-        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
-            let field_index = Index {
-                index: idx as u32,
-                span: field.span(),
-            };
-            quote! {
-                self.#field_index.as_reflect(),
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(idx, field)| {
+                let field_index = Index {
+                    index: idx as u32,
+                    span: field.span(),
+                };
+                quote! {
+                    self.#field_index.as_reflect(),
+                }
+            });
 
         quote! {
             fn elements(&self) -> ValueIter<'_> {
@@ -218,15 +272,19 @@ fn expand_tuple_struct(ident: &Ident, fields: &Fields) -> TokenStream {
     };
 
     let fn_elements_mut = {
-        let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
-            let field_index = Index {
-                index: idx as u32,
-                span: field.span(),
-            };
-            quote! {
-                self.#field_index.as_reflect_mut(),
-            }
-        });
+        let code_for_fields = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .map(|(idx, field)| {
+                let field_index = Index {
+                    index: idx as u32,
+                    span: field.span(),
+                };
+                quote! {
+                    self.#field_index.as_reflect_mut(),
+                }
+            });
 
         quote! {
             fn elements_mut(&mut self) -> ValueIterMut<'_> {
