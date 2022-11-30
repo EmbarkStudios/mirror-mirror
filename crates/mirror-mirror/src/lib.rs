@@ -74,7 +74,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
-        self.reflect_mut().as_tuple()
+        self.reflect_mut().as_tuple_mut()
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
@@ -82,7 +82,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_struct_mut(&mut self) -> Option<&mut dyn Struct> {
-        self.reflect_mut().as_struct()
+        self.reflect_mut().as_struct_mut()
     }
 
     fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
@@ -90,7 +90,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
-        self.reflect_mut().as_tuple_struct()
+        self.reflect_mut().as_tuple_struct_mut()
     }
 
     fn as_enum(&self) -> Option<&dyn Enum> {
@@ -98,7 +98,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_enum_mut(&mut self) -> Option<&mut dyn Enum> {
-        self.reflect_mut().as_enum()
+        self.reflect_mut().as_enum_mut()
     }
 
     fn as_list(&self) -> Option<&dyn List> {
@@ -106,7 +106,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_list_mut(&mut self) -> Option<&mut dyn List> {
-        self.reflect_mut().as_list()
+        self.reflect_mut().as_list_mut()
     }
 
     fn as_map(&self) -> Option<&dyn Map> {
@@ -114,7 +114,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_map_mut(&mut self) -> Option<&mut dyn Map> {
-        self.reflect_mut().as_map()
+        self.reflect_mut().as_map_mut()
     }
 
     fn as_scalar(&self) -> Option<ScalarRef<'_>> {
@@ -122,7 +122,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn as_scalar_mut(&mut self) -> Option<ScalarMut<'_>> {
-        self.reflect_mut().as_scalar()
+        self.reflect_mut().as_scalar_mut()
     }
 }
 
@@ -446,49 +446,49 @@ pub enum ReflectMut<'a> {
 }
 
 impl<'a> ReflectMut<'a> {
-    pub fn as_tuple(self) -> Option<&'a mut dyn Tuple> {
+    pub fn as_tuple_mut(self) -> Option<&'a mut dyn Tuple> {
         match self {
             Self::Tuple(inner) => Some(inner),
             _ => None,
         }
     }
 
-    pub fn as_struct(self) -> Option<&'a mut dyn Struct> {
+    pub fn as_struct_mut(self) -> Option<&'a mut dyn Struct> {
         match self {
             Self::Struct(inner) => Some(inner),
             _ => None,
         }
     }
 
-    pub fn as_tuple_struct(self) -> Option<&'a mut dyn TupleStruct> {
+    pub fn as_tuple_struct_mut(self) -> Option<&'a mut dyn TupleStruct> {
         match self {
             Self::TupleStruct(inner) => Some(inner),
             _ => None,
         }
     }
 
-    pub fn as_enum(self) -> Option<&'a mut dyn Enum> {
+    pub fn as_enum_mut(self) -> Option<&'a mut dyn Enum> {
         match self {
             Self::Enum(inner) => Some(inner),
             _ => None,
         }
     }
 
-    pub fn as_list(self) -> Option<&'a mut dyn List> {
+    pub fn as_list_mut(self) -> Option<&'a mut dyn List> {
         match self {
             Self::List(inner) => Some(inner),
             _ => None,
         }
     }
 
-    pub fn as_map(self) -> Option<&'a mut dyn Map> {
+    pub fn as_map_mut(self) -> Option<&'a mut dyn Map> {
         match self {
             Self::Map(inner) => Some(inner),
             _ => None,
         }
     }
 
-    pub fn as_scalar(self) -> Option<ScalarMut<'a>> {
+    pub fn as_scalar_mut(self) -> Option<ScalarMut<'a>> {
         match self {
             Self::Scalar(inner) => Some(inner),
             _ => None,

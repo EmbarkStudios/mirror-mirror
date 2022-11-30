@@ -1,6 +1,7 @@
 use crate as mirror_mirror;
 use crate::enum_::VariantKind;
 use crate::Enum;
+use crate::GetFieldMut;
 use mirror_mirror::EnumValue;
 use mirror_mirror::FromReflect;
 use mirror_mirror::GetField;
@@ -266,7 +267,7 @@ fn option() {
     assert_eq!(format!("{:?}", None::<i32>.as_reflect()), "None");
 
     let some_value = Some(1).to_value();
-    let some_value = some_value.reflect_ref().as_enum().unwrap();
+    let some_value: &dyn Enum = some_value.reflect_ref().as_enum().unwrap();
     assert_eq!(some_value.variant_name(), "Some");
     assert_eq!(some_value.variant_kind(), VariantKind::Tuple);
     assert_eq!(some_value.get_field::<i32>(0).unwrap(), &1);

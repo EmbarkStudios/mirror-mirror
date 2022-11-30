@@ -21,37 +21,30 @@ pub enum TypeInfo {
 }
 
 macro_rules! from_impl {
-    ($variant:ident($ty:ty)) => {
+    ($variant:ident(Option<$ty:ty>)) => {
         impl From<$ty> for TypeInfo {
             fn from(value: $ty) -> Self {
                 Self::$variant(Some(value))
             }
         }
     };
+
+    ($variant:ident($ty:ty)) => {
+        impl From<$ty> for TypeInfo {
+            fn from(value: $ty) -> Self {
+                Self::$variant(value)
+            }
+        }
+    };
 }
 
-from_impl! { Struct(StructInfo) }
-from_impl! { TupleStruct(TupleStructInfo) }
-from_impl! { Tuple(TupleInfo) }
-from_impl! { Enum(EnumInfo) }
-
-impl From<ListInfo> for TypeInfo {
-    fn from(value: ListInfo) -> Self {
-        Self::List(value)
-    }
-}
-
-impl From<MapInfo> for TypeInfo {
-    fn from(value: MapInfo) -> Self {
-        Self::Map(value)
-    }
-}
-
-impl From<ScalarInfo> for TypeInfo {
-    fn from(value: ScalarInfo) -> Self {
-        Self::Scalar(value)
-    }
-}
+from_impl! { Struct(Option<StructInfo>) }
+from_impl! { TupleStruct(Option<TupleStructInfo>) }
+from_impl! { Tuple(Option<TupleInfo>) }
+from_impl! { Enum(Option<EnumInfo>) }
+from_impl! { List(ListInfo) }
+from_impl! { Map(MapInfo) }
+from_impl! { Scalar(ScalarInfo) }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct StructInfo {

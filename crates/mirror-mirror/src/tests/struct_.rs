@@ -23,6 +23,10 @@ fn accessing_fields() {
         .unwrap();
 
     assert_eq!(*value, 42);
+
+    let value: Value = struct_.to_value();
+    assert_eq!(value.get_field::<i32>("field").unwrap(), &42);
+    assert_eq!(value.get_field::<i32>("field".to_owned()).unwrap(), &42);
 }
 
 #[test]

@@ -1,190 +1,349 @@
-use self::private::*;
-use crate::Enum;
-use crate::List;
-use crate::Reflect;
-use crate::ReflectMut;
-use crate::ReflectRef;
-use crate::Struct;
-use crate::Tuple;
-use crate::TupleStruct;
+use crate::{Enum, List, Map, Reflect, ReflectMut, ReflectRef, Struct, Tuple, TupleStruct, Value};
 
-pub trait GetField {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
-    where
-        T: Reflect;
-
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
+pub trait GetField<'a, K, M> {
+    fn get_field<T>(self, key: K) -> Option<&'a T>
     where
         T: Reflect;
 }
 
-mod private {
-    #![allow(unreachable_pub)]
-    pub trait Sealed {}
-    impl Sealed for &str {}
-    impl Sealed for usize {}
-
-    pub enum Key<'a> {
-        Str(&'a str),
-        Usize(usize),
-    }
+pub trait GetFieldMut<'a, K, M> {
+    fn get_field_mut<T>(self, key: K) -> Option<&'a mut T>
+    where
+        T: Reflect;
 }
 
-pub trait AsKey: Sealed {
-    fn as_key(&self) -> Key<'_>;
-}
-
-impl AsKey for &str {
-    fn as_key(&self) -> Key<'_> {
-        Key::Str(self)
-    }
-}
-
-impl AsKey for usize {
-    fn as_key(&self) -> Key<'_> {
-        Key::Usize(*self)
-    }
-}
-
-impl<K> GetField for K
+impl<'a, R, K, M> GetField<'a, K, M> for &'a mut R
 where
-    K: Reflect,
+    R: ?Sized,
+    &'a R: GetField<'a, K, M>,
 {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
+    fn get_field<T>(self, key: K) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        <&R as GetField<_, _>>::get_field(self, key)
+    }
+}
+
+impl<'a> GetField<'a, &str, private::Value> for &'a Value {
+    #[allow(warnings)]
+    fn get_field<T>(self, key: &str) -> Option<&'a T>
     where
         T: Reflect,
     {
         match self.reflect_ref() {
-            ReflectRef::Struct(inner) => inner.get_field(name),
-            ReflectRef::TupleStruct(inner) => inner.get_field(name),
-            ReflectRef::Tuple(inner) => inner.get_field(name),
-            ReflectRef::Enum(inner) => inner.get_field(name),
-            ReflectRef::List(inner) => inner.get_field(name),
-            ReflectRef::Map(_) | ReflectRef::Scalar(_) => None,
+            ReflectRef::Struct(inner) => inner.get_field(key),
+            ReflectRef::Enum(inner) => inner.get_field(key),
+            ReflectRef::Map(inner) => inner.get_field(key),
+            ReflectRef::TupleStruct(_)
+            | ReflectRef::Tuple(_)
+            | ReflectRef::List(_)
+            | ReflectRef::Scalar(_) => None,
         }
     }
+}
 
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
+impl<'a> GetFieldMut<'a, &str, private::Value> for &'a mut Value {
+    fn get_field_mut<T>(self, key: &str) -> Option<&'a mut T>
     where
         T: Reflect,
     {
         match self.reflect_mut() {
-            ReflectMut::Struct(inner) => inner.get_field_mut(name),
-            ReflectMut::TupleStruct(inner) => inner.get_field_mut(name),
-            ReflectMut::Tuple(inner) => inner.get_field_mut(name),
-            ReflectMut::Enum(inner) => inner.get_field_mut(name),
-            ReflectMut::List(inner) => inner.get_field_mut(name),
-            ReflectMut::Map(_) | ReflectMut::Scalar(_) => None,
+            ReflectMut::Struct(inner) => inner.get_field_mut(key),
+            ReflectMut::Enum(inner) => inner.get_field_mut(key),
+            ReflectMut::Map(inner) => inner.get_field_mut(key),
+            ReflectMut::TupleStruct(_)
+            | ReflectMut::Tuple(_)
+            | ReflectMut::List(_)
+            | ReflectMut::Scalar(_) => None,
         }
     }
 }
 
-impl GetField for dyn Struct {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
+impl<'a, K> GetField<'a, K, private::Value> for &'a Value
+where
+    K: Reflect,
+{
+    fn get_field<T>(self, key: K) -> Option<&'a T>
     where
         T: Reflect,
     {
-        match name.as_key() {
-            Key::Str(name) => self.field(name)?.downcast_ref(),
-            Key::Usize(_) => None,
-        }
-    }
-
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
-    where
-        T: Reflect,
-    {
-        match name.as_key() {
-            Key::Str(name) => self.field_mut(name)?.downcast_mut(),
-            Key::Usize(_) => None,
-        }
-    }
-}
-
-impl GetField for dyn TupleStruct {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
-    where
-        T: Reflect,
-    {
-        match name.as_key() {
-            Key::Str(_) => None,
-            Key::Usize(index) => self.element(index)?.downcast_ref(),
-        }
-    }
-
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
-    where
-        T: Reflect,
-    {
-        match name.as_key() {
-            Key::Str(_) => None,
-            Key::Usize(index) => self.element_mut(index)?.downcast_mut(),
+        if let Some(&key) = key.as_any().downcast_ref::<usize>() {
+            match self.reflect_ref() {
+                ReflectRef::TupleStruct(inner) => inner.get_field(key),
+                ReflectRef::Tuple(inner) => inner.get_field(key),
+                ReflectRef::Enum(inner) => inner.get_field(key),
+                ReflectRef::List(inner) => inner.get_field(key),
+                ReflectRef::Map(inner) => inner.get_field(key),
+                ReflectRef::Struct(_) | ReflectRef::Scalar(_) => None,
+            }
+        } else if let Some(key) = key.as_any().downcast_ref::<String>() {
+            match self.reflect_ref() {
+                ReflectRef::Map(inner) => inner.get_field(key.to_owned()),
+                ReflectRef::Struct(inner) => inner.get_field(key),
+                ReflectRef::TupleStruct(_)
+                | ReflectRef::Tuple(_)
+                | ReflectRef::Enum(_)
+                | ReflectRef::List(_)
+                | ReflectRef::Scalar(_) => None,
+            }
+        } else {
+            match self.reflect_ref() {
+                ReflectRef::Map(inner) => inner.get_field(key),
+                ReflectRef::TupleStruct(_)
+                | ReflectRef::Tuple(_)
+                | ReflectRef::Enum(_)
+                | ReflectRef::List(_)
+                | ReflectRef::Struct(_)
+                | ReflectRef::Scalar(_) => None,
+            }
         }
     }
 }
 
-impl GetField for dyn Enum {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
+impl<'a, K> GetFieldMut<'a, K, private::Value> for &'a mut Value
+where
+    K: Reflect,
+{
+    fn get_field_mut<T>(self, key: K) -> Option<&'a mut T>
     where
         T: Reflect,
     {
-        match name.as_key() {
-            Key::Str(name) => self.field(name)?.downcast_ref(),
-            Key::Usize(index) => self.element(index)?.downcast_ref(),
-        }
-    }
-
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
-    where
-        T: Reflect,
-    {
-        match name.as_key() {
-            Key::Str(name) => self.field_mut(name)?.downcast_mut(),
-            Key::Usize(index) => self.element_mut(index)?.downcast_mut(),
-        }
-    }
-}
-
-impl GetField for dyn Tuple {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
-    where
-        T: Reflect,
-    {
-        match name.as_key() {
-            Key::Str(_) => None,
-            Key::Usize(index) => self.element(index)?.downcast_ref(),
-        }
-    }
-
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
-    where
-        T: Reflect,
-    {
-        match name.as_key() {
-            Key::Str(_) => None,
-            Key::Usize(index) => self.element_mut(index)?.downcast_mut(),
+        if let Some(&key) = key.as_any().downcast_ref::<usize>() {
+            match self.reflect_mut() {
+                ReflectMut::TupleStruct(inner) => inner.get_field_mut(key),
+                ReflectMut::Tuple(inner) => inner.get_field_mut(key),
+                ReflectMut::Enum(inner) => inner.get_field_mut(key),
+                ReflectMut::List(inner) => inner.get_field_mut(key),
+                ReflectMut::Map(inner) => inner.get_field_mut(key),
+                ReflectMut::Struct(_) | ReflectMut::Scalar(_) => None,
+            }
+        } else if let Some(key) = key.as_any().downcast_ref::<String>() {
+            match self.reflect_mut() {
+                ReflectMut::Map(inner) => inner.get_field_mut(key.to_owned()),
+                ReflectMut::Struct(inner) => inner.get_field_mut(key),
+                ReflectMut::TupleStruct(_)
+                | ReflectMut::Tuple(_)
+                | ReflectMut::Enum(_)
+                | ReflectMut::List(_)
+                | ReflectMut::Scalar(_) => None,
+            }
+        } else {
+            match self.reflect_mut() {
+                ReflectMut::Map(inner) => inner.get_field_mut(key),
+                ReflectMut::TupleStruct(_)
+                | ReflectMut::Tuple(_)
+                | ReflectMut::Enum(_)
+                | ReflectMut::List(_)
+                | ReflectMut::Struct(_)
+                | ReflectMut::Scalar(_) => None,
+            }
         }
     }
 }
 
-impl GetField for dyn List {
-    fn get_field<T>(&self, name: impl AsKey) -> Option<&T>
+impl<'a, R> GetField<'a, &str, private::Struct> for &'a R
+where
+    R: Struct + ?Sized,
+{
+    fn get_field<T>(self, key: &str) -> Option<&'a T>
     where
         T: Reflect,
     {
-        match name.as_key() {
-            Key::Str(_) => None,
-            Key::Usize(index) => self.get(index)?.downcast_ref(),
-        }
+        self.field(key)?.downcast_ref()
     }
+}
 
-    fn get_field_mut<T>(&mut self, name: impl AsKey) -> Option<&mut T>
+impl<'a, R> GetFieldMut<'a, &str, private::Struct> for &'a mut R
+where
+    R: Struct + ?Sized,
+{
+    fn get_field_mut<T>(self, key: &str) -> Option<&'a mut T>
     where
         T: Reflect,
     {
-        match name.as_key() {
-            Key::Str(_) => None,
-            Key::Usize(index) => self.get_mut(index)?.downcast_mut(),
-        }
+        self.field_mut(key)?.downcast_mut()
     }
+}
+
+impl<'a, R> GetField<'a, usize, private::TupleStruct> for &'a R
+where
+    R: TupleStruct + ?Sized,
+{
+    fn get_field<T>(self, key: usize) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.element(key)?.downcast_ref()
+    }
+}
+
+impl<'a, R> GetFieldMut<'a, usize, private::TupleStruct> for &'a mut R
+where
+    R: TupleStruct + ?Sized,
+{
+    fn get_field_mut<T>(self, key: usize) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.element_mut(key)?.downcast_mut()
+    }
+}
+
+impl<'a, R> GetField<'a, &str, private::Enum> for &'a R
+where
+    R: Enum + ?Sized,
+{
+    fn get_field<T>(self, key: &str) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.field(key)?.downcast_ref()
+    }
+}
+
+impl<'a, R> GetFieldMut<'a, &str, private::Enum> for &'a mut R
+where
+    R: Enum + ?Sized,
+{
+    fn get_field_mut<T>(self, key: &str) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.field_mut(key)?.downcast_mut()
+    }
+}
+
+impl<'a, R> GetField<'a, usize, private::Enum> for &'a R
+where
+    R: Enum + ?Sized,
+{
+    fn get_field<T>(self, key: usize) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.element(key)?.downcast_ref()
+    }
+}
+
+impl<'a, R> GetFieldMut<'a, usize, private::Enum> for &'a mut R
+where
+    R: Enum + ?Sized,
+{
+    fn get_field_mut<T>(self, key: usize) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.element_mut(key)?.downcast_mut()
+    }
+}
+
+impl<'a, R> GetField<'a, usize, private::Tuple> for &'a R
+where
+    R: Tuple + ?Sized,
+{
+    fn get_field<T>(self, key: usize) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.element(key)?.downcast_ref()
+    }
+}
+
+impl<'a, R> GetFieldMut<'a, usize, private::Tuple> for &'a mut R
+where
+    R: Tuple + ?Sized,
+{
+    fn get_field_mut<T>(self, key: usize) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.element_mut(key)?.downcast_mut()
+    }
+}
+
+impl<'a, R> GetField<'a, usize, private::List> for &'a R
+where
+    R: List + ?Sized,
+{
+    fn get_field<T>(self, key: usize) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.get(key)?.downcast_ref()
+    }
+}
+
+impl<'a, R> GetFieldMut<'a, usize, private::List> for &'a mut R
+where
+    R: List + ?Sized,
+{
+    fn get_field_mut<T>(self, key: usize) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.get_mut(key)?.downcast_mut()
+    }
+}
+
+impl<'a, R, K> GetField<'a, K, private::Map> for &'a R
+where
+    R: Map + ?Sized,
+    K: Reflect,
+{
+    fn get_field<T>(self, key: K) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.get(&key)?.downcast_ref()
+    }
+}
+
+impl<'a, R, K> GetFieldMut<'a, K, private::Map> for &'a mut R
+where
+    R: Map + ?Sized,
+    K: Reflect,
+{
+    fn get_field_mut<T>(self, key: K) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.get_mut(&key)?.downcast_mut()
+    }
+}
+
+impl<'a, R> GetField<'a, &str, private::Map> for &'a R
+where
+    R: Map + ?Sized,
+{
+    fn get_field<T>(self, key: &str) -> Option<&'a T>
+    where
+        T: Reflect,
+    {
+        self.get(&key.to_owned())?.downcast_ref()
+    }
+}
+
+impl<'a, R> GetFieldMut<'a, &str, private::Map> for &'a mut R
+where
+    R: Map + ?Sized,
+{
+    fn get_field_mut<T>(self, key: &str) -> Option<&'a mut T>
+    where
+        T: Reflect,
+    {
+        self.get_mut(&key.to_owned())?.downcast_mut()
+    }
+}
+
+mod private {
+    /// Types used to disambiguate otherwise overlapping trait impls
+
+    pub struct Struct;
+    pub struct TupleStruct;
+    pub struct Enum;
+    pub struct Tuple;
+    pub struct List;
+    pub struct Map;
+    pub struct Value;
 }
