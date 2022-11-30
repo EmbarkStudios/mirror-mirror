@@ -36,21 +36,60 @@ fn works() {
         e: Vec::from([1.0, 2.0, 3.0]),
     };
 
-    assert_eq!(a.at::<i32>(key_path!(.a)).unwrap(), &42);
+    assert_eq!(
+        a.at(key_path!(.a)).unwrap().downcast_ref::<i32>().unwrap(),
+        &42
+    );
 
-    assert_eq!(a.at::<bool>(key_path!(.b.c)).unwrap(), &true);
-    assert!(a.at::<B>(key_path!(.b.c).pop().unwrap()).is_some());
+    assert_eq!(
+        a.at(key_path!(.b.c))
+            .unwrap()
+            .downcast_ref::<bool>()
+            .unwrap(),
+        &true
+    );
+    assert!(a.at(key_path!(.b.c).pop().unwrap()).is_some());
 
-    assert_eq!(a.at::<String>(key_path!(.c.d)).unwrap(), &"foo");
+    assert_eq!(
+        a.at(key_path!(.c.d))
+            .unwrap()
+            .downcast_ref::<String>()
+            .unwrap(),
+        &"foo"
+    );
 
-    assert_eq!(a.at::<u32>(key_path!(.d.fourtytwo)).unwrap(), &42);
+    assert_eq!(
+        a.at(key_path!(.d.fourtytwo))
+            .unwrap()
+            .downcast_ref::<u32>()
+            .unwrap(),
+        &42
+    );
 
-    assert_eq!(a.at::<f32>(key_path!(.e[0])).unwrap(), &1.0);
-    assert_eq!(a.at::<f32>(key_path!(.e[1])).unwrap(), &2.0);
-    assert_eq!(a.at::<f32>(key_path!(.e[2])).unwrap(), &3.0);
-    assert!(a.at::<f32>(key_path!(.e[3])).is_none());
+    assert_eq!(
+        a.at(key_path!(.e[0]))
+            .unwrap()
+            .downcast_ref::<f32>()
+            .unwrap(),
+        &1.0
+    );
+    assert_eq!(
+        a.at(key_path!(.e[1]))
+            .unwrap()
+            .downcast_ref::<f32>()
+            .unwrap(),
+        &2.0
+    );
+    assert_eq!(
+        a.at(key_path!(.e[2]))
+            .unwrap()
+            .downcast_ref::<f32>()
+            .unwrap(),
+        &3.0
+    );
+    assert!(a.at(key_path!(.e[3])).is_none());
 
     assert_eq!(a.b.c, true);
-    *a.at_mut::<bool>(key_path!(.b.c)).unwrap() = false;
+    *a.at_mut(key_path!(.b.c)).unwrap().downcast_mut().unwrap() = false;
     assert_eq!(a.b.c, false);
 }

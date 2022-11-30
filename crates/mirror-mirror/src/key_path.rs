@@ -4,23 +4,16 @@ use speedy::{Readable, Writable};
 use crate::{Reflect, ReflectMut, ReflectRef};
 
 pub trait GetPath {
-    fn at<T>(&self, key_path: KeyPath) -> Option<&T>
-    where
-        T: Reflect;
+    fn at(&self, key_path: KeyPath) -> Option<&dyn Reflect>;
 
-    fn at_mut<T>(&mut self, key_path: KeyPath) -> Option<&mut T>
-    where
-        T: Reflect;
+    fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect>;
 }
 
 impl<R> GetPath for R
 where
     R: Reflect + ?Sized,
 {
-    fn at<T>(&self, key_path: KeyPath) -> Option<&T>
-    where
-        T: Reflect,
-    {
+    fn at(&self, key_path: KeyPath) -> Option<&dyn Reflect> {
         fn go<R>(value: &R, mut stack: Vec<Key>) -> Option<&dyn Reflect>
         where
             R: Reflect + ?Sized,
@@ -59,13 +52,10 @@ where
 
         let mut path = key_path.path;
         path.reverse();
-        go(self, path)?.downcast_ref::<T>()
+        go(self, path)
     }
 
-    fn at_mut<T>(&mut self, key_path: KeyPath) -> Option<&mut T>
-    where
-        T: Reflect,
-    {
+    fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect> {
         fn go<R>(value: &mut R, mut stack: Vec<Key>) -> Option<&mut dyn Reflect>
         where
             R: Reflect + ?Sized,
@@ -101,7 +91,7 @@ where
 
         let mut path = key_path.path;
         path.reverse();
-        go(self, path)?.downcast_mut::<T>()
+        go(self, path)
     }
 }
 
