@@ -11,7 +11,7 @@ use syn::Variant;
 pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::Result<TokenStream> {
     let variant_attrs = AttrsDatabase::new_from_enum_for_variants(&enum_)?;
 
-    let reflect = expand_reflect(ident, &enum_, attrs, &variant_attrs);
+    let reflect = expand_reflect(ident, &enum_, attrs, &variant_attrs)?;
     let from_reflect = expand_from_reflect(ident, &enum_, &variant_attrs);
     let enum_ = expand_enum(ident, &enum_, &variant_attrs);
 
@@ -27,7 +27,7 @@ fn expand_reflect(
     enum_: &DataEnum,
     attrs: ItemAttrs,
     variant_attrs: &AttrsDatabase<Ident>,
-) -> TokenStream {
+) -> syn::Result<TokenStream> {
     let fn_patch = {
         let match_arms = enum_
             .variants
@@ -181,6 +181,8 @@ fn expand_reflect(
                 let (ident, _) = variant_parts(variant);
                 let ident_string = stringify(ident);
 
+                let meta = variant_attrs.meta(ident);
+
                 match &variant.fields {
                     syn::Fields::Named(_) => {
                         let fields = variant.fields.iter().map(|field| {
@@ -191,38 +193,40 @@ fn expand_reflect(
                             let field_name = stringify(ident);
                             let field_ty = &field.ty;
                             quote! {
-                                NamedField::new::<#field_ty>(#field_name)
+                                NamedField::new::<#field_ty>(#field_name, Default::default())
                             }
                         });
 
                         quote! {
-                            StructVariantInfo::new(#ident_string, &[#(#fields),*]).into()
+                            StructVariantInfo::new(#ident_string, &[#(#fields),*], #meta).into()
                         }
                     }
                     syn::Fields::Unnamed(_) => {
                         let fields = variant.fields.iter().map(|field| {
                             let field_ty = &field.ty;
                             quote! {
-                                UnnamedField::new::<#field_ty>()
+                                UnnamedField::new::<#field_ty>(Default::default())
                             }
                         });
 
                         quote! {
-                            TupleVariantInfo::new(#ident_string, &[#(#fields),*]).into()
+                            TupleVariantInfo::new(#ident_string, &[#(#fields),*], #meta).into()
                         }
                     }
                     syn::Fields::Unit => quote! {
-                        UnitVariantInfo::new(#ident_string).into()
+                        UnitVariantInfo::new(#ident_string, #meta).into()
                     },
                 }
             });
+
+        let meta = attrs.meta();
 
         quote! {
             fn type_info(&self) -> TypeInfo {
                 impl Typed for #ident {
                     fn type_info() -> TypeInfo {
                         let variants = &[#(#code_for_variants),*];
-                        EnumInfo::new::<Self>(variants).into()
+                        EnumInfo::new::<Self>(variants, #meta).into()
                     }
                 }
 
@@ -234,7 +238,7 @@ fn expand_reflect(
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
-    quote! {
+    Ok(quote! {
         impl Reflect for #ident {
             fn as_any(&self) -> &dyn Any {
                 self
@@ -266,7 +270,7 @@ fn expand_reflect(
                 ReflectMut::Enum(self)
             }
         }
-    }
+    })
 }
 
 fn expand_from_reflect(

@@ -524,5 +524,25 @@ pub mod __private {
     pub use crate::iter::*;
     pub use crate::*;
     pub use std::any::Any;
+    pub use std::collections::HashMap;
     pub use std::fmt;
+
+    pub trait IntoValue {
+        fn into_value(self) -> Value;
+    }
+
+    impl<R> IntoValue for R
+    where
+        R: Reflect,
+    {
+        fn into_value(self) -> Value {
+            self.to_value()
+        }
+    }
+
+    impl IntoValue for &str {
+        fn into_value(self) -> Value {
+            self.to_owned().into_value()
+        }
+    }
 }

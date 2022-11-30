@@ -1,9 +1,13 @@
 use std::fmt;
 
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
 
-use crate::{Reflect, ReflectMut, ReflectRef};
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
 
 pub trait GetPath {
     fn at(&self, key_path: KeyPath) -> Option<&dyn Reflect>;

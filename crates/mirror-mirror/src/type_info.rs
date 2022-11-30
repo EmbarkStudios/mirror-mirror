@@ -1,12 +1,25 @@
-use std::{any::type_name, collections::BTreeMap};
+use std::any::type_name;
+use std::collections::BTreeMap;
+use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
 
-use crate::{
-    Enum, EnumValue, FromReflect, List, Map, Reflect, Struct, StructValue, Tuple, TupleStruct,
-    TupleStructValue, TupleValue, Value,
-};
+use crate::Enum;
+use crate::EnumValue;
+use crate::FromReflect;
+use crate::List;
+use crate::Map;
+use crate::Reflect;
+use crate::Struct;
+use crate::StructValue;
+use crate::Tuple;
+use crate::TupleStruct;
+use crate::TupleStructValue;
+use crate::TupleValue;
+use crate::Value;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub enum TypeInfo {
@@ -18,6 +31,21 @@ pub enum TypeInfo {
     Map(MapInfo),
     Scalar(ScalarInfo),
     Value,
+}
+
+impl TypeInfo {
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        match self {
+            TypeInfo::Struct(x) => x.as_ref().and_then(|x| x.get_meta(key)),
+            TypeInfo::TupleStruct(x) => x.as_ref().and_then(|x| x.get_meta(key)),
+            TypeInfo::Enum(x) => x.as_ref().and_then(|x| x.get_meta(key)),
+            TypeInfo::Tuple(_)
+            | TypeInfo::List(_)
+            | TypeInfo::Map(_)
+            | TypeInfo::Scalar(_)
+            | TypeInfo::Value => None,
+        }
+    }
 }
 
 macro_rules! from_impl {
@@ -46,20 +74,24 @@ from_impl! { List(ListInfo) }
 from_impl! { Map(MapInfo) }
 from_impl! { Scalar(ScalarInfo) }
 
+pub type Meta = HashMap<String, Value>;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct StructInfo {
     type_name: String,
     fields: Vec<NamedField>,
+    meta: Meta,
 }
 
 impl StructInfo {
-    pub fn new<T>(fields: &[NamedField]) -> Self
+    pub fn new<T>(fields: &[NamedField], meta: Meta) -> Self
     where
         T: Struct,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_owned(),
+            meta,
         }
     }
 
@@ -70,22 +102,28 @@ impl StructInfo {
     pub fn fields(&self) -> &[NamedField] {
         &self.fields
     }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct NamedField {
     name: String,
     type_name: String,
+    meta: Meta,
 }
 
 impl NamedField {
-    pub fn new<T>(name: &'static str) -> Self
+    pub fn new<T>(name: &'static str, meta: Meta) -> Self
     where
         T: Reflect,
     {
         Self {
             name: name.to_owned(),
             type_name: type_name::<T>().to_owned(),
+            meta,
         }
     }
 
@@ -96,22 +134,28 @@ impl NamedField {
     pub fn type_name(&self) -> &str {
         &self.type_name
     }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct TupleStructInfo {
     type_name: String,
     fields: Vec<UnnamedField>,
+    meta: Meta,
 }
 
 impl TupleStructInfo {
-    pub fn new<T>(fields: &[UnnamedField]) -> Self
+    pub fn new<T>(fields: &[UnnamedField], meta: Meta) -> Self
     where
         T: TupleStruct,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_owned(),
+            meta,
         }
     }
 
@@ -121,23 +165,27 @@ impl TupleStructInfo {
 
     pub fn fields(&self) -> &[UnnamedField] {
         &self.fields
+    }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct TupleInfo {
     type_name: String,
-    fields: Vec<UnnamedField>,
+    elements: Vec<UnnamedField>,
 }
 
 impl TupleInfo {
-    pub fn new<T>(fields: &[UnnamedField]) -> Self
+    pub fn new<T>(elements: &[UnnamedField]) -> Self
     where
         T: Tuple,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
-            fields: fields.to_owned(),
+            elements: elements.to_owned(),
         }
     }
 
@@ -145,28 +193,34 @@ impl TupleInfo {
         &self.type_name
     }
 
-    pub fn fields(&self) -> &[UnnamedField] {
-        &self.fields
+    pub fn elements(&self) -> &[UnnamedField] {
+        &self.elements
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct UnnamedField {
     type_name: String,
+    meta: Meta,
 }
 
 impl UnnamedField {
-    pub fn new<T>() -> Self
+    pub fn new<T>(meta: Meta) -> Self
     where
         T: Reflect,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
+            meta,
         }
     }
 
     pub fn type_name(&self) -> &str {
         &self.type_name
+    }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
     }
 }
 
@@ -235,17 +289,27 @@ impl MapInfo {
 pub struct EnumInfo {
     type_name: String,
     variants: Vec<VariantInfo>,
+    meta: Meta,
 }
 
 impl EnumInfo {
-    pub fn new<T>(variants: &[VariantInfo]) -> Self
+    pub fn new<T>(variants: &[VariantInfo], meta: Meta) -> Self
     where
         T: Enum,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             variants: variants.to_owned(),
+            meta,
         }
+    }
+
+    pub fn type_name(&self) -> &str {
+        &self.type_name
+    }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
     }
 }
 
@@ -254,6 +318,16 @@ pub enum VariantInfo {
     Struct(StructVariantInfo),
     Tuple(TupleVariantInfo),
     Unit(UnitVariantInfo),
+}
+
+impl VariantInfo {
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        match self {
+            VariantInfo::Struct(x) => x.get_meta(key),
+            VariantInfo::Tuple(x) => x.get_meta(key),
+            VariantInfo::Unit(x) => x.get_meta(key),
+        }
+    }
 }
 
 impl From<StructVariantInfo> for VariantInfo {
@@ -278,13 +352,15 @@ impl From<UnitVariantInfo> for VariantInfo {
 pub struct StructVariantInfo {
     name: String,
     fields: Vec<NamedField>,
+    meta: Meta,
 }
 
 impl StructVariantInfo {
-    pub fn new(name: &'static str, fields: &[NamedField]) -> Self {
+    pub fn new(name: &'static str, fields: &[NamedField], meta: Meta) -> Self {
         Self {
             name: name.to_owned(),
             fields: fields.to_owned(),
+            meta,
         }
     }
 
@@ -295,19 +371,25 @@ impl StructVariantInfo {
     pub fn fields(&self) -> &[NamedField] {
         &self.fields
     }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct TupleVariantInfo {
     name: String,
     fields: Vec<UnnamedField>,
+    meta: Meta,
 }
 
 impl TupleVariantInfo {
-    pub fn new(name: &'static str, fields: &[UnnamedField]) -> Self {
+    pub fn new(name: &'static str, fields: &[UnnamedField], meta: Meta) -> Self {
         Self {
             name: name.to_owned(),
             fields: fields.to_owned(),
+            meta,
         }
     }
 
@@ -318,22 +400,32 @@ impl TupleVariantInfo {
     pub fn fields(&self) -> &[UnnamedField] {
         &self.fields
     }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Readable, Writable)]
 pub struct UnitVariantInfo {
     name: String,
+    meta: Meta,
 }
 
 impl UnitVariantInfo {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new(name: &'static str, meta: Meta) -> Self {
         Self {
             name: name.to_owned(),
+            meta,
         }
     }
 
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
+        Some(self.meta.get(key)?.as_reflect())
     }
 }
 

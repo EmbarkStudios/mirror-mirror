@@ -5,12 +5,13 @@ mod enum_;
 mod key_path;
 mod list;
 mod map;
+mod meta;
 mod struct_;
 mod tuple;
 mod tuple_struct;
 
 #[derive(Reflect)]
-#[reflect(!Debug, !Clone)]
+#[reflect(opt_out(!Debug, !Clone))]
 #[allow(dead_code)]
 struct DebugOptOut;
 

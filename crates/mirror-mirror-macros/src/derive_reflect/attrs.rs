@@ -1,12 +1,11 @@
-use std::collections::HashMap;
-
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
+use std::collections::HashMap;
 use syn::parse::ParseStream;
-use syn::punctuated::Punctuated;
 use syn::Attribute;
 use syn::DataEnum;
+use syn::Expr;
 use syn::Field;
 use syn::FieldsNamed;
 use syn::FieldsUnnamed;
@@ -17,12 +16,15 @@ mod kw {
     syn::custom_keyword!(Debug);
     syn::custom_keyword!(Clone);
     syn::custom_keyword!(skip);
+    syn::custom_keyword!(meta);
+    syn::custom_keyword!(opt_out);
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub(super) struct ItemAttrs {
     debug_opt_out: bool,
     clone_opt_out: bool,
+    meta: HashMap<Ident, Expr>,
 }
 
 impl ItemAttrs {
@@ -41,37 +43,56 @@ impl ItemAttrs {
             ));
         }
 
-        let punctuated = attr.parse_args_with(|input: ParseStream<'_>| {
-            Punctuated::<_, Token![,]>::parse_terminated_with(input, |input| {
-                input.parse::<Token![!]>()?;
+        attr.parse_args_with(|input: ParseStream<'_>| {
+            let mut item_attrs = Self::default();
 
-                let mut debug_opt_out = false;
-                let mut clone_opt_out = false;
-
+            while !input.is_empty() {
                 let lh = input.lookahead1();
-                if lh.peek(kw::Debug) {
-                    input.parse::<kw::Debug>()?;
-                    debug_opt_out = true;
-                } else if lh.peek(kw::Clone) {
-                    input.parse::<kw::Clone>()?;
-                    clone_opt_out = true;
+
+                if lh.peek(kw::opt_out) {
+                    input.parse::<kw::opt_out>()?;
+                    let content;
+                    syn::parenthesized!(content in input);
+                    while !content.is_empty() {
+                        content.parse::<Token![!]>()?;
+                        let lh = content.lookahead1();
+                        if lh.peek(kw::Debug) {
+                            content.parse::<kw::Debug>()?;
+                            item_attrs.debug_opt_out = true;
+                        } else if lh.peek(kw::Clone) {
+                            content.parse::<kw::Clone>()?;
+                            item_attrs.clone_opt_out = true;
+                        } else {
+                            return Err(lh.error());
+                        }
+
+                        let _ = content.parse::<Token![,]>();
+                    }
+                } else if lh.peek(kw::meta) {
+                    input.parse::<kw::meta>()?;
+                    let content;
+                    syn::parenthesized!(content in input);
+                    while !content.is_empty() {
+                        let ident = content.parse::<Ident>()?;
+                        content.parse::<Token![=]>()?;
+                        let expr = content.parse::<Expr>()?;
+                        if item_attrs.meta.insert(ident.clone(), expr).is_some() {
+                            return Err(syn::Error::new_spanned(
+                                &ident,
+                                format!("`{ident}` specified more than once"),
+                            ));
+                        }
+
+                        let _ = content.parse::<Token![,]>();
+                    }
                 } else {
                     return Err(lh.error());
                 }
 
-                Ok((debug_opt_out, clone_opt_out))
-            })
-        })?;
+                let _ = input.parse::<Token![,]>();
+            }
 
-        let (debug_opt_out, clone_opt_out) = punctuated
-            .iter()
-            .fold((false, false), |acc, &(debug, clone)| {
-                (acc.0 || debug, acc.1 || clone)
-            });
-
-        Ok(ItemAttrs {
-            debug_opt_out,
-            clone_opt_out,
+            Ok(item_attrs)
         })
     }
 
@@ -110,6 +131,21 @@ impl ItemAttrs {
                 }
             }
         }
+    }
+
+    pub(super) fn meta(&self) -> TokenStream {
+        tokenize_meta(&self.meta)
+    }
+}
+
+fn tokenize_meta(meta: &HashMap<Ident, Expr>) -> TokenStream {
+    let pairs = meta.iter().map(|(ident, expr)| {
+        quote! {
+            (stringify!(#ident).to_owned(), IntoValue::into_value(#expr)),
+        }
+    });
+    quote! {
+        HashMap::from([#(#pairs)*])
     }
 }
 
@@ -183,11 +219,23 @@ where
             .map(|attrs| attrs.skip)
             .unwrap_or_default()
     }
+
+    pub(super) fn meta(&self, key: &T) -> TokenStream {
+        self.map
+            .get(key)
+            .map(|attrs| tokenize_meta(&attrs.meta))
+            .unwrap_or_else(|| {
+                quote! {
+                    Default::default()
+                }
+            })
+    }
 }
 
 #[derive(Debug, Default)]
 struct FieldAttrs {
     skip: bool,
+    meta: HashMap<Ident, Expr>,
 }
 
 impl FieldAttrs {
@@ -214,6 +262,23 @@ impl FieldAttrs {
                 if lh.peek(kw::skip) {
                     input.parse::<kw::skip>()?;
                     field_attrs.skip = true;
+                } else if lh.peek(kw::meta) {
+                    input.parse::<kw::meta>()?;
+                    let content;
+                    syn::parenthesized!(content in input);
+                    while !content.is_empty() {
+                        let ident = content.parse::<Ident>()?;
+                        content.parse::<Token![=]>()?;
+                        let expr = content.parse::<Expr>()?;
+                        if field_attrs.meta.insert(ident.clone(), expr).is_some() {
+                            return Err(syn::Error::new_spanned(
+                                &ident,
+                                format!("`{ident}` specified more than once"),
+                            ));
+                        }
+
+                        let _ = content.parse::<Token![,]>();
+                    }
                 } else {
                     return Err(lh.error());
                 }

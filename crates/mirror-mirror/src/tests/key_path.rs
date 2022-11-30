@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 
+use crate::key_path;
 use crate::key_path::*;
-use crate::{self as mirror_mirror, key_path};
+use crate::{self as mirror_mirror};
 use mirror_mirror::Reflect;
 
 #[test]

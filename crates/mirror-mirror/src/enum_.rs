@@ -413,10 +413,15 @@ where
 {
     fn type_info(&self) -> TypeInfo {
         let variants = &[
-            TupleVariantInfo::new("Some", &[UnnamedField::new::<T>()]).into(),
-            UnitVariantInfo::new("None").into(),
+            TupleVariantInfo::new(
+                "Some",
+                &[UnnamedField::new::<T>(Default::default())],
+                Default::default(),
+            )
+            .into(),
+            UnitVariantInfo::new("None", Default::default()).into(),
         ];
-        EnumInfo::new::<Self>(variants).into()
+        EnumInfo::new::<Self>(variants, Default::default()).into()
     }
 
     fn as_any(&self) -> &dyn Any {

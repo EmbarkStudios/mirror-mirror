@@ -1,4 +1,5 @@
-use crate::{FromReflect, Reflect};
+use crate::FromReflect;
+use crate::Reflect;
 
 #[test]
 fn indexing() {

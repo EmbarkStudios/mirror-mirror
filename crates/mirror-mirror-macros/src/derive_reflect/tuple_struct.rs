@@ -90,19 +90,22 @@ fn expand_reflect(
             .iter()
             .enumerate()
             .filter(field_attrs.filter_out_skipped_unnamed())
-            .map(|(_, field)| {
+            .map(|(idx, field)| {
                 let field_ty = &field.ty;
+                let meta = field_attrs.meta(&idx);
                 quote! {
-                    UnnamedField::new::<#field_ty>()
+                    UnnamedField::new::<#field_ty>(#meta)
                 }
             });
+
+        let meta = attrs.meta();
 
         quote! {
             fn type_info(&self) -> TypeInfo {
                 impl Typed for #ident {
                     fn type_info() -> TypeInfo {
                         let fields = &[#(#code_for_fields),*];
-                        TupleStructInfo::new::<Self>(fields).into()
+                        TupleStructInfo::new::<Self>(fields, #meta).into()
                     }
                 }
 

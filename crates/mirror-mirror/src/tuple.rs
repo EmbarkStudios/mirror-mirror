@@ -162,7 +162,7 @@ macro_rules! impl_tuple {
             $($ident: Reflect + Clone,)*
         {
             fn type_info() -> TypeInfo {
-                let fields = &[$(UnnamedField::new::<$ident>()),*];
+                let fields = &[$(UnnamedField::new::<$ident>(Default::default())),*];
                 TupleInfo::new::<Self>(fields).into()
             }
         }

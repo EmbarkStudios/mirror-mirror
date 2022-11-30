@@ -89,17 +89,20 @@ fn expand_reflect(
             .map(|field| {
                 let name = stringify(&field.ident);
                 let field_ty = &field.ty;
+                let meta = field_attrs.meta(field.ident.as_ref().unwrap());
                 quote! {
-                    NamedField::new::<#field_ty>(#name)
+                    NamedField::new::<#field_ty>(#name, #meta)
                 }
             });
+
+        let meta = item_attrs.meta();
 
         quote! {
             fn type_info(&self) -> TypeInfo {
                 impl Typed for #ident {
                     fn type_info() -> TypeInfo {
                         let fields = &[#(#code_for_fields),*];
-                        StructInfo::new::<Self>(fields).into()
+                        StructInfo::new::<Self>(fields, #meta).into()
                     }
                 }
 

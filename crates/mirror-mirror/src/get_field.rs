@@ -1,4 +1,13 @@
-use crate::{Enum, List, Map, Reflect, ReflectMut, ReflectRef, Struct, Tuple, TupleStruct, Value};
+use crate::Enum;
+use crate::List;
+use crate::Map;
+use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectRef;
+use crate::Struct;
+use crate::Tuple;
+use crate::TupleStruct;
+use crate::Value;
 
 pub trait GetField<'a, K, M> {
     fn get_field<T>(self, key: K) -> Option<&'a T>

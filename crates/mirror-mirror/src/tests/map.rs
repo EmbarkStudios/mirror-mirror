@@ -1,4 +1,6 @@
-use crate::{GetField, GetFieldMut, Reflect};
+use crate::GetField;
+use crate::GetFieldMut;
+use crate::Reflect;
 use std::collections::BTreeMap;
 
 #[test]
