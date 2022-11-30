@@ -36,6 +36,8 @@ fn works() {
         e: Vec::from([1.0, 2.0, 3.0]),
     };
 
+    assert!(a.at(key_path!()).unwrap().downcast_ref::<A>().is_some());
+
     assert_eq!(
         a.at(key_path!(.a)).unwrap().downcast_ref::<i32>().unwrap(),
         &42
@@ -48,7 +50,6 @@ fn works() {
             .unwrap(),
         &true
     );
-    assert!(a.at(key_path!(.b.c).pop().unwrap()).is_some());
 
     assert_eq!(
         a.at(key_path!(.c.d))
@@ -92,4 +93,12 @@ fn works() {
     assert_eq!(a.b.c, true);
     *a.at_mut(key_path!(.b.c)).unwrap().downcast_mut().unwrap() = false;
     assert_eq!(a.b.c, false);
+}
+
+#[test]
+fn display() {
+    assert_eq!(
+        key_path!(.a.b.c[1][2].d[3]).to_string(),
+        ".a.b.c[1][2].d[3]"
+    );
 }

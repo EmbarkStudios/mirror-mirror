@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
@@ -50,6 +52,10 @@ where
             }
         }
 
+        if key_path.is_empty() {
+            return Some(self.as_reflect());
+        }
+
         let mut path = key_path.path;
         path.reverse();
         go(self, path)
@@ -89,6 +95,10 @@ where
             }
         }
 
+        if key_path.is_empty() {
+            return Some(self.as_reflect_mut());
+        }
+
         let mut path = key_path.path;
         path.reverse();
         go(self, path)
@@ -105,13 +115,24 @@ impl KeyPath {
     where
         S: Into<String>,
     {
-        self.path.push(Key::Field(field.into()));
+        self.push_field(field);
         self
     }
 
+    pub fn push_field<S>(&mut self, field: S)
+    where
+        S: Into<String>,
+    {
+        self.path.push(Key::Field(field.into()));
+    }
+
     pub fn element(mut self, element: usize) -> Self {
-        self.path.push(Key::Element(element));
+        self.push_element(element);
         self
+    }
+
+    pub fn push_element(&mut self, element: usize) {
+        self.path.push(Key::Element(element));
     }
 
     pub fn len(&self) -> usize {
@@ -122,9 +143,8 @@ impl KeyPath {
         self.path.is_empty()
     }
 
-    pub fn pop(mut self) -> Option<Self> {
-        self.path.pop()?;
-        Some(self)
+    pub fn pop(&mut self) {
+        self.path.pop();
     }
 }
 
@@ -190,4 +210,17 @@ macro_rules! key_path {
             [$($tt)*],
         )
     }};
+}
+
+impl fmt::Display for KeyPath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for key in &self.path {
+            match key {
+                Key::Field(field) => write!(f, ".{field}")?,
+                Key::Element(element) => write!(f, "[{element}]")?,
+            }
+        }
+
+        Ok(())
+    }
 }
