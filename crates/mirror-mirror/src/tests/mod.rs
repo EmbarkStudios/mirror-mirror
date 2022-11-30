@@ -2,6 +2,7 @@ use crate as mirror_mirror;
 use crate::Reflect;
 
 mod enum_;
+mod key_path;
 mod list;
 mod map;
 mod struct_;
@@ -22,30 +23,30 @@ where
 }
 
 mod complex_types {
-    // #![allow(dead_code)]
+    #![allow(dead_code)]
 
-    // use crate as mirror_mirror;
-    // use crate::Reflect;
-    // use std::collections::BTreeMap;
+    use crate as mirror_mirror;
+    use crate::Reflect;
+    use std::collections::BTreeMap;
 
-    // #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    // struct A {
-    //     a: String,
-    //     b: Vec<B>,
-    //     d: BTreeMap<B, Vec<A>>,
-    // }
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    struct A {
+        a: String,
+        b: Vec<B>,
+        d: BTreeMap<B, Vec<A>>,
+    }
 
-    // #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    // enum B {
-    //     C(C),
-    //     D { d: D },
-    // }
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    enum B {
+        C(C),
+        D { d: D },
+    }
 
-    // #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    // struct C(String, i32, Vec<bool>);
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    struct C(String, i32, Vec<bool>);
 
-    // #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    // struct D;
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    struct D;
 }
 
 mod skip {

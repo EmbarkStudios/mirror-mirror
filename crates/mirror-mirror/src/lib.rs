@@ -6,6 +6,7 @@ use std::any::TypeId;
 use std::fmt;
 
 pub mod iter;
+pub mod key_path;
 
 mod enum_;
 mod get_field;
