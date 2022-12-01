@@ -47,7 +47,7 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
     };
 
     Ok(quote_spanned! {span=>
-        #[allow(clippy::implicit_clone)]
+        #[allow(clippy::implicit_clone, unused_variables)]
         const _: () = {
 
             #[allow(unused_imports)]

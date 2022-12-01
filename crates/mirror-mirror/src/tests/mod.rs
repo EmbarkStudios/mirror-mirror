@@ -64,19 +64,20 @@ mod skip {
     #[derive(Reflect, Debug, Clone)]
     struct TestTupleStruct(#[reflect(skip)] NotReflect);
 
-    // TODO(david): support #[reflection(skip)] on fields inside variants
     #[derive(Reflect, Debug, Clone)]
     #[allow(clippy::enum_variant_names)]
     enum TestEnum {
         #[reflect(skip)]
-        SkipStructVariant { not_reflect: NotReflect },
-        // SkipStructField {
-        //     #[reflect(skip)]
-        //     not_reflect: NotReflect,
-        // },
+        SkipStructVariant {
+            not_reflect: NotReflect,
+        },
+        SkipStructField {
+            #[reflect(skip)]
+            not_reflect: NotReflect,
+        },
         #[reflect(skip)]
         SkipTupleVariant(NotReflect),
-        // SkipTupleField(#[reflect(skip)] NotReflect),
+        SkipTupleField(#[reflect(skip)] NotReflect),
         #[reflect(skip)]
         SkipUnitVariant,
     }
