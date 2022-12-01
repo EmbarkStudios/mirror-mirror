@@ -45,18 +45,17 @@ struct A {
 #[reflect(meta(n = 1))]
 struct B(#[reflect(meta(n = 1))] String);
 
-// TODO(david): support #[reflection(meta)] on fields inside variants
 #[derive(Reflect, Debug, Clone)]
 #[reflect(meta(n = 1))]
 enum C {
     #[reflect(meta(n = 1))]
     A {
-        // #[reflect(meta(n = 1))]
+        #[reflect(meta(n = 1))]
         a: String,
     },
 
     #[reflect(meta(n = 1))]
-    B(/* #[reflect(meta(n = 1))] */ String),
+    B(#[reflect(meta(n = 1))] String),
 
     #[reflect(meta(n = 1))]
     C,

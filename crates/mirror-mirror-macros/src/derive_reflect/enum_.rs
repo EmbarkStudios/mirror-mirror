@@ -177,8 +177,9 @@ fn expand_reflect(
                         let ident = &field.ident;
                         let field_name = stringify(ident);
                         let field_ty = &field.ty;
+                        let meta = field.attrs.meta();
                         quote! {
-                            NamedField::new::<#field_ty>(#field_name, Default::default())
+                            NamedField::new::<#field_ty>(#field_name, #meta)
                         }
                     });
 
@@ -189,8 +190,9 @@ fn expand_reflect(
                 FieldsData::Unnamed(fields) => {
                     let fields = fields.iter().filter(filter_out_skipped).map(|field| {
                         let field_ty = &field.ty;
+                        let meta = field.attrs.meta();
                         quote! {
-                            UnnamedField::new::<#field_ty>(Default::default())
+                            UnnamedField::new::<#field_ty>(#meta)
                         }
                     });
 
