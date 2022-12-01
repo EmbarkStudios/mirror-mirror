@@ -54,7 +54,6 @@ impl ItemAttrs {
                     let content;
                     syn::parenthesized!(content in input);
                     while !content.is_empty() {
-                        content.parse::<Token![!]>()?;
                         let lh = content.lookahead1();
                         if lh.peek(kw::Debug) {
                             content.parse::<kw::Debug>()?;

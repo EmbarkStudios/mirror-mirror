@@ -11,7 +11,7 @@ mod tuple;
 mod tuple_struct;
 
 #[derive(Reflect)]
-#[reflect(opt_out(!Debug, !Clone))]
+#[reflect(opt_out(Debug, Clone))]
 #[allow(dead_code)]
 struct DebugOptOut;
 
