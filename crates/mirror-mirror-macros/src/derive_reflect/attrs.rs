@@ -166,25 +166,8 @@ impl AttrsDatabase<Ident> {
         Ok(Self { map })
     }
 
-    pub(super) fn new_from_enum_for_variants(enum_: &DataEnum) -> syn::Result<Self> {
-        let map = enum_
-            .variants
-            .iter()
-            .map(|variant| {
-                let attrs = FieldAttrs::parse(&variant.attrs)?;
-                Ok((variant.ident.clone(), attrs))
-            })
-            .collect::<syn::Result<HashMap<_, _>>>()?;
-
-        Ok(Self { map })
-    }
-
     pub(super) fn filter_out_skipped_named(&self) -> impl Fn(&&Field) -> bool + '_ {
         move |field| !self.skip(field.ident.as_ref().unwrap())
-    }
-
-    pub(super) fn filter_out_skipped_variant(&self) -> impl Fn(&&Variant) -> bool + '_ {
-        move |variant| !self.skip(&variant.ident)
     }
 }
 
@@ -232,13 +215,13 @@ where
 }
 
 #[derive(Debug, Default)]
-struct FieldAttrs {
-    skip: bool,
-    meta: HashMap<Ident, Expr>,
+pub(super) struct FieldAttrs {
+    pub(super) skip: bool,
+    pub(super) meta: HashMap<Ident, Expr>,
 }
 
 impl FieldAttrs {
-    fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
+    pub(super) fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
         let mut reflect_attrs = attrs
             .iter()
             .filter(|attr| attr.path.is_ident("reflect"))
@@ -287,5 +270,9 @@ impl FieldAttrs {
 
             Ok(field_attrs)
         })
+    }
+
+    pub(super) fn meta(&self) -> TokenStream {
+        tokenize_meta(&self.meta)
     }
 }
