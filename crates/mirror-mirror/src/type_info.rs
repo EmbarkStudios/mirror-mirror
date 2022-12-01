@@ -30,7 +30,7 @@ pub enum TypeInfo {
     List(ListInfo),
     Map(MapInfo),
     Scalar(ScalarInfo),
-    Value,
+    Opaque,
 }
 
 impl TypeInfo {
@@ -43,7 +43,7 @@ impl TypeInfo {
             | TypeInfo::List(_)
             | TypeInfo::Map(_)
             | TypeInfo::Scalar(_)
-            | TypeInfo::Value => None,
+            | TypeInfo::Opaque => None,
         }
     }
 }
@@ -450,13 +450,32 @@ pub enum ScalarInfo {
     String,
 }
 
+macro_rules! scalar_typed {
+    ($($ty:ident)*) => {
+        $(
+            impl Typed for $ty {
+                fn type_info() -> TypeInfo {
+                    TypeInfo::Scalar(ScalarInfo::$ty)
+                }
+            }
+        )*
+    };
+}
+
+scalar_typed! {
+    usize u8 u16 u32 u64 u128
+    i8 i16 i32 i64 i128
+    f32 f64
+    bool char String
+}
+
 pub trait Typed: Reflect {
     fn type_info() -> TypeInfo;
 }
 
 impl Typed for Value {
     fn type_info() -> TypeInfo {
-        TypeInfo::Value
+        TypeInfo::Opaque
     }
 }
 
