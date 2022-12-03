@@ -8,6 +8,8 @@ use std::fmt;
 pub mod iter;
 pub mod key_path;
 
+pub mod type_info_2;
+
 mod enum_;
 mod get_field;
 mod list;
