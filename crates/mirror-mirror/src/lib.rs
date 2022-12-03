@@ -7,6 +7,7 @@ use std::fmt;
 
 pub mod iter;
 pub mod key_path;
+pub mod type_info;
 
 mod enum_;
 mod get_field;
@@ -14,7 +15,6 @@ mod list;
 mod map;
 mod struct_;
 mod tuple;
-mod type_info;
 mod value;
 
 #[cfg(test)]
@@ -33,14 +33,14 @@ pub use self::struct_::*;
 #[doc(inline)]
 pub use self::tuple::*;
 #[doc(inline)]
-pub use self::type_info::*;
+pub use self::type_info::{TypeInfoRoot, Typed};
 #[doc(inline)]
 pub use self::value::*;
 
 pub use mirror_mirror_macros::*;
 
 pub trait Reflect: Any + Send + 'static {
-    fn type_info(&self) -> TypeInfo;
+    fn type_info(&self) -> TypeInfoRoot;
 
     fn as_any(&self) -> &dyn Any;
 
@@ -150,7 +150,7 @@ impl fmt::Debug for dyn Reflect {
 }
 
 impl Reflect for Box<dyn Reflect> {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
         <dyn Reflect as Reflect>::type_info(&**self)
     }
 
@@ -199,8 +199,8 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
-                fn type_info(&self) -> TypeInfo {
-                    ScalarInfo::$ty.into()
+                fn type_info(&self) -> TypeInfoRoot {
+                    <Self as Typed>::type_info()
                 }
 
                 fn as_any(&self) -> &dyn Any {
@@ -279,8 +279,8 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
-    fn type_info(&self) -> TypeInfo {
-        ScalarInfo::String.into()
+    fn type_info(&self) -> TypeInfoRoot {
+        <Self as Typed>::type_info()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -522,6 +522,7 @@ pub enum ScalarMut<'a> {
 #[doc(hidden)]
 pub mod __private {
     pub use crate::iter::*;
+    pub use crate::type_info::graph::*;
     pub use crate::*;
     pub use std::any::Any;
     pub use std::collections::HashMap;

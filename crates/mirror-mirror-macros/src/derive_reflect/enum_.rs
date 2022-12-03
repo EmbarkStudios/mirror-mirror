@@ -179,12 +179,18 @@ fn expand_reflect(
                         let field_ty = &field.ty;
                         let meta = field.attrs.meta();
                         quote! {
-                            NamedField::new::<#field_ty>(#field_name, #meta)
+                            NamedFieldNode::new::<#field_ty>(#field_name, #meta, graph)
                         }
                     });
 
                     quote! {
-                        StructVariantInfo::new(#variant_ident_string, &[#(#fields),*], #meta).into()
+                        VariantNode::Struct(
+                            StructVariantInfoNode::new(
+                                #variant_ident_string,
+                                &[#(#fields),*],
+                                #meta
+                            )
+                        )
                     }
                 }
                 FieldsData::Unnamed(fields) => {
@@ -192,16 +198,22 @@ fn expand_reflect(
                         let field_ty = &field.ty;
                         let meta = field.attrs.meta();
                         quote! {
-                            UnnamedField::new::<#field_ty>(#meta)
+                            UnnamedFieldNode::new::<#field_ty>(#meta, graph)
                         }
                     });
 
                     quote! {
-                        TupleVariantInfo::new(#variant_ident_string, &[#(#fields),*], #meta).into()
+                        VariantNode::Tuple(
+                            TupleVariantInfoNode::new(
+                                #variant_ident_string,
+                                &[#(#fields),*],
+                                #meta,
+                            )
+                        )
                     }
                 }
                 FieldsData::Unit => quote! {
-                    UnitVariantInfo::new(#variant_ident_string, #meta).into()
+                    VariantNode::Unit(UnitVariantInfoNode::new(#variant_ident_string, #meta))
                 },
             }
         });
@@ -209,11 +221,13 @@ fn expand_reflect(
         let meta = attrs.meta();
 
         quote! {
-            fn type_info(&self) -> TypeInfo {
+            fn type_info(&self) -> TypeInfoRoot {
                 impl Typed for #ident {
-                    fn type_info() -> TypeInfo {
+                    fn build(graph: &mut TypeInfoGraph) -> Id {
                         let variants = &[#(#code_for_variants),*];
-                        EnumInfo::new::<Self>(variants, #meta).into()
+                        graph.get_or_build_with::<#ident, _>(|graph| {
+                            EnumInfoNode::new::<#ident>(variants, #meta)
+                        })
                     }
                 }
 

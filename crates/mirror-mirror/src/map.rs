@@ -4,7 +4,7 @@ use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfo;
+use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
 use std::any::Any;
@@ -33,8 +33,8 @@ impl fmt::Debug for dyn Map {
 
 impl<K, V> Map for BTreeMap<K, V>
 where
-    K: FromReflect + Ord,
-    V: FromReflect,
+    K: FromReflect + Typed + Ord,
+    V: FromReflect + Typed,
 {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
         let key = key.downcast_ref::<K>()?;
@@ -73,10 +73,10 @@ where
 
 impl<K, V> Reflect for BTreeMap<K, V>
 where
-    K: FromReflect + Ord,
-    V: FromReflect,
+    K: FromReflect + Typed + Ord,
+    V: FromReflect + Typed,
 {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
         <Self as Typed>::type_info()
     }
 
@@ -134,8 +134,8 @@ where
 
 impl<K, V> FromReflect for BTreeMap<K, V>
 where
-    K: FromReflect + Ord,
-    V: FromReflect,
+    K: FromReflect + Typed + Ord,
+    V: FromReflect + Typed,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_reflect().as_map()?;

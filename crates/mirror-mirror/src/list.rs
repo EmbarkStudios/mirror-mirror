@@ -4,7 +4,7 @@ use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfo;
+use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
 use std::any::Any;
@@ -32,7 +32,7 @@ impl fmt::Debug for dyn List {
 
 impl<T> List for Vec<T>
 where
-    T: FromReflect,
+    T: FromReflect + Typed,
 {
     fn get(&self, index: usize) -> Option<&dyn Reflect> {
         self.as_slice().get(index).map(|value| value.as_reflect())
@@ -68,9 +68,9 @@ where
 
 impl<T> Reflect for Vec<T>
 where
-    T: FromReflect,
+    T: FromReflect + Typed,
 {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
         <Self as Typed>::type_info()
     }
 
@@ -125,7 +125,7 @@ where
 
 impl<T> FromReflect for Vec<T>
 where
-    T: FromReflect,
+    T: FromReflect + Typed,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let list = reflect.reflect_ref().as_list()?;

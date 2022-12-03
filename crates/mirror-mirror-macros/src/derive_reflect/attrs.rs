@@ -4,13 +4,11 @@ use quote::quote;
 use std::collections::HashMap;
 use syn::parse::ParseStream;
 use syn::Attribute;
-use syn::DataEnum;
 use syn::Expr;
 use syn::Field;
 use syn::FieldsNamed;
 use syn::FieldsUnnamed;
 use syn::Token;
-use syn::Variant;
 
 mod kw {
     syn::custom_keyword!(Debug);

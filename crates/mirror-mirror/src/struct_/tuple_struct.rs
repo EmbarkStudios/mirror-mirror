@@ -1,12 +1,15 @@
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
+use crate::type_info::graph::Id;
+use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeInfoNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
 use crate::Tuple;
 use crate::TupleValue;
-use crate::TypeInfo;
+use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
 use serde::Deserialize;
@@ -66,7 +69,12 @@ impl TupleStructValue {
 }
 
 impl Reflect for TupleStructValue {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
+        impl Typed for TupleStructValue {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::TupleStruct(None))
+            }
+        }
         <Self as Typed>::type_info()
     }
 
