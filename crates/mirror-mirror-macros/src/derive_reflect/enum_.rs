@@ -169,7 +169,7 @@ fn expand_reflect(
     let fn_type_info = {
         let code_for_variants = variants.iter().filter(filter_out_skipped).map(|variant| {
             let variant_ident_string = stringify(&variant.ident);
-            let meta = variant.attrs.meta();
+            // let meta = variant.attrs.meta();
 
             match &variant.fields {
                 FieldsData::Named(fields) => {
@@ -177,43 +177,49 @@ fn expand_reflect(
                         let ident = &field.ident;
                         let field_name = stringify(ident);
                         let field_ty = &field.ty;
-                        let meta = field.attrs.meta();
+                        // let meta = field.attrs.meta();
                         quote! {
-                            NamedField::new::<#field_ty>(#field_name, #meta)
+                            NamedFieldNode::new::<#field_ty>(#field_name, graph)
                         }
                     });
 
                     quote! {
-                        StructVariantInfo::new(#variant_ident_string, &[#(#fields),*], #meta).into()
+                        VariantNode::Struct(
+                            StructVariantInfoNode::new(#variant_ident_string, &[#(#fields),*])
+                        )
                     }
                 }
                 FieldsData::Unnamed(fields) => {
                     let fields = fields.iter().filter(filter_out_skipped).map(|field| {
                         let field_ty = &field.ty;
-                        let meta = field.attrs.meta();
+                        // let meta = field.attrs.meta();
                         quote! {
-                            UnnamedField::new::<#field_ty>(#meta)
+                            UnnamedFieldNode::new::<#field_ty>(graph)
                         }
                     });
 
                     quote! {
-                        TupleVariantInfo::new(#variant_ident_string, &[#(#fields),*], #meta).into()
+                        VariantNode::Tuple(
+                            TupleVariantInfoNode::new(#variant_ident_string, &[#(#fields),*])
+                        )
                     }
                 }
                 FieldsData::Unit => quote! {
-                    UnitVariantInfo::new(#variant_ident_string, #meta).into()
+                    VariantNode::Unit(UnitVariantInfoNode::new(#variant_ident_string))
                 },
             }
         });
 
-        let meta = attrs.meta();
+        // let meta = attrs.meta();
 
         quote! {
-            fn type_info(&self) -> TypeInfo {
+            fn type_info(&self) -> TypeInfoRoot {
                 impl Typed for #ident {
-                    fn type_info() -> TypeInfo {
+                    fn build(graph: &mut TypeInfoGraph) -> Id {
                         let variants = &[#(#code_for_variants),*];
-                        EnumInfo::new::<Self>(variants, #meta).into()
+                        graph.get_or_build_with::<#ident, _>(|graph| {
+                            EnumInfoNode::new::<#ident>(variants)
+                        })
                     }
                 }
 

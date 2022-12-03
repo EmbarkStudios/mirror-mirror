@@ -1,10 +1,13 @@
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
+use crate::type_info::graph::Id;
+use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeInfoNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfo;
+use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
 use serde::Deserialize;
@@ -65,7 +68,12 @@ impl StructValue {
 }
 
 impl Reflect for StructValue {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
+        impl Typed for StructValue {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Struct(None))
+            }
+        }
         <Self as Typed>::type_info()
     }
 

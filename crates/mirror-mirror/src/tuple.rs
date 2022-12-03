@@ -1,14 +1,16 @@
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
+use crate::type_info::graph::Id;
+use crate::type_info::graph::TupleInfoNode;
+use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeInfoNode;
+use crate::type_info::graph::UnnamedFieldNode;
 use crate::FromReflect;
-use crate::List;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TupleInfo;
-use crate::TypeInfo;
+use crate::TypeInfoRoot;
 use crate::Typed;
-use crate::UnnamedField;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
@@ -87,7 +89,12 @@ impl Tuple for TupleValue {
 }
 
 impl Reflect for TupleValue {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
+        impl Typed for TupleValue {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Tuple(None))
+            }
+        }
         <Self as Typed>::type_info()
     }
 
@@ -159,20 +166,22 @@ macro_rules! impl_tuple {
         #[allow(non_snake_case, unused_mut, unused_variables)]
         impl<$($ident,)*> Typed for ($($ident,)*)
         where
-            $($ident: Reflect + Clone,)*
+            $($ident: Reflect + Typed + Clone,)*
         {
-            fn type_info() -> TypeInfo {
-                let fields = &[$(UnnamedField::new::<$ident>(Default::default())),*];
-                TupleInfo::new::<Self>(fields).into()
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|graph| {
+                    let fields = &[$(UnnamedFieldNode::new::<$ident>(graph),)*];
+                    TupleInfoNode::new::<Self>(fields)
+                })
             }
         }
 
         #[allow(non_snake_case, unused_mut, unused_variables)]
         impl<$($ident,)*> Reflect for ($($ident,)*)
         where
-            $($ident: Reflect + Clone,)*
+            $($ident: Reflect + Typed + Clone,)*
         {
-            fn type_info(&self) -> TypeInfo {
+            fn type_info(&self) -> TypeInfoRoot {
                 <Self as Typed>::type_info()
             }
 
@@ -235,7 +244,7 @@ macro_rules! impl_tuple {
         #[allow(non_snake_case, unused_mut, unused_assignments, unused_variables)]
         impl<$($ident,)*> Tuple for ($($ident,)*)
         where
-            $($ident: Reflect + Clone,)*
+            $($ident: Reflect + Typed + Clone,)*
         {
             fn element(&self, index: usize) -> Option<&dyn Reflect> {
                 let mut i = 0;
@@ -275,7 +284,7 @@ macro_rules! impl_tuple {
         #[allow(non_snake_case, unused_mut, unused_assignments, unused_variables)]
         impl<$($ident,)*> FromReflect for ($($ident,)*)
         where
-            $($ident: FromReflect + Clone,)*
+            $($ident: FromReflect + Typed + Clone,)*
         {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
                 Some((

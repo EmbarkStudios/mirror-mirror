@@ -90,22 +90,24 @@ fn expand_reflect(
             .iter()
             .enumerate()
             .filter(field_attrs.filter_out_skipped_unnamed())
-            .map(|(idx, field)| {
+            .map(|(_idx, field)| {
                 let field_ty = &field.ty;
-                let meta = field_attrs.meta(&idx);
+                // let meta = field_attrs.meta(&idx);
                 quote! {
-                    UnnamedField::new::<#field_ty>(#meta)
+                    UnnamedFieldNode::new::<#field_ty>(graph)
                 }
             });
 
-        let meta = attrs.meta();
+        // let meta = attrs.meta();
 
         quote! {
-            fn type_info(&self) -> TypeInfo {
+            fn type_info(&self) -> TypeInfoRoot {
                 impl Typed for #ident {
-                    fn type_info() -> TypeInfo {
+                    fn build(graph: &mut TypeInfoGraph) -> Id {
                         let fields = &[#(#code_for_fields),*];
-                        TupleStructInfo::new::<Self>(fields, #meta).into()
+                        graph.get_or_build_with::<#ident, _>(|graph| {
+                            TupleStructInfoNode::new::<#ident>(fields)
+                        })
                     }
                 }
 

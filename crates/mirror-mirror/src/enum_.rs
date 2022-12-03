@@ -2,7 +2,9 @@ use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
-use crate::EnumInfo;
+use crate::type_info::graph::Id;
+use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeInfoNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -11,11 +13,8 @@ use crate::Struct;
 use crate::StructValue;
 use crate::Tuple;
 use crate::TupleValue;
-use crate::TupleVariantInfo;
-use crate::TypeInfo;
+use crate::TypeInfoRoot;
 use crate::Typed;
-use crate::UnitVariantInfo;
-use crate::UnnamedField;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
@@ -132,7 +131,12 @@ impl EnumValue {
 }
 
 impl Reflect for EnumValue {
-    fn type_info(&self) -> TypeInfo {
+    fn type_info(&self) -> TypeInfoRoot {
+        impl Typed for EnumValue {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Enum(None))
+            }
+        }
         <Self as Typed>::type_info()
     }
 
@@ -409,19 +413,10 @@ impl<'a> Iterator for VariantFieldIterMut<'a> {
 
 impl<T> Reflect for Option<T>
 where
-    T: FromReflect,
+    T: FromReflect + Typed,
 {
-    fn type_info(&self) -> TypeInfo {
-        let variants = &[
-            TupleVariantInfo::new(
-                "Some",
-                &[UnnamedField::new::<T>(Default::default())],
-                Default::default(),
-            )
-            .into(),
-            UnitVariantInfo::new("None", Default::default()).into(),
-        ];
-        EnumInfo::new::<Self>(variants, Default::default()).into()
+    fn type_info(&self) -> TypeInfoRoot {
+        <Self as Typed>::type_info()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -495,7 +490,7 @@ where
 
 impl<T> Enum for Option<T>
 where
-    T: FromReflect,
+    T: FromReflect + Typed,
 {
     fn variant_name(&self) -> &str {
         match self {
@@ -550,7 +545,7 @@ where
 
 impl<T> FromReflect for Option<T>
 where
-    T: FromReflect,
+    T: FromReflect + Typed,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let enum_ = reflect.reflect_ref().as_enum()?;
