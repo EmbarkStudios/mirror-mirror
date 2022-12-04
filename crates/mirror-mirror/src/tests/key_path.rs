@@ -38,20 +38,20 @@ fn works() {
         e: Vec::from([1.0, 2.0, 3.0]),
     };
 
-    assert!(a.get_at::<A>(key_path!()).is_some());
-    assert_eq!(a.get_at::<i32>(key_path!(.a)).unwrap(), &42);
-    assert_eq!(a.get_at::<bool>(key_path!(.b.c)).unwrap(), &true);
-    assert_eq!(a.get_at::<String>(key_path!(.c{C}.d)).unwrap(), &"foo");
-    assert!(a.at(key_path!(.c{DoesntExist})).is_none());
-    assert_eq!(a.get_at::<u32>(key_path!(.d.fourtytwo)).unwrap(), &42);
+    assert!(a.get_at::<A>(&key_path!()).is_some());
+    assert_eq!(a.get_at::<i32>(&key_path!(.a)).unwrap(), &42);
+    assert_eq!(a.get_at::<bool>(&key_path!(.b.c)).unwrap(), &true);
+    assert_eq!(a.get_at::<String>(&key_path!(.c{C}.d)).unwrap(), &"foo");
+    assert!(a.at(&key_path!(.c{DoesntExist})).is_none());
+    assert_eq!(a.get_at::<u32>(&key_path!(.d.fourtytwo)).unwrap(), &42);
 
-    assert_eq!(a.get_at::<f32>(key_path!(.e[0])).unwrap(), &1.0);
-    assert_eq!(a.get_at::<f32>(key_path!(.e[1])).unwrap(), &2.0);
-    assert_eq!(a.get_at::<f32>(key_path!(.e[2])).unwrap(), &3.0);
-    assert!(a.at(key_path!(.e[3])).is_none());
+    assert_eq!(a.get_at::<f32>(&key_path!(.e[0])).unwrap(), &1.0);
+    assert_eq!(a.get_at::<f32>(&key_path!(.e[1])).unwrap(), &2.0);
+    assert_eq!(a.get_at::<f32>(&key_path!(.e[2])).unwrap(), &3.0);
+    assert!(a.at(&key_path!(.e[3])).is_none());
 
     assert_eq!(a.b.c, true);
-    *a.get_at_mut(key_path!(.b.c)).unwrap() = false;
+    *a.get_at_mut(&key_path!(.b.c)).unwrap() = false;
     assert_eq!(a.b.c, false);
 }
 
@@ -90,7 +90,7 @@ fn query_type_info_struct() {
 
     let key_path = key_path!(.employer.countries[0].name);
 
-    assert_eq!(user.get_at::<String>(key_path.clone()).unwrap(), "Denmark");
+    assert_eq!(user.get_at::<String>(&key_path).unwrap(), "Denmark");
 
     let type_info = <User as Typed>::type_info();
 

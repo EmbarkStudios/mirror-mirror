@@ -10,18 +10,18 @@ use crate::ReflectMut;
 use crate::ReflectRef;
 
 pub trait GetPath {
-    fn at(&self, key_path: KeyPath) -> Option<&dyn Reflect>;
+    fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect>;
 
-    fn get_at<T>(&self, key_path: KeyPath) -> Option<&T>
+    fn get_at<T>(&self, key_path: &KeyPath) -> Option<&T>
     where
         T: Reflect,
     {
         self.at(key_path)?.downcast_ref()
     }
 
-    fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect>;
+    fn at_mut(&mut self, key_path: &KeyPath) -> Option<&mut dyn Reflect>;
 
-    fn get_at_mut<T>(&mut self, key_path: KeyPath) -> Option<&mut T>
+    fn get_at_mut<T>(&mut self, key_path: &KeyPath) -> Option<&mut T>
     where
         T: Reflect,
     {
@@ -33,32 +33,29 @@ impl<R> GetPath for R
 where
     R: Reflect + ?Sized,
 {
-    fn at(&self, key_path: KeyPath) -> Option<&dyn Reflect> {
-        fn go<R>(value: &R, mut stack: Vec<Key>) -> Option<&dyn Reflect>
+    fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect> {
+        fn go<'a, R>(value: &'a R, mut stack: Vec<&Key>) -> Option<&'a dyn Reflect>
         where
             R: Reflect + ?Sized,
         {
             let head = stack.pop()?;
 
             let value_at_key = match head {
-                Key::Field(key) => {
-                    let key: &str = &key;
-                    match value.reflect_ref() {
-                        ReflectRef::Struct(inner) => inner.field(key)?,
-                        ReflectRef::Map(inner) => inner.get(&key.to_owned())?,
-                        ReflectRef::Enum(inner) => inner.field(key)?,
-                        ReflectRef::TupleStruct(_)
-                        | ReflectRef::Tuple(_)
-                        | ReflectRef::List(_)
-                        | ReflectRef::Scalar(_) => return None,
-                    }
-                }
+                Key::Field(key) => match value.reflect_ref() {
+                    ReflectRef::Struct(inner) => inner.field(key)?,
+                    ReflectRef::Map(inner) => inner.get(&key.to_owned())?,
+                    ReflectRef::Enum(inner) => inner.field(key)?,
+                    ReflectRef::TupleStruct(_)
+                    | ReflectRef::Tuple(_)
+                    | ReflectRef::List(_)
+                    | ReflectRef::Scalar(_) => return None,
+                },
                 Key::Element(index) => match value.reflect_ref() {
-                    ReflectRef::TupleStruct(inner) => inner.field(index)?,
-                    ReflectRef::Tuple(inner) => inner.field(index)?,
-                    ReflectRef::Enum(inner) => inner.field_at(index)?,
-                    ReflectRef::List(inner) => inner.get(index)?,
-                    ReflectRef::Map(inner) => inner.get(&index)?,
+                    ReflectRef::TupleStruct(inner) => inner.field(*index)?,
+                    ReflectRef::Tuple(inner) => inner.field(*index)?,
+                    ReflectRef::Enum(inner) => inner.field_at(*index)?,
+                    ReflectRef::List(inner) => inner.get(*index)?,
+                    ReflectRef::Map(inner) => inner.get(index)?,
                     ReflectRef::Struct(_) | ReflectRef::Scalar(_) => return None,
                 },
                 Key::Variant(variant) => match value.reflect_ref() {
@@ -89,13 +86,13 @@ where
             return Some(self.as_reflect());
         }
 
-        let mut path = key_path.path;
+        let mut path = key_path.path.iter().collect::<Vec<_>>();
         path.reverse();
         go(self, path)
     }
 
-    fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect> {
-        fn go<R>(value: &mut R, mut stack: Vec<Key>) -> Option<&mut dyn Reflect>
+    fn at_mut(&mut self, key_path: &KeyPath) -> Option<&mut dyn Reflect> {
+        fn go<'a, R>(value: &'a mut R, mut stack: Vec<&Key>) -> Option<&'a mut dyn Reflect>
         where
             R: Reflect + ?Sized,
         {
@@ -103,20 +100,20 @@ where
 
             let value_at_key = match head {
                 Key::Field(key) => match value.reflect_mut() {
-                    ReflectMut::Struct(inner) => inner.field_mut(&key)?,
-                    ReflectMut::Map(inner) => inner.get_mut(&key)?,
-                    ReflectMut::Enum(inner) => inner.field_mut(&key)?,
+                    ReflectMut::Struct(inner) => inner.field_mut(key)?,
+                    ReflectMut::Map(inner) => inner.get_mut(key)?,
+                    ReflectMut::Enum(inner) => inner.field_mut(key)?,
                     ReflectMut::TupleStruct(_)
                     | ReflectMut::Tuple(_)
                     | ReflectMut::List(_)
                     | ReflectMut::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_mut() {
-                    ReflectMut::TupleStruct(inner) => inner.field_mut(index)?,
-                    ReflectMut::Tuple(inner) => inner.field_mut(index)?,
-                    ReflectMut::Enum(inner) => inner.field_at_mut(index)?,
-                    ReflectMut::List(inner) => inner.get_mut(index)?,
-                    ReflectMut::Map(inner) => inner.get_mut(&index)?,
+                    ReflectMut::TupleStruct(inner) => inner.field_mut(*index)?,
+                    ReflectMut::Tuple(inner) => inner.field_mut(*index)?,
+                    ReflectMut::Enum(inner) => inner.field_at_mut(*index)?,
+                    ReflectMut::List(inner) => inner.get_mut(*index)?,
+                    ReflectMut::Map(inner) => inner.get_mut(index)?,
                     ReflectMut::Struct(_) | ReflectMut::Scalar(_) => return None,
                 },
                 Key::Variant(variant) => match value.reflect_mut() {
@@ -147,7 +144,7 @@ where
             return Some(self.as_reflect_mut());
         }
 
-        let mut path = key_path.path;
+        let mut path = key_path.path.iter().collect::<Vec<_>>();
         path.reverse();
         go(self, path)
     }
