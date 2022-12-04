@@ -4,9 +4,14 @@ use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
+use crate::type_info::graph::EnumInfoNode;
 use crate::type_info::graph::Id;
+use crate::type_info::graph::TupleVariantInfoNode;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::type_info::graph::TypeInfoNode;
+use crate::type_info::graph::UnitVariantInfoNode;
+use crate::type_info::graph::UnnamedFieldNode;
+use crate::type_info::graph::VariantNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -416,6 +421,27 @@ where
     T: FromReflect + Typed,
 {
     fn type_info(&self) -> TypeInfoRoot {
+        impl<T> Typed for Option<T>
+        where
+            T: Typed,
+        {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|graph| {
+                    EnumInfoNode::new::<Self>(
+                        &[
+                            VariantNode::Tuple(TupleVariantInfoNode::new(
+                                "Some",
+                                &[UnnamedFieldNode::new::<T>(Default::default(), graph)],
+                                Default::default(),
+                            )),
+                            VariantNode::Unit(UnitVariantInfoNode::new("None", Default::default())),
+                        ],
+                        Default::default(),
+                    )
+                })
+            }
+        }
+
         <Self as Typed>::type_info()
     }
 
