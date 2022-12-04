@@ -61,6 +61,21 @@ where
                     ReflectRef::Map(inner) => inner.get(&index)?,
                     ReflectRef::Struct(_) | ReflectRef::Scalar(_) => return None,
                 },
+                Key::Variant(variant) => match value.reflect_ref() {
+                    ReflectRef::Enum(enum_) => {
+                        if enum_.variant_name() == variant {
+                            enum_.as_reflect()
+                        } else {
+                            return None;
+                        }
+                    }
+                    ReflectRef::Struct(_)
+                    | ReflectRef::TupleStruct(_)
+                    | ReflectRef::Tuple(_)
+                    | ReflectRef::List(_)
+                    | ReflectRef::Map(_)
+                    | ReflectRef::Scalar(_) => return None,
+                },
             };
 
             if stack.is_empty() {
@@ -104,6 +119,21 @@ where
                     ReflectMut::Map(inner) => inner.get_mut(&index)?,
                     ReflectMut::Struct(_) | ReflectMut::Scalar(_) => return None,
                 },
+                Key::Variant(variant) => match value.reflect_mut() {
+                    ReflectMut::Enum(enum_) => {
+                        if enum_.variant_name() == variant {
+                            enum_.as_reflect_mut()
+                        } else {
+                            return None;
+                        }
+                    }
+                    ReflectMut::Struct(_)
+                    | ReflectMut::TupleStruct(_)
+                    | ReflectMut::Tuple(_)
+                    | ReflectMut::List(_)
+                    | ReflectMut::Map(_)
+                    | ReflectMut::Scalar(_) => return None,
+                },
             };
 
             if stack.is_empty() {
@@ -144,6 +174,21 @@ impl KeyPath {
         self.path.push(Key::Field(field.into()));
     }
 
+    pub fn variant<S>(mut self, variant: S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.push_variant(variant);
+        self
+    }
+
+    pub fn push_variant<S>(&mut self, variant: S)
+    where
+        S: Into<String>,
+    {
+        self.path.push(Key::Variant(variant.into()));
+    }
+
     pub fn element(mut self, element: usize) -> Self {
         self.push_element(element);
         self
@@ -170,6 +215,7 @@ impl KeyPath {
 enum Key {
     Field(String),
     Element(usize),
+    Variant(String),
 }
 
 pub fn field<S>(field: S) -> KeyPath
@@ -181,6 +227,13 @@ where
 
 pub fn element(element: usize) -> KeyPath {
     KeyPath::default().element(element)
+}
+
+pub fn variant<S>(variant: S) -> KeyPath
+where
+    S: Into<String>,
+{
+    KeyPath::default().variant(variant)
 }
 
 #[macro_export]
@@ -220,6 +273,28 @@ macro_rules! key_path {
         )
     }};
 
+    // recursive case (variant)
+    (
+        @go:
+        $path:expr,
+        [ {$variant:ident} $($tt:tt)*],
+    ) => {{
+        $crate::key_path!(
+            @go:
+            $path.variant(stringify!($variant)),
+            [$($tt)*],
+        )
+    }};
+
+    // on invalid syntax
+    (
+        @go:
+        $path:expr,
+        [$($tt:tt)*],
+    ) => {{
+        compile_error!(concat!("Unexpected tokens ", stringify!($($tt)*)))
+    }};
+
     // entry point
     ( $($tt:tt)* ) => {{
         $crate::key_path!(
@@ -236,6 +311,7 @@ impl fmt::Display for KeyPath {
             match key {
                 Key::Field(field) => write!(f, ".{field}")?,
                 Key::Element(element) => write!(f, "[{element}]")?,
+                Key::Variant(variant) => write!(f, "{{{variant}}}")?,
             }
         }
 

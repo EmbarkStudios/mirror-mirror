@@ -40,7 +40,8 @@ fn works() {
     assert!(a.get_at::<A>(key_path!()).is_some());
     assert_eq!(a.get_at::<i32>(key_path!(.a)).unwrap(), &42);
     assert_eq!(a.get_at::<bool>(key_path!(.b.c)).unwrap(), &true);
-    assert_eq!(a.get_at::<String>(key_path!(.c.d)).unwrap(), &"foo");
+    assert_eq!(a.get_at::<String>(key_path!(.c{C}.d)).unwrap(), &"foo");
+    assert!(a.at(key_path!(.c{DoesntExist})).is_none());
     assert_eq!(a.get_at::<u32>(key_path!(.d.fourtytwo)).unwrap(), &42);
 
     assert_eq!(a.get_at::<f32>(key_path!(.e[0])).unwrap(), &1.0);
@@ -56,7 +57,7 @@ fn works() {
 #[test]
 fn display() {
     assert_eq!(
-        key_path!(.a.b.c[1][2].d[3]).to_string(),
-        ".a.b.c[1][2].d[3]"
+        key_path!(.a.b.c[1][2]{D}.e[3]).to_string(),
+        ".a.b.c[1][2]{D}.e[3]"
     );
 }
