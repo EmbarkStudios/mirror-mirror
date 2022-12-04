@@ -132,7 +132,7 @@ impl<'a> TypeInfo<'a> {
                     | TypeInfo::Opaque => return None,
                 },
                 Key::Element(index) => match type_info {
-                    TypeInfo::List(inner) => inner.element_type(),
+                    TypeInfo::List(inner) => inner.field_type(),
                     TypeInfo::TupleStruct(inner) => inner?.fields().nth(index)?.type_(),
                     TypeInfo::Tuple(inner) => inner?.fields().nth(index)?.type_(),
 
@@ -503,8 +503,8 @@ impl<'a> ListInfo<'a> {
         &self.node.type_name
     }
 
-    pub fn element_type(self) -> TypeInfo<'a> {
-        TypeInfo::new(self.node.element_type_id, self.graph)
+    pub fn field_type(self) -> TypeInfo<'a> {
+        TypeInfo::new(self.node.field_type_id, self.graph)
     }
 }
 
@@ -816,7 +816,7 @@ pub mod graph {
     #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
     pub struct ListInfoNode {
         pub(super) type_name: String,
-        pub(super) element_type_id: Id,
+        pub(super) field_type_id: Id,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
@@ -874,7 +874,7 @@ pub mod graph {
         fn build(graph: &mut TypeInfoGraph) -> Id {
             graph.get_or_build_with::<Self, _>(|graph| ListInfoNode {
                 type_name: type_name::<Self>().to_owned(),
-                element_type_id: T::build(graph),
+                field_type_id: T::build(graph),
             })
         }
     }
@@ -965,7 +965,7 @@ mod tests {
                     );
 
                     assert_eq!(
-                        list.element_type().type_name().unwrap(),
+                        list.field_type().type_name().unwrap(),
                         "mirror_mirror::type_info::tests::struct_::Foo"
                     );
                 }

@@ -7,14 +7,12 @@ use crate::TupleStruct;
 
 #[test]
 fn tuple_value() {
-    let mut tuple = TupleStructValue::new()
-        .with_element(1_i32)
-        .with_element(false);
+    let mut tuple = TupleStructValue::new().with_field(1_i32).with_field(false);
 
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &1);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 
-    tuple.patch(&TupleStructValue::new().with_element(42_i32));
+    tuple.patch(&TupleStructValue::new().with_field(42_i32));
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 }
@@ -29,18 +27,18 @@ fn static_tuple() {
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &1);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 
-    tuple.patch(&TupleStructValue::new().with_element(42_i32));
+    tuple.patch(&TupleStructValue::new().with_field(42_i32));
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 
     let mut tuple = A::from_reflect(&tuple.to_value()).unwrap();
     assert!(matches!(tuple, A(42, false)));
 
-    let elements = tuple.elements().collect::<Vec<_>>();
-    assert_eq!(elements.len(), 2);
-    assert_eq!(elements[0].downcast_ref::<i32>().unwrap(), &42);
-    assert_eq!(elements[1].downcast_ref::<bool>().unwrap(), &false);
+    let fields = tuple.fields().collect::<Vec<_>>();
+    assert_eq!(fields.len(), 2);
+    assert_eq!(fields[0].downcast_ref::<i32>().unwrap(), &42);
+    assert_eq!(fields[1].downcast_ref::<bool>().unwrap(), &false);
 
-    tuple.element_mut(1).unwrap().patch(&true);
+    tuple.field_mut(1).unwrap().patch(&true);
     assert!(tuple.1);
 }

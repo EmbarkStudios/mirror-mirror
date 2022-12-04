@@ -10,8 +10,8 @@ use mirror_mirror::Reflect;
 #[test]
 fn enum_value() {
     let mut enum_ = EnumValue::new_struct_variant("Foo")
-        .with_field("foo", 1_i32)
-        .with_field("bar", false);
+        .with_struct_field("foo", 1_i32)
+        .with_struct_field("bar", false);
 
     assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &1);
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &false);
@@ -19,7 +19,7 @@ fn enum_value() {
     *enum_.get_field_mut("foo").unwrap() = 42;
     assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
 
-    enum_.patch(&EnumValue::new_struct_variant("Foo").with_field("bar", true));
+    enum_.patch(&EnumValue::new_struct_variant("Foo").with_struct_field("bar", true));
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
     let enum_ = EnumValue::from_reflect(&enum_).unwrap();
@@ -66,11 +66,11 @@ fn static_enum() {
     *enum_.get_field_mut("foo").unwrap() = 42;
     assert_eq!(enum_.get_field::<i32>("foo").unwrap(), &42);
 
-    enum_.patch(&EnumValue::new_struct_variant("Foo").with_field("bar", true));
+    enum_.patch(&EnumValue::new_struct_variant("Foo").with_struct_field("bar", true));
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
     // variants with other names are ignored
-    enum_.patch(&EnumValue::new_struct_variant("Ignored").with_field("bar", false));
+    enum_.patch(&EnumValue::new_struct_variant("Ignored").with_struct_field("bar", false));
     assert_eq!(enum_.get_field::<bool>("bar").unwrap(), &true);
 
     assert!(matches!(enum_, Foo::Foo { foo: 42, bar: true }));
@@ -101,7 +101,7 @@ fn static_enum() {
 
     // the variant name must match, even if it has the right fields
     assert!(Foo::from_reflect(
-        &EnumValue::new_struct_variant("NotInFoo").with_field("baz", "foo".to_owned()),
+        &EnumValue::new_struct_variant("NotInFoo").with_struct_field("baz", "foo".to_owned()),
     )
     .is_none());
 }
@@ -126,34 +126,34 @@ fn patching() {
 
     // whole: static.patch(value)
     let mut foo = Foo::A { a: 1 };
-    foo.patch(&EnumValue::new_struct_variant("B").with_field("b", false));
+    foo.patch(&EnumValue::new_struct_variant("B").with_struct_field("b", false));
     assert!(matches!(dbg!(foo), Foo::B { b: false }));
 
     // part: static.patch(value)
     let mut foo = Foo::A { a: 1 };
-    foo.patch(&EnumValue::new_struct_variant("A").with_field("a", 42));
+    foo.patch(&EnumValue::new_struct_variant("A").with_struct_field("a", 42));
     assert!(matches!(dbg!(foo), Foo::A { a: 42 }));
 
     // whole: value.patch(static)
-    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
+    let mut foo = EnumValue::new_struct_variant("A").with_struct_field("a", 1);
     foo.patch(&Foo::B { b: false });
     assert_eq!(foo.get_field::<bool>("b").unwrap(), &false);
 
     // part: value.patch(static)
-    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
+    let mut foo = EnumValue::new_struct_variant("A").with_struct_field("a", 1);
     foo.patch(&Foo::A { a: 42 });
     assert_eq!(foo.get_field::<i32>("a").unwrap(), &42);
 
     // whole: value.patch(value)
-    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
-    foo.patch(&EnumValue::new_struct_variant("B").with_field("b", false));
+    let mut foo = EnumValue::new_struct_variant("A").with_struct_field("a", 1);
+    foo.patch(&EnumValue::new_struct_variant("B").with_struct_field("b", false));
     assert_eq!(foo.variant_name(), "B");
     assert!(foo.get_field::<i32>("a").is_none());
     assert_eq!(foo.get_field::<bool>("b").unwrap(), &false);
 
     // part: value.patch(value)
-    let mut foo = EnumValue::new_struct_variant("A").with_field("a", 1);
-    foo.patch(&EnumValue::new_struct_variant("A").with_field("a", 42));
+    let mut foo = EnumValue::new_struct_variant("A").with_struct_field("a", 1);
+    foo.patch(&EnumValue::new_struct_variant("A").with_struct_field("a", 42));
     assert_eq!(foo.get_field::<i32>("a").unwrap(), &42);
 }
 
@@ -169,13 +169,13 @@ fn static_tuple_enum() {
 
     assert_eq!(foo.get_field::<i32>(0).unwrap(), &1);
     assert_eq!(foo.get_field::<bool>(1).unwrap(), &true);
-    assert!(foo.element(2).is_none());
+    assert!(foo.field_at(2).is_none());
 
     assert_eq!(foo.get_field_mut::<i32>(0).unwrap(), &1);
     assert_eq!(foo.get_field_mut::<bool>(1).unwrap(), &true);
     foo.get_field_mut::<bool>(1).unwrap().patch(&false);
     assert_eq!(foo.get_field_mut::<bool>(1).unwrap(), &false);
-    assert!(foo.element_mut(2).is_none());
+    assert!(foo.field_at_mut(2).is_none());
 
     // whole: static.patch(static)
     let mut foo = Foo::A(1, true);
@@ -189,32 +189,32 @@ fn static_tuple_enum() {
 
     // whole: static.patch(value)
     let mut foo = Foo::A(1, true);
-    foo.patch(&EnumValue::new_tuple_variant("B").with_element("foo"));
+    foo.patch(&EnumValue::new_tuple_variant("B").with_tuple_field("foo"));
     assert!(matches!(dbg!(foo), Foo::B(s) if s == "foo"));
 
     // part: static.patch(value)
     let mut foo = Foo::A(1, true);
-    foo.patch(&EnumValue::new_tuple_variant("A").with_element(42));
+    foo.patch(&EnumValue::new_tuple_variant("A").with_tuple_field(42));
     assert!(matches!(dbg!(foo), Foo::A(42, true)));
 
     // whole: value.patch(static)
     let mut foo = EnumValue::new_tuple_variant("A")
-        .with_element(1)
-        .with_element(true);
+        .with_tuple_field(1)
+        .with_tuple_field(true);
     foo.patch(&Foo::B("foo".to_owned()));
     assert_eq!(foo.get_field::<String>(0).unwrap(), &"foo");
-    assert!(foo.element(1).is_none());
+    assert!(foo.field_at(1).is_none());
 
     // part: value.patch(static)
     let mut foo = EnumValue::new_tuple_variant("A")
-        .with_element(1_i32)
-        .with_element(true)
-        .with_element("foo");
+        .with_tuple_field(1_i32)
+        .with_tuple_field(true)
+        .with_tuple_field("foo");
     foo.patch(&Foo::A(42, true));
     assert_eq!(foo.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(foo.get_field::<bool>(1).unwrap(), &true);
     assert_eq!(foo.get_field::<String>(2).unwrap(), &"foo");
-    assert!(foo.element(3).is_none());
+    assert!(foo.field_at(3).is_none());
 }
 
 #[test]
@@ -271,13 +271,13 @@ fn option() {
     assert_eq!(some_value.variant_name(), "Some");
     assert_eq!(some_value.variant_kind(), VariantKind::Tuple);
     assert_eq!(some_value.get_field::<i32>(0).unwrap(), &1);
-    assert!(some_value.element(1).is_none());
+    assert!(some_value.field_at(1).is_none());
 
     let none_value = None::<i32>.to_value();
     let none_value = none_value.reflect_ref().as_enum().unwrap();
     assert_eq!(none_value.variant_name(), "None");
     assert_eq!(none_value.variant_kind(), VariantKind::Unit);
-    assert!(none_value.element(0).is_none());
+    assert!(none_value.field_at(0).is_none());
 
     assert_eq!(
         Some(1)

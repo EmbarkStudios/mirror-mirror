@@ -54,9 +54,9 @@ where
                     }
                 }
                 Key::Element(index) => match value.reflect_ref() {
-                    ReflectRef::TupleStruct(inner) => inner.element(index)?,
-                    ReflectRef::Tuple(inner) => inner.element(index)?,
-                    ReflectRef::Enum(inner) => inner.element(index)?,
+                    ReflectRef::TupleStruct(inner) => inner.field(index)?,
+                    ReflectRef::Tuple(inner) => inner.field(index)?,
+                    ReflectRef::Enum(inner) => inner.field_at(index)?,
                     ReflectRef::List(inner) => inner.get(index)?,
                     ReflectRef::Map(inner) => inner.get(&index)?,
                     ReflectRef::Struct(_) | ReflectRef::Scalar(_) => return None,
@@ -112,9 +112,9 @@ where
                     | ReflectMut::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_mut() {
-                    ReflectMut::TupleStruct(inner) => inner.element_mut(index)?,
-                    ReflectMut::Tuple(inner) => inner.element_mut(index)?,
-                    ReflectMut::Enum(inner) => inner.element_mut(index)?,
+                    ReflectMut::TupleStruct(inner) => inner.field_mut(index)?,
+                    ReflectMut::Tuple(inner) => inner.field_mut(index)?,
+                    ReflectMut::Enum(inner) => inner.field_at_mut(index)?,
                     ReflectMut::List(inner) => inner.get_mut(index)?,
                     ReflectMut::Map(inner) => inner.get_mut(&index)?,
                     ReflectMut::Struct(_) | ReflectMut::Scalar(_) => return None,
@@ -159,19 +159,13 @@ pub struct KeyPath {
 }
 
 impl KeyPath {
-    pub fn field<S>(mut self, field: S) -> Self
-    where
-        S: Into<String>,
-    {
+    pub fn field(mut self, field: impl IntoKey) -> Self {
         self.push_field(field);
         self
     }
 
-    pub fn push_field<S>(&mut self, field: S)
-    where
-        S: Into<String>,
-    {
-        self.path.push(Key::Field(field.into()));
+    pub fn push_field(&mut self, field: impl IntoKey) {
+        self.path.push(field.into_key());
     }
 
     pub fn variant<S>(mut self, variant: S) -> Self
@@ -189,15 +183,6 @@ impl KeyPath {
         self.path.push(Key::Variant(variant.into()));
     }
 
-    pub fn element(mut self, element: usize) -> Self {
-        self.push_element(element);
-        self
-    }
-
-    pub fn push_element(&mut self, element: usize) {
-        self.path.push(Key::Element(element));
-    }
-
     pub fn len(&self) -> usize {
         self.path.len()
     }
@@ -211,22 +196,48 @@ impl KeyPath {
     }
 }
 
-#[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
-pub(crate) enum Key {
-    Field(String),
-    Element(usize),
-    Variant(String),
+mod private {
+    use super::*;
+
+    pub trait Sealed {}
+    impl Sealed for &str {}
+    impl Sealed for String {}
+    impl Sealed for usize {}
+
+    #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+    pub enum Key {
+        Field(String),
+        Element(usize),
+        Variant(String),
+    }
 }
 
-pub fn field<S>(field: S) -> KeyPath
-where
-    S: Into<String>,
-{
+pub(crate) use private::Key;
+
+pub trait IntoKey: private::Sealed {
+    fn into_key(self) -> Key;
+}
+
+impl IntoKey for &str {
+    fn into_key(self) -> Key {
+        Key::Field(self.to_owned())
+    }
+}
+
+impl IntoKey for String {
+    fn into_key(self) -> Key {
+        Key::Field(self)
+    }
+}
+
+impl IntoKey for usize {
+    fn into_key(self) -> Key {
+        Key::Element(self)
+    }
+}
+
+pub fn field(field: impl IntoKey) -> KeyPath {
     KeyPath::default().field(field)
-}
-
-pub fn element(element: usize) -> KeyPath {
-    KeyPath::default().element(element)
 }
 
 pub fn variant<S>(variant: S) -> KeyPath
@@ -260,15 +271,15 @@ macro_rules! key_path {
         )
     }};
 
-    // recursive case (element)
+    // recursive case (field)
     (
         @go:
         $path:expr,
-        [ [$element:expr] $($tt:tt)*],
+        [ [$field:expr] $($tt:tt)*],
     ) => {{
         $crate::key_path!(
             @go:
-            $path.element($element),
+            $path.field($field),
             [$($tt)*],
         )
     }};
@@ -310,7 +321,7 @@ impl fmt::Display for KeyPath {
         for key in &self.path {
             match key {
                 Key::Field(field) => write!(f, ".{field}")?,
-                Key::Element(element) => write!(f, "[{element}]")?,
+                Key::Element(field) => write!(f, "[{field}]")?,
                 Key::Variant(variant) => write!(f, "{{{variant}}}")?,
             }
         }

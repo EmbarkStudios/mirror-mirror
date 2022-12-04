@@ -35,7 +35,6 @@ where
 }
 
 impl<'a> GetField<'a, &str, private::Value> for &'a Value {
-    #[allow(warnings)]
     fn get_field<T>(self, key: &str) -> Option<&'a T>
     where
         T: Reflect,
@@ -183,7 +182,7 @@ where
     where
         T: Reflect,
     {
-        self.element(key)?.downcast_ref()
+        self.field(key)?.downcast_ref()
     }
 }
 
@@ -195,7 +194,7 @@ where
     where
         T: Reflect,
     {
-        self.element_mut(key)?.downcast_mut()
+        self.field_mut(key)?.downcast_mut()
     }
 }
 
@@ -231,7 +230,7 @@ where
     where
         T: Reflect,
     {
-        self.element(key)?.downcast_ref()
+        self.field_at(key)?.downcast_ref()
     }
 }
 
@@ -243,7 +242,7 @@ where
     where
         T: Reflect,
     {
-        self.element_mut(key)?.downcast_mut()
+        self.field_at_mut(key)?.downcast_mut()
     }
 }
 
@@ -255,7 +254,7 @@ where
     where
         T: Reflect,
     {
-        self.element(key)?.downcast_ref()
+        self.field(key)?.downcast_ref()
     }
 }
 
@@ -267,7 +266,7 @@ where
     where
         T: Reflect,
     {
-        self.element_mut(key)?.downcast_mut()
+        self.field_mut(key)?.downcast_mut()
     }
 }
 
