@@ -1,5 +1,6 @@
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
+use crate::tuple::TupleValue;
 use crate::type_info::graph::Id;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::type_info::graph::TypeInfoNode;
@@ -8,7 +9,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
 use crate::Tuple;
-use crate::TupleValue;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;

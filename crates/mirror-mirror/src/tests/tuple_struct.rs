@@ -1,9 +1,9 @@
 use crate as mirror_mirror;
+use crate::struct_::TupleStructValue;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
 use crate::TupleStruct;
-use crate::TupleStructValue;
 
 #[test]
 fn tuple_value() {

@@ -5,38 +5,43 @@ use std::any::Any;
 use std::any::TypeId;
 use std::fmt;
 
+pub mod enum_;
+pub mod get_field;
 pub mod iter;
 pub mod key_path;
+pub mod list;
+pub mod map;
+pub mod struct_;
+pub mod tuple;
 pub mod type_info;
-
-mod enum_;
-mod get_field;
-mod list;
-mod map;
-mod struct_;
-mod tuple;
-mod value;
+pub mod value;
 
 #[cfg(test)]
 mod tests;
 
 #[doc(inline)]
-pub use self::enum_::*;
+pub use self::enum_::Enum;
 #[doc(inline)]
-pub use self::get_field::*;
+pub use self::get_field::GetField;
 #[doc(inline)]
-pub use self::list::*;
+pub use self::get_field::GetFieldMut;
 #[doc(inline)]
-pub use self::map::*;
+pub use self::list::List;
 #[doc(inline)]
-pub use self::struct_::*;
+pub use self::map::Map;
 #[doc(inline)]
-pub use self::tuple::*;
+pub use self::struct_::Struct;
 #[doc(inline)]
-pub use self::type_info::{TypeInfoRoot, Typed};
+pub use self::struct_::TupleStruct;
 #[doc(inline)]
-pub use self::value::*;
-
+pub use self::tuple::Tuple;
+#[doc(inline)]
+pub use self::type_info::TypeInfoRoot;
+#[doc(inline)]
+pub use self::type_info::Typed;
+#[doc(inline)]
+pub use self::value::Value;
+#[doc(inline)]
 pub use mirror_mirror_macros::*;
 
 pub trait Reflect: Any + Send + 'static {
@@ -521,6 +526,12 @@ pub enum ScalarMut<'a> {
 /// Private. Used by macros
 #[doc(hidden)]
 pub mod __private {
+    pub use self::enum_::*;
+    pub use self::key_path::*;
+    pub use self::struct_::*;
+    pub use self::tuple::*;
+    pub use self::type_info::*;
+    pub use self::value::*;
     pub use crate::iter::*;
     pub use crate::type_info::graph::*;
     pub use crate::*;

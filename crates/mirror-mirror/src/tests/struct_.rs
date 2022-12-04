@@ -1,9 +1,9 @@
 use crate as mirror_mirror;
+use crate::struct_::StructValue;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
 use crate::Struct;
-use crate::StructValue;
 use crate::Value;
 
 #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]

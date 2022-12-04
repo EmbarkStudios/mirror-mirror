@@ -1,6 +1,6 @@
+use crate::tuple::TupleValue;
 use crate::GetField;
 use crate::Reflect;
-use crate::TupleValue;
 
 #[test]
 fn tuple_value() {

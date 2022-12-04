@@ -1,10 +1,10 @@
 use crate as mirror_mirror;
+use crate::enum_::EnumValue;
 use crate::enum_::VariantKind;
+use crate::get_field::GetField;
+use crate::get_field::GetFieldMut;
 use crate::Enum;
-use crate::GetFieldMut;
-use mirror_mirror::EnumValue;
 use mirror_mirror::FromReflect;
-use mirror_mirror::GetField;
 use mirror_mirror::Reflect;
 
 #[test]
