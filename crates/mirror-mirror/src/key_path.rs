@@ -18,9 +18,7 @@ pub trait GetPath {
     {
         self.at(key_path)?.downcast_ref()
     }
-}
 
-pub trait GetPathMut {
     fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect>;
 
     fn get_at_mut<T>(&mut self, key_path: KeyPath) -> Option<&mut T>
@@ -95,12 +93,7 @@ where
         path.reverse();
         go(self, path)
     }
-}
 
-impl<R> GetPathMut for R
-where
-    R: Reflect + ?Sized,
-{
     fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect> {
         fn go<R>(value: &mut R, mut stack: Vec<Key>) -> Option<&mut dyn Reflect>
         where

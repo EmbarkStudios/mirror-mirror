@@ -21,7 +21,7 @@ pub trait Typed: 'static {
 }
 
 pub trait GetTypedPath<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>>;
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
@@ -37,7 +37,7 @@ impl TypeInfoRoot {
 }
 
 impl<'a> GetTypedPath<'a> for &'a TypeInfoRoot {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
         self.type_().at_typed(key_path)
     }
 }
@@ -119,16 +119,16 @@ impl<'a> TypeInfo<'a> {
         }
     }
 
-    fn into_at_typed(self) -> Option<AtTyped<'a>> {
+    fn into_type_info_at_path(self) -> Option<TypeInfoAtPath<'a>> {
         match self {
-            TypeInfo::Struct(inner) => inner.map(|inner| inner.into_at_typed()),
-            TypeInfo::TupleStruct(inner) => inner.map(|inner| inner.into_at_typed()),
-            TypeInfo::Tuple(inner) => inner.map(|inner| inner.into_at_typed()),
-            TypeInfo::Enum(inner) => inner.map(|inner| inner.into_at_typed()),
-            TypeInfo::List(inner) => Some(inner.into_at_typed()),
-            TypeInfo::Map(inner) => Some(inner.into_at_typed()),
-            TypeInfo::Scalar(inner) => Some(inner.into_at_typed()),
-            TypeInfo::Opaque => Some(AtTyped::Opaque),
+            TypeInfo::Struct(inner) => inner.map(|inner| inner.into_type_info_at_path()),
+            TypeInfo::TupleStruct(inner) => inner.map(|inner| inner.into_type_info_at_path()),
+            TypeInfo::Tuple(inner) => inner.map(|inner| inner.into_type_info_at_path()),
+            TypeInfo::Enum(inner) => inner.map(|inner| inner.into_type_info_at_path()),
+            TypeInfo::List(inner) => Some(inner.into_type_info_at_path()),
+            TypeInfo::Map(inner) => Some(inner.into_type_info_at_path()),
+            TypeInfo::Scalar(inner) => Some(inner.into_type_info_at_path()),
+            TypeInfo::Opaque => Some(TypeInfoAtPath::Opaque),
         }
     }
 
@@ -183,56 +183,56 @@ impl<'a> TypeInfo<'a> {
 }
 
 impl<'a> GetTypedPath<'a> for TypeInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed()?.at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path()?.at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for StructInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for TupleStructInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for TupleInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for EnumInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for ListInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for MapInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl GetTypedPath<'static> for ScalarInfo {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'static>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'static>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
 impl<'a> GetTypedPath<'a> for VariantInfo<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        self.into_at_typed().at_typed(key_path)
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
@@ -321,8 +321,8 @@ impl ScalarInfo {
         }
     }
 
-    fn into_at_typed(self) -> AtTyped<'static> {
-        AtTyped::Scalar(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'static> {
+        TypeInfoAtPath::Scalar(self)
     }
 }
 
@@ -344,8 +344,8 @@ impl<'a> StructInfo<'a> {
         })
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::Struct(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Struct(self)
     }
 }
 
@@ -367,8 +367,8 @@ impl<'a> TupleStructInfo<'a> {
         })
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::TupleStruct(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::TupleStruct(self)
     }
 }
 
@@ -390,8 +390,8 @@ impl<'a> TupleInfo<'a> {
         })
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::Tuple(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Tuple(self)
     }
 }
 
@@ -410,18 +410,24 @@ impl<'a> EnumInfo<'a> {
         self.node.variants.iter().map(|variant| match variant {
             VariantNode::Struct(node) => VariantInfo::Struct(StructVariantInfo {
                 node,
+                enum_node: self.node,
                 graph: self.graph,
             }),
             VariantNode::Tuple(node) => VariantInfo::Tuple(TupleVariantInfo {
                 node,
+                enum_node: self.node,
                 graph: self.graph,
             }),
-            VariantNode::Unit(node) => VariantInfo::Unit(UnitVariantInfo { node }),
+            VariantNode::Unit(node) => VariantInfo::Unit(UnitVariantInfo {
+                node,
+                enum_node: self.node,
+                graph: self.graph,
+            }),
         })
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::Enum(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Enum(self)
     }
 }
 
@@ -450,8 +456,16 @@ impl<'a> VariantInfo<'a> {
         }
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::Variant(self)
+    pub fn enum_type(self) -> EnumInfo<'a> {
+        match self {
+            VariantInfo::Struct(inner) => inner.enum_type(),
+            VariantInfo::Tuple(inner) => inner.enum_type(),
+            VariantInfo::Unit(inner) => inner.enum_type(),
+        }
+    }
+
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Variant(self)
     }
 }
 
@@ -483,6 +497,7 @@ impl<'a> VariantField<'a> {
 #[derive(Copy, Clone, Debug)]
 pub struct StructVariantInfo<'a> {
     node: &'a StructVariantInfoNode,
+    enum_node: &'a EnumInfoNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -497,11 +512,19 @@ impl<'a> StructVariantInfo<'a> {
             graph: self.graph,
         })
     }
+
+    pub fn enum_type(self) -> EnumInfo<'a> {
+        EnumInfo {
+            node: self.enum_node,
+            graph: self.graph,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct TupleVariantInfo<'a> {
     node: &'a TupleVariantInfoNode,
+    enum_node: &'a EnumInfoNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -516,16 +539,32 @@ impl<'a> TupleVariantInfo<'a> {
             graph: self.graph,
         })
     }
+
+    pub fn enum_type(self) -> EnumInfo<'a> {
+        EnumInfo {
+            node: self.enum_node,
+            graph: self.graph,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct UnitVariantInfo<'a> {
     node: &'a UnitVariantInfoNode,
+    enum_node: &'a EnumInfoNode,
+    graph: &'a TypeInfoGraph,
 }
 
 impl<'a> UnitVariantInfo<'a> {
     pub fn name(self) -> &'a str {
         &self.node.name
+    }
+
+    pub fn enum_type(self) -> EnumInfo<'a> {
+        EnumInfo {
+            node: self.enum_node,
+            graph: self.graph,
+        }
     }
 }
 
@@ -572,8 +611,8 @@ impl<'a> ListInfo<'a> {
         TypeInfo::new(self.node.field_type_id, self.graph)
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::List(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::List(self)
     }
 }
 
@@ -596,13 +635,13 @@ impl<'a> MapInfo<'a> {
         TypeInfo::new(self.node.value_type_id, self.graph)
     }
 
-    fn into_at_typed(self) -> AtTyped<'a> {
-        AtTyped::Map(self)
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Map(self)
     }
 }
 
 #[derive(Copy, Clone, Debug)]
-pub enum AtTyped<'a> {
+pub enum TypeInfoAtPath<'a> {
     Struct(StructInfo<'a>),
     TupleStruct(TupleStructInfo<'a>),
     Tuple(TupleInfo<'a>),
@@ -614,7 +653,23 @@ pub enum AtTyped<'a> {
     Opaque,
 }
 
-impl<'a> AtTyped<'a> {
+impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
+    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+        match self {
+            TypeInfoAtPath::Struct(inner) => inner.get_meta(key),
+            TypeInfoAtPath::TupleStruct(inner) => inner.get_meta(key),
+            TypeInfoAtPath::Enum(inner) => inner.get_meta(key),
+            TypeInfoAtPath::Variant(_)
+            | TypeInfoAtPath::Tuple(_)
+            | TypeInfoAtPath::List(_)
+            | TypeInfoAtPath::Map(_)
+            | TypeInfoAtPath::Scalar(_)
+            | TypeInfoAtPath::Opaque => None,
+        }
+    }
+}
+
+impl<'a> TypeInfoAtPath<'a> {
     pub fn as_struct(self) -> Option<StructInfo<'a>> {
         match self {
             Self::Struct(inner) => Some(inner),
@@ -672,28 +727,28 @@ impl<'a> AtTyped<'a> {
     }
 }
 
-impl<'a> GetTypedPath<'a> for AtTyped<'a> {
-    fn at_typed(self, key_path: KeyPath) -> Option<AtTyped<'a>> {
-        fn go(type_info: AtTyped<'_>, mut stack: Vec<Key>) -> Option<AtTyped<'_>> {
+impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
+    fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
+        fn go(type_info: TypeInfoAtPath<'_>, mut stack: Vec<Key>) -> Option<TypeInfoAtPath<'_>> {
             let head = stack.pop()?;
 
-            let value_at_key: AtTyped<'_> = match head {
+            let value_at_key: TypeInfoAtPath<'_> = match head {
                 Key::Field(key) => match type_info {
-                    AtTyped::Struct(struct_) => struct_
+                    TypeInfoAtPath::Struct(struct_) => struct_
                         .fields()
                         .find(|field| field.name() == key)?
                         .type_()
-                        .into_at_typed()?,
-                    AtTyped::Map(map) => map.value_type().into_at_typed()?,
-                    AtTyped::Variant(variant) => match variant {
+                        .into_type_info_at_path()?,
+                    TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path()?,
+                    TypeInfoAtPath::Variant(variant) => match variant {
                         VariantInfo::Struct(struct_variant) => struct_variant
                             .fields()
                             .find(|field| field.name() == key)?
                             .type_()
-                            .into_at_typed()?,
+                            .into_type_info_at_path()?,
                         VariantInfo::Tuple(_) | VariantInfo::Unit(_) => return None,
                     },
-                    AtTyped::Enum(enum_) => {
+                    TypeInfoAtPath::Enum(enum_) => {
                         let mut variants = enum_.variants();
                         let first = variants.next()?;
                         if variants.next().is_none() {
@@ -710,55 +765,64 @@ impl<'a> GetTypedPath<'a> for AtTyped<'a> {
                                     VariantField::Unnamed(_) => None,
                                 })?
                                 .type_()
-                                .into_at_typed()?
+                                .into_type_info_at_path()?
                         } else {
                             return None;
                         }
                     }
-                    AtTyped::TupleStruct(_)
-                    | AtTyped::Tuple(_)
-                    | AtTyped::List(_)
-                    | AtTyped::Scalar(_)
-                    | AtTyped::Opaque => return None,
+                    TypeInfoAtPath::TupleStruct(_)
+                    | TypeInfoAtPath::Tuple(_)
+                    | TypeInfoAtPath::List(_)
+                    | TypeInfoAtPath::Scalar(_)
+                    | TypeInfoAtPath::Opaque => return None,
                 },
                 Key::Element(index) => match type_info {
-                    AtTyped::List(list) => list.field_type().into_at_typed()?,
-                    AtTyped::Map(map) => map.value_type().into_at_typed()?,
-                    AtTyped::TupleStruct(tuple_struct) => {
-                        tuple_struct.fields().nth(index)?.type_().into_at_typed()?
-                    }
-                    AtTyped::Tuple(tuple) => tuple.fields().nth(index)?.type_().into_at_typed()?,
+                    TypeInfoAtPath::List(list) => list.field_type().into_type_info_at_path()?,
+                    TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path()?,
+                    TypeInfoAtPath::TupleStruct(tuple_struct) => tuple_struct
+                        .fields()
+                        .nth(index)?
+                        .type_()
+                        .into_type_info_at_path()?,
+                    TypeInfoAtPath::Tuple(tuple) => tuple
+                        .fields()
+                        .nth(index)?
+                        .type_()
+                        .into_type_info_at_path()?,
 
-                    AtTyped::Variant(variant) => match variant {
-                        VariantInfo::Tuple(tuple_variant) => {
-                            tuple_variant.fields().nth(index)?.type_().into_at_typed()?
-                        }
+                    TypeInfoAtPath::Variant(variant) => match variant {
+                        VariantInfo::Tuple(tuple_variant) => tuple_variant
+                            .fields()
+                            .nth(index)?
+                            .type_()
+                            .into_type_info_at_path()?,
                         VariantInfo::Struct(_) | VariantInfo::Unit(_) => return None,
                     },
 
-                    AtTyped::Enum(_) | AtTyped::Scalar(_) | AtTyped::Struct(_) | AtTyped::Opaque => {
-                        return None
-                    }
+                    TypeInfoAtPath::Enum(_)
+                    | TypeInfoAtPath::Scalar(_)
+                    | TypeInfoAtPath::Struct(_)
+                    | TypeInfoAtPath::Opaque => return None,
                 },
                 Key::Variant(variant) => match type_info {
-                    AtTyped::Variant(v) => {
+                    TypeInfoAtPath::Variant(v) => {
                         if v.name() == variant {
-                            AtTyped::Variant(v)
+                            TypeInfoAtPath::Variant(v)
                         } else {
                             return None;
                         }
                     }
-                    AtTyped::Enum(enum_) => {
+                    TypeInfoAtPath::Enum(enum_) => {
                         let variant_info = enum_.variants().find(|v| v.name() == variant)?;
-                        AtTyped::Variant(variant_info)
+                        TypeInfoAtPath::Variant(variant_info)
                     }
-                    AtTyped::Struct(_)
-                    | AtTyped::TupleStruct(_)
-                    | AtTyped::Tuple(_)
-                    | AtTyped::List(_)
-                    | AtTyped::Map(_)
-                    | AtTyped::Scalar(_)
-                    | AtTyped::Opaque => return None,
+                    TypeInfoAtPath::Struct(_)
+                    | TypeInfoAtPath::TupleStruct(_)
+                    | TypeInfoAtPath::Tuple(_)
+                    | TypeInfoAtPath::List(_)
+                    | TypeInfoAtPath::Map(_)
+                    | TypeInfoAtPath::Scalar(_)
+                    | TypeInfoAtPath::Opaque => return None,
                 },
             };
 

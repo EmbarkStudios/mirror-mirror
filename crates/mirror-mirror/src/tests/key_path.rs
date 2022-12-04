@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::key_path;
 use crate::key_path::*;
-use crate::type_info::{GetTypedPath, AtTyped, ScalarInfo};
+use crate::type_info::{GetTypedPath, ScalarInfo, TypeInfoAtPath};
 use crate::{self as mirror_mirror, Typed};
 use mirror_mirror::Reflect;
 
@@ -96,7 +96,7 @@ fn query_type_info_struct() {
 
     assert!(matches!(
         dbg!(type_info.at_typed(key_path).unwrap()),
-        AtTyped::Scalar(ScalarInfo::String)
+        TypeInfoAtPath::Scalar(ScalarInfo::String)
     ));
 }
 
@@ -113,14 +113,14 @@ fn query_type_info_enum() {
         dbg!(<Foo as Typed>::type_info()
             .at_typed(key_path!({ A }.a))
             .unwrap()),
-        AtTyped::Scalar(ScalarInfo::String)
+        TypeInfoAtPath::Scalar(ScalarInfo::String)
     ));
 
     assert!(matches!(
         dbg!(<Foo as Typed>::type_info()
             .at_typed(key_path!({ B }[0]))
             .unwrap()),
-        AtTyped::Scalar(ScalarInfo::i32)
+        TypeInfoAtPath::Scalar(ScalarInfo::i32)
     ));
 
     let info = <Foo as Typed>::type_info();
