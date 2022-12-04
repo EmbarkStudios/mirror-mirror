@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::key_path;
 use crate::key_path::*;
-use crate::type_info::{ScalarInfo, TypeInfo, VariantInfo};
+use crate::type_info::{NameMe, ScalarInfo, TypeInfo, VariantInfo};
 use crate::{self as mirror_mirror, Typed};
 use mirror_mirror::Reflect;
 
@@ -96,28 +96,31 @@ fn query_type_info_struct() {
 
     assert!(matches!(
         dbg!(type_info.at(key_path).unwrap()),
-        TypeInfo::Scalar(ScalarInfo::String)
+        NameMe::Scalar(ScalarInfo::String)
     ));
 }
 
-// #[test]
-// fn query_type_info_enum() {
-//     #[derive(Reflect, Clone, Debug)]
-//     enum Foo {
-//         A { a: String },
-//         B(i32),
-//         C,
-//     }
+#[test]
+fn query_type_info_enum() {
+    #[derive(Reflect, Clone, Debug)]
+    enum Foo {
+        A { a: String },
+        B(i32),
+        C,
+    }
 
-//     assert!(matches!(
-//         dbg!(<Foo as Typed>::type_info().at(key_path!({ A }.a)).unwrap()),
-//         TypeInfo::Scalar(ScalarInfo::String)
-//     ));
+    assert!(matches!(
+        dbg!(<Foo as Typed>::type_info().at(key_path!({ A }.a)).unwrap()),
+        NameMe::Scalar(ScalarInfo::String)
+    ));
 
-//     assert!(matches!(
-//         dbg!(<Foo as Typed>::type_info().at(key_path!({ B }[0])).unwrap()),
-//         TypeInfo::Scalar(ScalarInfo::i32)
-//     ));
+    assert!(matches!(
+        dbg!(<Foo as Typed>::type_info().at(key_path!({ B }[0])).unwrap()),
+        NameMe::Scalar(ScalarInfo::i32)
+    ));
 
-//     let enum_: VariantInfo<'_> = <Foo as Typed>::type_info().at(key_path!({ C }));
-// }
+    let info = <Foo as Typed>::type_info();
+    let variant = info.at(key_path!({ C })).unwrap().as_variant().unwrap();
+
+    assert_eq!(variant.name(), "C");
+}

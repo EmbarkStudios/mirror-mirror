@@ -29,7 +29,7 @@ impl TypeInfoRoot {
         TypeInfo::new(self.root, &self.graph)
     }
 
-    pub fn at(&self, key_path: KeyPath) -> Option<TypeInfo<'_>> {
+    pub fn at(&self, key_path: KeyPath) -> Option<NameMe<'_>> {
         self.type_().at(key_path)
     }
 }
@@ -112,71 +112,21 @@ impl<'a> TypeInfo<'a> {
     }
 
     // TODO(david): make trait implemented for all type infos
-    pub fn at(self, key_path: KeyPath) -> Option<TypeInfo<'a>> {
-        fn go(type_info: TypeInfo<'_>, mut stack: Vec<Key>) -> Option<TypeInfo<'_>> {
-            let head = stack.pop()?;
+    pub fn at(self, key_path: KeyPath) -> Option<NameMe<'a>> {
+        self.into_a()?.at(key_path)
+    }
 
-            let value_at_key = match head {
-                Key::Field(key) => match type_info {
-                    TypeInfo::Struct(inner) => {
-                        inner?.fields().find(|field| field.name() == key)?.type_()
-                    }
-                    TypeInfo::Map(inner) => inner.value_type(),
-
-                    TypeInfo::Enum(_) => todo!("enum"),
-
-                    TypeInfo::TupleStruct(_)
-                    | TypeInfo::Tuple(_)
-                    | TypeInfo::List(_)
-                    | TypeInfo::Scalar(_)
-                    | TypeInfo::Opaque => return None,
-                },
-                Key::Element(index) => match type_info {
-                    TypeInfo::List(inner) => inner.field_type(),
-                    TypeInfo::TupleStruct(inner) => inner?.fields().nth(index)?.type_(),
-                    TypeInfo::Tuple(inner) => inner?.fields().nth(index)?.type_(),
-
-                    TypeInfo::Enum(_) => todo!("enum"),
-
-                    TypeInfo::Scalar(_)
-                    | TypeInfo::Struct(_)
-                    | TypeInfo::Map(_)
-                    | TypeInfo::Opaque => return None,
-                },
-                Key::Variant(variant) => match type_info {
-                    TypeInfo::Enum(inner) => {
-                        let matching_variant: VariantInfo =
-                            inner?.variants().find(|v| v.name() == variant)?;
-                        // let x = EnumInfo {
-                        //     node,
-                        //     graph: enum_info.graph,
-                        // };
-                        todo!()
-                    }
-                    TypeInfo::Struct(_)
-                    | TypeInfo::TupleStruct(_)
-                    | TypeInfo::Tuple(_)
-                    | TypeInfo::List(_)
-                    | TypeInfo::Map(_)
-                    | TypeInfo::Scalar(_)
-                    | TypeInfo::Opaque => return None,
-                },
-            };
-
-            if stack.is_empty() {
-                Some(value_at_key)
-            } else {
-                go(value_at_key, stack)
-            }
+    fn into_a(self) -> Option<NameMe<'a>> {
+        match self {
+            TypeInfo::Struct(inner) => inner.map(NameMe::Struct),
+            TypeInfo::TupleStruct(inner) => inner.map(NameMe::TupleStruct),
+            TypeInfo::Tuple(inner) => inner.map(NameMe::Tuple),
+            TypeInfo::Enum(inner) => inner.map(NameMe::Enum),
+            TypeInfo::List(inner) => Some(NameMe::List(inner)),
+            TypeInfo::Map(inner) => Some(NameMe::Map(inner)),
+            TypeInfo::Scalar(inner) => Some(NameMe::Scalar(inner)),
+            TypeInfo::Opaque => Some(NameMe::Opaque),
         }
-
-        if key_path.is_empty() {
-            return Some(self);
-        }
-
-        let mut path = key_path.path;
-        path.reverse();
-        go(self, path)
     }
 
     pub fn as_struct(self) -> Option<StructInfo<'a>> {
@@ -413,6 +363,30 @@ impl<'a> VariantInfo<'a> {
             VariantInfo::Unit(inner) => inner.name(),
         }
     }
+
+    pub fn fields(self) -> impl Iterator<Item = VariantField<'a>> {
+        match self {
+            VariantInfo::Struct(inner) => Box::new(inner.fields().map(VariantField::Named))
+                as Box<dyn Iterator<Item = VariantField<'a>>>,
+            VariantInfo::Tuple(inner) => Box::new(inner.fields().map(VariantField::Unnamed)),
+            VariantInfo::Unit(_) => Box::new(std::iter::empty()),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum VariantField<'a> {
+    Named(NamedField<'a>),
+    Unnamed(UnnamedField<'a>),
+}
+
+impl<'a> VariantField<'a> {
+    pub fn type_(self) -> TypeInfo<'a> {
+        match self {
+            VariantField::Named(inner) => inner.type_(),
+            VariantField::Unnamed(inner) => inner.type_(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -525,6 +499,182 @@ impl<'a> MapInfo<'a> {
 
     pub fn value_type(self) -> TypeInfo<'a> {
         TypeInfo::new(self.node.value_type_id, self.graph)
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum NameMe<'a> {
+    Struct(StructInfo<'a>),
+    TupleStruct(TupleStructInfo<'a>),
+    Tuple(TupleInfo<'a>),
+    Enum(EnumInfo<'a>),
+    Variant(VariantInfo<'a>),
+    List(ListInfo<'a>),
+    Map(MapInfo<'a>),
+    Scalar(ScalarInfo),
+    Opaque,
+}
+
+impl<'a> NameMe<'a> {
+    pub fn at(self, key_path: KeyPath) -> Option<Self> {
+        fn go(type_info: NameMe<'_>, mut stack: Vec<Key>) -> Option<NameMe<'_>> {
+            let head = stack.pop()?;
+
+            let value_at_key: NameMe<'_> = match head {
+                Key::Field(key) => match type_info {
+                    NameMe::Struct(struct_) => struct_
+                        .fields()
+                        .find(|field| field.name() == key)?
+                        .type_()
+                        .into_a()?,
+                    NameMe::Map(map) => map.value_type().into_a()?,
+                    NameMe::Variant(variant) => match variant {
+                        VariantInfo::Struct(struct_variant) => struct_variant
+                            .fields()
+                            .find(|field| field.name() == key)?
+                            .type_()
+                            .into_a()?,
+                        VariantInfo::Tuple(_) | VariantInfo::Unit(_) => return None,
+                    },
+                    NameMe::Enum(enum_) => {
+                        let mut variants = enum_.variants();
+                        let first = variants.next()?;
+                        if variants.next().is_none() {
+                            first
+                                .fields()
+                                .find_map(|field| match field {
+                                    VariantField::Named(field) => {
+                                        if field.name() == key {
+                                            Some(field)
+                                        } else {
+                                            None
+                                        }
+                                    }
+                                    VariantField::Unnamed(_) => None,
+                                })?
+                                .type_()
+                                .into_a()?
+                        } else {
+                            return None;
+                        }
+                    }
+                    NameMe::TupleStruct(_)
+                    | NameMe::Tuple(_)
+                    | NameMe::List(_)
+                    | NameMe::Scalar(_)
+                    | NameMe::Opaque => return None,
+                },
+                Key::Element(index) => match type_info {
+                    NameMe::List(list) => list.field_type().into_a()?,
+                    NameMe::Map(map) => map.value_type().into_a()?,
+                    NameMe::TupleStruct(tuple_struct) => {
+                        tuple_struct.fields().nth(index)?.type_().into_a()?
+                    }
+                    NameMe::Tuple(tuple) => tuple.fields().nth(index)?.type_().into_a()?,
+
+                    NameMe::Variant(variant) => match variant {
+                        VariantInfo::Tuple(tuple_variant) => {
+                            tuple_variant.fields().nth(index)?.type_().into_a()?
+                        }
+                        VariantInfo::Struct(_) | VariantInfo::Unit(_) => return None,
+                    },
+
+                    NameMe::Enum(_) | NameMe::Scalar(_) | NameMe::Struct(_) | NameMe::Opaque => {
+                        return None
+                    }
+                },
+                Key::Variant(variant) => match type_info {
+                    NameMe::Variant(v) => {
+                        if v.name() == variant {
+                            NameMe::Variant(v)
+                        } else {
+                            return None;
+                        }
+                    }
+                    NameMe::Enum(enum_) => {
+                        let variant_info = enum_.variants().find(|v| v.name() == variant)?;
+                        NameMe::Variant(variant_info)
+                    }
+                    NameMe::Struct(_)
+                    | NameMe::TupleStruct(_)
+                    | NameMe::Tuple(_)
+                    | NameMe::List(_)
+                    | NameMe::Map(_)
+                    | NameMe::Scalar(_)
+                    | NameMe::Opaque => return None,
+                },
+            };
+
+            if stack.is_empty() {
+                Some(value_at_key)
+            } else {
+                go(value_at_key, stack)
+            }
+        }
+
+        if key_path.is_empty() {
+            return Some(self);
+        }
+
+        let mut path = key_path.path;
+        path.reverse();
+        go(self, path)
+    }
+
+    pub fn as_struct(self) -> Option<StructInfo<'a>> {
+        match self {
+            Self::Struct(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_tuple_struct(self) -> Option<TupleStructInfo<'a>> {
+        match self {
+            Self::TupleStruct(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_tuple(self) -> Option<TupleInfo<'a>> {
+        match self {
+            Self::Tuple(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_enum(self) -> Option<EnumInfo<'a>> {
+        match self {
+            Self::Enum(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_variant(self) -> Option<VariantInfo<'a>> {
+        match self {
+            Self::Variant(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_list(self) -> Option<ListInfo<'a>> {
+        match self {
+            Self::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_map(self) -> Option<MapInfo<'a>> {
+        match self {
+            Self::Map(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_scalar(self) -> Option<ScalarInfo> {
+        match self {
+            Self::Scalar(inner) => Some(inner),
+            _ => None,
+        }
     }
 }
 
