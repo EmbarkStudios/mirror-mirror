@@ -1,4 +1,5 @@
 use crate as mirror_mirror;
+use crate::type_info::GetMeta;
 use crate::Reflect;
 use crate::Typed;
 use mirror_mirror::type_info::TypeInfo;

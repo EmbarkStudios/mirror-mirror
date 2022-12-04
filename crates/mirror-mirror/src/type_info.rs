@@ -91,19 +91,6 @@ impl<'a> TypeInfo<'a> {
         }
     }
 
-    pub fn get_meta(&self, key: &str) -> Option<&dyn Reflect> {
-        match self {
-            TypeInfo::Struct(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
-            TypeInfo::TupleStruct(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
-            TypeInfo::Enum(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
-            TypeInfo::Tuple(_)
-            | TypeInfo::List(_)
-            | TypeInfo::Map(_)
-            | TypeInfo::Scalar(_)
-            | TypeInfo::Opaque => None,
-        }
-    }
-
     pub fn type_name(self) -> Option<&'a str> {
         match self {
             TypeInfo::Struct(inner) => inner.map(|inner| inner.type_name()),
@@ -118,12 +105,46 @@ impl<'a> TypeInfo<'a> {
     }
 }
 
-macro_rules! fn_get_meta {
-    () => {
-        pub fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
-            Some(self.node.metadata.get(key)?.as_reflect())
+pub trait GetMeta<'a> {
+    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect>;
+}
+
+impl<'a> GetMeta<'a> for TypeInfo<'a> {
+    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+        match self {
+            TypeInfo::Struct(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
+            TypeInfo::TupleStruct(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
+            TypeInfo::Enum(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
+            TypeInfo::Tuple(_)
+            | TypeInfo::List(_)
+            | TypeInfo::Map(_)
+            | TypeInfo::Scalar(_)
+            | TypeInfo::Opaque => None,
         }
+    }
+}
+
+macro_rules! impl_get_meta {
+    ($($ident:ident)*) => {
+        $(
+            impl<'a> GetMeta<'a> for $ident<'a> {
+                fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+                    Some(self.node.metadata.get(key)?.as_reflect())
+                }
+            }
+        )*
     };
+}
+
+impl_get_meta! {
+    StructInfo
+    TupleStructInfo
+    EnumInfo
+    StructVariantInfo
+    TupleVariantInfo
+    UnitVariantInfo
+    UnnamedField
+    NamedField
 }
 
 #[allow(non_camel_case_types)]
@@ -187,8 +208,6 @@ impl<'a> StructInfo<'a> {
             graph: self.graph,
         })
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -208,8 +227,6 @@ impl<'a> TupleStructInfo<'a> {
             graph: self.graph,
         })
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -255,8 +272,6 @@ impl<'a> EnumInfo<'a> {
             VariantNode::Unit(node) => VariantInfo::Unit(UnitVariantInfo { node }),
         })
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -283,8 +298,6 @@ impl<'a> StructVariantInfo<'a> {
             graph: self.graph,
         })
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -304,8 +317,6 @@ impl<'a> TupleVariantInfo<'a> {
             graph: self.graph,
         })
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -317,8 +328,6 @@ impl<'a> UnitVariantInfo<'a> {
     pub fn name(self) -> &'a str {
         &self.node.name
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -331,8 +340,6 @@ impl<'a> UnnamedField<'a> {
     pub fn type_(self) -> TypeInfo<'a> {
         TypeInfo::new(self.node.id, self.graph)
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -349,8 +356,6 @@ impl<'a> NamedField<'a> {
     pub fn type_(self) -> TypeInfo<'a> {
         TypeInfo::new(self.node.id, self.graph)
     }
-
-    fn_get_meta!();
 }
 
 #[derive(Copy, Clone, Debug)]
