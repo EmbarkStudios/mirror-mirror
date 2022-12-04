@@ -178,6 +178,55 @@ impl<'a> TypeInfo<'a> {
         path.reverse();
         go(self, path)
     }
+
+    pub fn as_struct(self) -> Option<StructInfo<'a>> {
+        match self {
+            TypeInfo::Struct(inner) => inner,
+            _ => None,
+        }
+    }
+
+    pub fn as_tuple_struct(self) -> Option<TupleStructInfo<'a>> {
+        match self {
+            TypeInfo::TupleStruct(inner) => inner,
+            _ => None,
+        }
+    }
+
+    pub fn as_tuple(self) -> Option<TupleInfo<'a>> {
+        match self {
+            TypeInfo::Tuple(inner) => inner,
+            _ => None,
+        }
+    }
+
+    pub fn as_enum(self) -> Option<EnumInfo<'a>> {
+        match self {
+            TypeInfo::Enum(inner) => inner,
+            _ => None,
+        }
+    }
+
+    pub fn as_list(self) -> Option<ListInfo<'a>> {
+        match self {
+            TypeInfo::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_map(self) -> Option<MapInfo<'a>> {
+        match self {
+            TypeInfo::Map(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_scalar(self) -> Option<ScalarInfo> {
+        match self {
+            TypeInfo::Scalar(inner) => Some(inner),
+            _ => None,
+        }
+    }
 }
 
 pub trait GetMeta<'a> {
