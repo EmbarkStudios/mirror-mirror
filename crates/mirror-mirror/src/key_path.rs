@@ -155,7 +155,7 @@ where
 
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone, Default)]
 pub struct KeyPath {
-    path: Vec<Key>,
+    pub(crate) path: Vec<Key>,
 }
 
 impl KeyPath {
@@ -212,7 +212,7 @@ impl KeyPath {
 }
 
 #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
-enum Key {
+pub(crate) enum Key {
     Field(String),
     Element(usize),
     Variant(String),

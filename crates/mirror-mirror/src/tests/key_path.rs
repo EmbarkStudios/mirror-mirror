@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
-use crate as mirror_mirror;
 use crate::key_path;
 use crate::key_path::*;
+use crate::type_info::{ScalarInfo, TypeInfo};
+use crate::{self as mirror_mirror, Typed};
 use mirror_mirror::Reflect;
 
 #[test]
@@ -60,4 +61,42 @@ fn display() {
         key_path!(.a.b.c[1][2]{D}.e[3]).to_string(),
         ".a.b.c[1][2]{D}.e[3]"
     );
+}
+
+#[test]
+#[allow(warnings)]
+fn query_type_info() {
+    #[derive(Reflect, Clone, Debug)]
+    struct User {
+        employer: Company,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    struct Company {
+        countries: Vec<Country>,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    struct Country {
+        name: String,
+    }
+
+    let user = User {
+        employer: Company {
+            countries: Vec::from([Country {
+                name: "Denmark".to_owned(),
+            }]),
+        },
+    };
+
+    let key_path = key_path!(.employer.countries[0].name);
+
+    assert_eq!(user.get_at::<String>(key_path.clone()).unwrap(), "Denmark");
+
+    let type_info = <User as Typed>::type_info();
+
+    assert!(matches!(
+        dbg!(type_info.at(key_path).unwrap()),
+        TypeInfo::Scalar(ScalarInfo::String)
+    ));
 }

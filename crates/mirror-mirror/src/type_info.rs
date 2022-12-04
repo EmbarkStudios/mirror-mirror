@@ -3,7 +3,10 @@ use speedy::{Readable, Writable};
 
 use graph::*;
 
-use crate::Reflect;
+use crate::{
+    key_path::{Key, KeyPath},
+    Reflect,
+};
 
 pub trait Typed: 'static {
     fn type_info() -> TypeInfoRoot {
@@ -24,6 +27,10 @@ pub struct TypeInfoRoot {
 impl TypeInfoRoot {
     pub fn type_(&self) -> TypeInfo<'_> {
         TypeInfo::new(self.root, &self.graph)
+    }
+
+    pub fn at(&self, key_path: KeyPath) -> Option<TypeInfo<'_>> {
+        self.type_().at(key_path)
     }
 }
 
@@ -102,6 +109,74 @@ impl<'a> TypeInfo<'a> {
             TypeInfo::Scalar(inner) => Some(inner.type_name()),
             TypeInfo::Opaque => None,
         }
+    }
+
+    // TODO(david): make trait implemented for all type infos
+    pub fn at(self, key_path: KeyPath) -> Option<TypeInfo<'a>> {
+        fn go(type_info: TypeInfo<'_>, mut stack: Vec<Key>) -> Option<TypeInfo<'_>> {
+            let head = stack.pop()?;
+
+            let value_at_key = match head {
+                Key::Field(key) => match type_info {
+                    TypeInfo::Struct(inner) => {
+                        inner?.fields().find(|field| field.name() == key)?.type_()
+                    }
+                    TypeInfo::Map(inner) => inner.value_type(),
+
+                    TypeInfo::Enum(_) => todo!("enum"),
+
+                    TypeInfo::TupleStruct(_)
+                    | TypeInfo::Tuple(_)
+                    | TypeInfo::List(_)
+                    | TypeInfo::Scalar(_)
+                    | TypeInfo::Opaque => return None,
+                },
+                Key::Element(index) => match type_info {
+                    TypeInfo::List(inner) => inner.element_type(),
+                    TypeInfo::TupleStruct(inner) => inner?.fields().nth(index)?.type_(),
+                    TypeInfo::Tuple(inner) => inner?.fields().nth(index)?.type_(),
+
+                    TypeInfo::Enum(_) => todo!("enum"),
+
+                    TypeInfo::Scalar(_)
+                    | TypeInfo::Struct(_)
+                    | TypeInfo::Map(_)
+                    | TypeInfo::Opaque => return None,
+                },
+                Key::Variant(variant) => match type_info {
+                    TypeInfo::Enum(inner) => {
+                        let matching_variant: VariantInfo =
+                            inner?.variants().find(|v| v.name() == variant)?;
+                        // let x = EnumInfo {
+                        //     node,
+                        //     graph: enum_info.graph,
+                        // };
+                        todo!()
+                    }
+                    TypeInfo::Struct(_)
+                    | TypeInfo::TupleStruct(_)
+                    | TypeInfo::Tuple(_)
+                    | TypeInfo::List(_)
+                    | TypeInfo::Map(_)
+                    | TypeInfo::Scalar(_)
+                    | TypeInfo::Opaque => return None,
+                },
+            };
+
+            if stack.is_empty() {
+                Some(value_at_key)
+            } else {
+                go(value_at_key, stack)
+            }
+        }
+
+        if key_path.is_empty() {
+            return Some(self);
+        }
+
+        let mut path = key_path.path;
+        path.reverse();
+        go(self, path)
     }
 }
 
@@ -279,6 +354,16 @@ pub enum VariantInfo<'a> {
     Struct(StructVariantInfo<'a>),
     Tuple(TupleVariantInfo<'a>),
     Unit(UnitVariantInfo<'a>),
+}
+
+impl<'a> VariantInfo<'a> {
+    pub fn name(self) -> &'a str {
+        match self {
+            VariantInfo::Struct(inner) => inner.name(),
+            VariantInfo::Tuple(inner) => inner.name(),
+            VariantInfo::Unit(inner) => inner.name(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
