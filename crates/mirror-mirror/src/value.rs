@@ -58,7 +58,7 @@ impl FromReflect for Value {
 
 #[allow(non_camel_case_types)]
 #[derive(Eq, PartialEq, PartialOrd, Ord)]
-enum H<'a> {
+enum OrdEqValue<'a> {
     usize(usize),
     u8(u8),
     u16(u16),
@@ -83,38 +83,38 @@ enum H<'a> {
     Map(&'a BTreeMap<Value, Value>),
 }
 
-impl<'a> From<&'a Value> for H<'a> {
+impl<'a> From<&'a Value> for OrdEqValue<'a> {
     fn from(value: &'a Value) -> Self {
         match value {
-            Value::usize(inner) => H::usize(*inner),
-            Value::u8(inner) => H::u8(*inner),
-            Value::u16(inner) => H::u16(*inner),
-            Value::u32(inner) => H::u32(*inner),
-            Value::u64(inner) => H::u64(*inner),
-            Value::u128(inner) => H::u128(*inner),
-            Value::i8(inner) => H::i8(*inner),
-            Value::i16(inner) => H::i16(*inner),
-            Value::i32(inner) => H::i32(*inner),
-            Value::i64(inner) => H::i64(*inner),
-            Value::i128(inner) => H::i128(*inner),
-            Value::bool(inner) => H::bool(*inner),
-            Value::char(inner) => H::char(*inner),
-            Value::f32(inner) => H::f32(OrderedFloat(*inner)),
-            Value::f64(inner) => H::f64(OrderedFloat(*inner)),
-            Value::String(inner) => H::String(inner),
-            Value::StructValue(inner) => H::StructValue(inner),
-            Value::EnumValue(inner) => H::EnumValue(inner),
-            Value::TupleStructValue(inner) => H::TupleStructValue(inner),
-            Value::TupleValue(inner) => H::TupleValue(inner),
-            Value::List(inner) => H::List(inner),
-            Value::Map(inner) => H::Map(inner),
+            Value::usize(inner) => OrdEqValue::usize(*inner),
+            Value::u8(inner) => OrdEqValue::u8(*inner),
+            Value::u16(inner) => OrdEqValue::u16(*inner),
+            Value::u32(inner) => OrdEqValue::u32(*inner),
+            Value::u64(inner) => OrdEqValue::u64(*inner),
+            Value::u128(inner) => OrdEqValue::u128(*inner),
+            Value::i8(inner) => OrdEqValue::i8(*inner),
+            Value::i16(inner) => OrdEqValue::i16(*inner),
+            Value::i32(inner) => OrdEqValue::i32(*inner),
+            Value::i64(inner) => OrdEqValue::i64(*inner),
+            Value::i128(inner) => OrdEqValue::i128(*inner),
+            Value::bool(inner) => OrdEqValue::bool(*inner),
+            Value::char(inner) => OrdEqValue::char(*inner),
+            Value::f32(inner) => OrdEqValue::f32(OrderedFloat(*inner)),
+            Value::f64(inner) => OrdEqValue::f64(OrderedFloat(*inner)),
+            Value::String(inner) => OrdEqValue::String(inner),
+            Value::StructValue(inner) => OrdEqValue::StructValue(inner),
+            Value::EnumValue(inner) => OrdEqValue::EnumValue(inner),
+            Value::TupleStructValue(inner) => OrdEqValue::TupleStructValue(inner),
+            Value::TupleValue(inner) => OrdEqValue::TupleValue(inner),
+            Value::List(inner) => OrdEqValue::List(inner),
+            Value::Map(inner) => OrdEqValue::Map(inner),
         }
     }
 }
 
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
-        H::from(self) == H::from(other)
+        OrdEqValue::from(self) == OrdEqValue::from(other)
     }
 }
 
@@ -128,7 +128,7 @@ impl PartialOrd for Value {
 
 impl Ord for Value {
     fn cmp(&self, other: &Self) -> Ordering {
-        H::from(self).cmp(&H::from(other))
+        OrdEqValue::from(self).cmp(&OrdEqValue::from(other))
     }
 }
 

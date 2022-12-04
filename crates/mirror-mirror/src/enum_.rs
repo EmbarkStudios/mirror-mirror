@@ -4,9 +4,14 @@ use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
+use crate::type_info::graph::EnumInfoNode;
 use crate::type_info::graph::Id;
+use crate::type_info::graph::TupleVariantInfoNode;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::type_info::graph::TypeInfoNode;
+use crate::type_info::graph::UnitVariantInfoNode;
+use crate::type_info::graph::UnnamedFieldNode;
+use crate::type_info::graph::VariantNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -32,9 +37,9 @@ pub trait Enum: Reflect {
 
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
 
-    fn element(&self, index: usize) -> Option<&dyn Reflect>;
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn fields(&self) -> VariantFieldIter<'_>;
 
@@ -94,19 +99,19 @@ impl EnumValue {
     }
 
     #[track_caller]
-    pub fn with_field(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
-        self.set_field(name, value);
+    pub fn with_struct_field(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
+        self.set_struct_field(name, value);
         self
     }
 
     #[track_caller]
-    pub fn with_element(mut self, value: impl Into<Value>) -> Self {
-        self.push_element(value);
+    pub fn with_tuple_field(mut self, value: impl Into<Value>) -> Self {
+        self.push_tuple_field(value);
         self
     }
 
     #[track_caller]
-    pub fn set_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
+    pub fn set_struct_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
         match &mut self.kind {
             EnumValueKind::Struct(struct_) => {
                 struct_.set_field(name, value);
@@ -117,13 +122,13 @@ impl EnumValue {
     }
 
     #[track_caller]
-    pub fn push_element(&mut self, value: impl Into<Value>) {
+    pub fn push_tuple_field(&mut self, value: impl Into<Value>) {
         match &mut self.kind {
             EnumValueKind::Struct(_) => {
-                panic!("Cannot push elements on struct variants")
+                panic!("Cannot push fields on struct variants")
             }
             EnumValueKind::Tuple(tuple) => {
-                tuple.push_element(value);
+                tuple.push_field(value);
             }
             EnumValueKind::Unit => panic!("Cannot set fields on unit variants"),
         }
@@ -167,7 +172,7 @@ impl Reflect for EnumValue {
                             }
                         }
                         VariantFieldMut::Tuple(value) => {
-                            if let Some(new_value) = enum_.element(idx) {
+                            if let Some(new_value) = enum_.field_at(idx) {
                                 value.patch(new_value);
                             }
                         }
@@ -233,18 +238,18 @@ impl Enum for EnumValue {
         }
     }
 
-    fn element(&self, index: usize) -> Option<&dyn Reflect> {
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
         match &self.kind {
             EnumValueKind::Struct(_) => None,
-            EnumValueKind::Tuple(tuple) => tuple.element(index),
+            EnumValueKind::Tuple(tuple) => tuple.field(index),
             EnumValueKind::Unit => None,
         }
     }
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
         match &mut self.kind {
             EnumValueKind::Struct(_) => None,
-            EnumValueKind::Tuple(tuple) => tuple.element_mut(index),
+            EnumValueKind::Tuple(tuple) => tuple.field_mut(index),
             EnumValueKind::Unit => None,
         }
     }
@@ -255,7 +260,7 @@ impl Enum for EnumValue {
                 VariantFieldIter(VariantFieldIterInner::Struct(inner.fields()))
             }
             EnumValueKind::Tuple(inner) => {
-                VariantFieldIter(VariantFieldIterInner::Tuple(inner.elements()))
+                VariantFieldIter(VariantFieldIterInner::Tuple(inner.fields()))
             }
             EnumValueKind::Unit => VariantFieldIter::empty(),
         }
@@ -267,7 +272,7 @@ impl Enum for EnumValue {
                 VariantFieldIterMut(VariantFieldIterInnerMut::Struct(inner.fields_mut()))
             }
             EnumValueKind::Tuple(inner) => {
-                VariantFieldIterMut(VariantFieldIterInnerMut::Tuple(inner.elements_mut()))
+                VariantFieldIterMut(VariantFieldIterInnerMut::Tuple(inner.fields_mut()))
             }
             EnumValueKind::Unit => VariantFieldIterMut::empty(),
         }
@@ -303,7 +308,7 @@ impl FromReflect for EnumValue {
                                     "iterator over fields in tuple variant yielded a struct field"
                                 )
                             }
-                            VariantField::Tuple(value) => builder.with_element(value.to_value()),
+                            VariantField::Tuple(value) => builder.with_field(value.to_value()),
                         });
                 EnumValueKind::Tuple(tuple)
             }
@@ -416,6 +421,27 @@ where
     T: FromReflect + Typed,
 {
     fn type_info(&self) -> TypeInfoRoot {
+        impl<T> Typed for Option<T>
+        where
+            T: Typed,
+        {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|graph| {
+                    EnumInfoNode::new::<Self>(
+                        &[
+                            VariantNode::Tuple(TupleVariantInfoNode::new(
+                                "Some",
+                                &[UnnamedFieldNode::new::<T>(Default::default(), graph)],
+                                Default::default(),
+                            )),
+                            VariantNode::Unit(UnitVariantInfoNode::new("None", Default::default())),
+                        ],
+                        Default::default(),
+                    )
+                })
+            }
+        }
+
         <Self as Typed>::type_info()
     }
 
@@ -442,7 +468,7 @@ where
                     match value {
                         VariantFieldMut::Struct(_, _) => {}
                         VariantFieldMut::Tuple(value) => {
-                            if let Some(new_value) = enum_.element(index) {
+                            if let Some(new_value) = enum_.field_at(index) {
                                 value.patch(new_value);
                             }
                         }
@@ -457,7 +483,7 @@ where
     fn to_value(&self) -> Value {
         match self {
             Some(value) => EnumValue::new_tuple_variant("Some")
-                .with_element(value.to_value())
+                .with_tuple_field(value.to_value())
                 .into(),
             None => EnumValue::new_unit_variant("None").into(),
         }
@@ -514,14 +540,14 @@ where
         None
     }
 
-    fn element(&self, index: usize) -> Option<&dyn Reflect> {
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
         match self {
             Some(value) if index == 0 => Some(value),
             _ => None,
         }
     }
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
         match self {
             Some(value) if index == 0 => Some(value),
             _ => None,
@@ -551,7 +577,7 @@ where
         let enum_ = reflect.reflect_ref().as_enum()?;
         match enum_.variant_name() {
             "Some" => {
-                let value = enum_.element(0)?;
+                let value = enum_.field_at(0)?;
                 Some(Some(T::from_reflect(value)?))
             }
             "None" => Some(None),

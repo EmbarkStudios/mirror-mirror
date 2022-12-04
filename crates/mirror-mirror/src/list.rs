@@ -1,5 +1,8 @@
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
+use crate::type_info::graph::Id;
+use crate::type_info::graph::ListInfoNode;
+use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -71,6 +74,15 @@ where
     T: FromReflect + Typed,
 {
     fn type_info(&self) -> TypeInfoRoot {
+        impl<T> Typed for Vec<T>
+        where
+            T: Typed,
+        {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|graph| ListInfoNode::new::<Self, T>(graph))
+            }
+        }
+
         <Self as Typed>::type_info()
     }
 

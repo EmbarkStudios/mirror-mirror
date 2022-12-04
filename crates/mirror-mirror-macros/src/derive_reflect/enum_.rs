@@ -58,7 +58,7 @@ fn expand_reflect(
                         |(index, field)| {
                             let ident = &field.fake_ident;
                             quote! {
-                                if let Some(new_value) = enum_.element(#index) {
+                                if let Some(new_value) = enum_.field_at(#index) {
                                     #ident.patch(new_value);
                                 }
                             }
@@ -114,7 +114,7 @@ fn expand_reflect(
                         let ident = &field.ident;
                         let ident_string = stringify(ident);
                         quote! {
-                            value.set_field(#ident_string, #ident.to_owned());
+                            value.set_struct_field(#ident_string, #ident.to_owned());
                         }
                     });
 
@@ -138,7 +138,7 @@ fn expand_reflect(
                         Self::#variant_ident(#(#field_names,)*) => {
                             let mut value = EnumValue::new_tuple_variant(#variant_ident_string);
                             #(
-                                value.push_element(#included_fields.to_owned());
+                                value.push_tuple_field(#included_fields.to_owned());
                             )*
                             value.into()
                         }
@@ -485,7 +485,7 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
         }
     };
 
-    let fn_element = {
+    let fn_field_at = {
         let match_arms = variants.iter().filter(filter_out_skipped).map(|variant| {
             let variant_ident = &variant.ident;
 
@@ -525,7 +525,7 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
-            fn element(&self, index: usize) -> Option<&dyn Reflect> {
+            fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
                 match self {
                     #(#match_arms)*
                     _ => {}
@@ -536,7 +536,7 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
         }
     };
 
-    let fn_element_mut = {
+    let fn_field_at_mut = {
         let match_arms = variants.iter().filter(filter_out_skipped).map(|variant| {
             let variant_ident = &variant.ident;
 
@@ -576,7 +576,7 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
-            fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+            fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 match self {
                     #(#match_arms)*
                     _ => {}
@@ -698,8 +698,8 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
             #fn_variant_kind
             #fn_field
             #fn_field_mut
-            #fn_element
-            #fn_element_mut
+            #fn_field_at
+            #fn_field_at_mut
             #fn_fields
             #fn_fields_mut
         }

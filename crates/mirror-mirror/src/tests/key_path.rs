@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
-use crate as mirror_mirror;
 use crate::key_path;
 use crate::key_path::*;
+use crate::type_info::{GetTypedPath, AtTyped, ScalarInfo};
+use crate::{self as mirror_mirror, Typed};
 use mirror_mirror::Reflect;
 
 #[test]
@@ -60,4 +61,74 @@ fn display() {
         key_path!(.a.b.c[1][2]{D}.e[3]).to_string(),
         ".a.b.c[1][2]{D}.e[3]"
     );
+}
+
+#[test]
+fn query_type_info_struct() {
+    #[derive(Reflect, Clone, Debug)]
+    struct User {
+        employer: Company,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    struct Company {
+        countries: Vec<Country>,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    struct Country {
+        name: String,
+    }
+
+    let user = User {
+        employer: Company {
+            countries: Vec::from([Country {
+                name: "Denmark".to_owned(),
+            }]),
+        },
+    };
+
+    let key_path = key_path!(.employer.countries[0].name);
+
+    assert_eq!(user.get_at::<String>(key_path.clone()).unwrap(), "Denmark");
+
+    let type_info = <User as Typed>::type_info();
+
+    assert!(matches!(
+        dbg!(type_info.at_typed(key_path).unwrap()),
+        AtTyped::Scalar(ScalarInfo::String)
+    ));
+}
+
+#[test]
+fn query_type_info_enum() {
+    #[derive(Reflect, Clone, Debug)]
+    enum Foo {
+        A { a: String },
+        B(i32),
+        C,
+    }
+
+    assert!(matches!(
+        dbg!(<Foo as Typed>::type_info()
+            .at_typed(key_path!({ A }.a))
+            .unwrap()),
+        AtTyped::Scalar(ScalarInfo::String)
+    ));
+
+    assert!(matches!(
+        dbg!(<Foo as Typed>::type_info()
+            .at_typed(key_path!({ B }[0]))
+            .unwrap()),
+        AtTyped::Scalar(ScalarInfo::i32)
+    ));
+
+    let info = <Foo as Typed>::type_info();
+    let variant = info
+        .at_typed(key_path!({ C }))
+        .unwrap()
+        .as_variant()
+        .unwrap();
+
+    assert_eq!(variant.name(), "C");
 }

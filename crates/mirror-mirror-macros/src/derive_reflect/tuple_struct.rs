@@ -46,8 +46,8 @@ fn expand_reflect(
             .filter(field_attrs.filter_out_skipped_unnamed())
             .map(|(idx, _)| {
                 quote! {
-                    if let Some(new_value) = tuple_struct.element(#idx) {
-                        self.element_mut(#idx).unwrap().patch(new_value);
+                    if let Some(new_value) = tuple_struct.field(#idx) {
+                        self.field_mut(#idx).unwrap().patch(new_value);
                     }
                 }
             });
@@ -72,7 +72,7 @@ fn expand_reflect(
                     span: field.span(),
                 };
                 quote! {
-                    let value = value.with_element(self.#field_index.clone());
+                    let value = value.with_field(self.#field_index.clone());
                 }
             });
 
@@ -174,7 +174,7 @@ fn expand_from_reflect(
             } else {
                 quote_spanned! {span=>
                     #field_index: tuple_struct
-                        .element(#field_index)?
+                        .field(#field_index)?
                         .downcast_ref::<#ty>()?
                         .to_owned(),
                 }
@@ -203,7 +203,7 @@ fn expand_tuple_struct(
     fields: &Fields,
     field_attrs: &AttrsDatabase<usize>,
 ) -> TokenStream {
-    let fn_element = {
+    let fn_field = {
         let match_arms = fields
             .iter()
             .enumerate()
@@ -219,7 +219,7 @@ fn expand_tuple_struct(
             });
 
         quote! {
-            fn element(&self, index: usize) -> Option<&dyn Reflect> {
+            fn field(&self, index: usize) -> Option<&dyn Reflect> {
                 match index {
                     #(#match_arms)*
                     _ => None,
@@ -228,7 +228,7 @@ fn expand_tuple_struct(
         }
     };
 
-    let fn_element_mut = {
+    let fn_field_mut = {
         let match_arms = fields
             .iter()
             .enumerate()
@@ -244,7 +244,7 @@ fn expand_tuple_struct(
             });
 
         quote! {
-            fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+            fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 match index {
                     #(#match_arms)*
                     _ => None,
@@ -253,7 +253,7 @@ fn expand_tuple_struct(
         }
     };
 
-    let fn_elements = {
+    let fn_fields = {
         let code_for_fields = fields
             .iter()
             .enumerate()
@@ -269,14 +269,14 @@ fn expand_tuple_struct(
             });
 
         quote! {
-            fn elements(&self) -> ValueIter<'_> {
+            fn fields(&self) -> ValueIter<'_> {
                 let iter = [#(#code_for_fields)*];
                 ValueIter::new(iter)
             }
         }
     };
 
-    let fn_elements_mut = {
+    let fn_fields_mut = {
         let code_for_fields = fields
             .iter()
             .enumerate()
@@ -292,7 +292,7 @@ fn expand_tuple_struct(
             });
 
         quote! {
-            fn elements_mut(&mut self) -> ValueIterMut<'_> {
+            fn fields_mut(&mut self) -> ValueIterMut<'_> {
                 let iter = [#(#code_for_fields)*];
                 ValueIterMut::new(iter)
             }
@@ -301,10 +301,10 @@ fn expand_tuple_struct(
 
     quote! {
         impl TupleStruct for #ident {
-            #fn_element
-            #fn_element_mut
-            #fn_elements
-            #fn_elements_mut
+            #fn_field
+            #fn_field_mut
+            #fn_fields
+            #fn_fields_mut
         }
     }
 }

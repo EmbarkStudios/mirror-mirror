@@ -21,13 +21,13 @@ use std::fmt;
 use std::fmt::Debug;
 
 pub trait Tuple: Reflect {
-    fn element(&self, index: usize) -> Option<&dyn Reflect>;
+    fn field(&self, index: usize) -> Option<&dyn Reflect>;
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
+    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
-    fn elements(&self) -> ValueIter<'_>;
+    fn fields(&self) -> ValueIter<'_>;
 
-    fn elements_mut(&mut self) -> ValueIterMut<'_>;
+    fn fields_mut(&mut self) -> ValueIterMut<'_>;
 }
 
 impl fmt::Debug for dyn Tuple {
@@ -50,7 +50,7 @@ impl fmt::Debug for dyn Tuple {
     PartialOrd,
 )]
 pub struct TupleValue {
-    elements: Vec<Value>,
+    fields: Vec<Value>,
 }
 
 impl TupleValue {
@@ -58,32 +58,32 @@ impl TupleValue {
         Self::default()
     }
 
-    pub fn with_element(mut self, value: impl Into<Value>) -> Self {
-        self.push_element(value);
+    pub fn with_field(mut self, value: impl Into<Value>) -> Self {
+        self.push_field(value);
         self
     }
 
-    pub fn push_element(&mut self, value: impl Into<Value>) {
-        self.elements.push(value.into());
+    pub fn push_field(&mut self, value: impl Into<Value>) {
+        self.fields.push(value.into());
     }
 }
 
 impl Tuple for TupleValue {
-    fn element(&self, index: usize) -> Option<&dyn Reflect> {
-        Some(self.elements.get(index)?.as_reflect())
+    fn field(&self, index: usize) -> Option<&dyn Reflect> {
+        Some(self.fields.get(index)?.as_reflect())
     }
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
-        Some(self.elements.get_mut(index)?.as_reflect_mut())
+    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+        Some(self.fields.get_mut(index)?.as_reflect_mut())
     }
 
-    fn elements(&self) -> ValueIter<'_> {
-        let iter = self.elements.iter().map(|value| value.as_reflect());
+    fn fields(&self) -> ValueIter<'_> {
+        let iter = self.fields.iter().map(|value| value.as_reflect());
         ValueIter::new(iter)
     }
 
-    fn elements_mut(&mut self) -> ValueIterMut<'_> {
-        let iter = self.elements.iter_mut().map(|value| value.as_reflect_mut());
+    fn fields_mut(&mut self) -> ValueIterMut<'_> {
+        let iter = self.fields.iter_mut().map(|value| value.as_reflect_mut());
         ValueIterMut::new(iter)
     }
 }
@@ -116,8 +116,8 @@ impl Reflect for TupleValue {
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(tuple) = value.reflect_ref().as_tuple() {
-            for (index, value) in self.elements_mut().enumerate() {
-                if let Some(new_value) = tuple.element(index) {
+            for (index, value) in self.fields_mut().enumerate() {
+                if let Some(new_value) = tuple.field(index) {
                     value.patch(new_value);
                 }
             }
@@ -153,9 +153,9 @@ impl FromReflect for TupleValue {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let tuple = reflect.reflect_ref().as_tuple()?;
         let this = tuple
-            .elements()
+            .fields()
             .fold(TupleValue::default(), |builder, value| {
-                builder.with_element(value.to_value())
+                builder.with_field(value.to_value())
             });
         Some(this)
     }
@@ -211,8 +211,8 @@ macro_rules! impl_tuple {
                     let ($($ident,)*) = self;
                     let mut i = 0;
                     $(
-                        if let Some(element) = tuple.element(i) {
-                            $ident.patch(element);
+                        if let Some(field) = tuple.field(i) {
+                            $ident.patch(field);
                         }
                         i += 1;
                     )*
@@ -223,7 +223,7 @@ macro_rules! impl_tuple {
                 let ($($ident,)*) = self;
                 let mut value = TupleValue::new();
                 $(
-                    value = value.with_element($ident.to_value());
+                    value = value.with_field($ident.to_value());
                 )*
                 value.into()
             }
@@ -250,7 +250,7 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn element(&self, index: usize) -> Option<&dyn Reflect> {
+            fn field(&self, index: usize) -> Option<&dyn Reflect> {
                 let mut i = 0;
                 let ($($ident,)*) = self;
                 $(
@@ -262,7 +262,7 @@ macro_rules! impl_tuple {
                 None
             }
 
-            fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+            fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 let mut i = 0;
                 let ($($ident,)*) = self;
                 $(
@@ -274,12 +274,12 @@ macro_rules! impl_tuple {
                 None
             }
 
-            fn elements(&self) -> ValueIter<'_> {
+            fn fields(&self) -> ValueIter<'_> {
                 let ($($ident,)*) = self;
                 ValueIter::new([$($ident.as_reflect(),)*])
             }
 
-            fn elements_mut(&mut self) -> ValueIterMut<'_> {
+            fn fields_mut(&mut self) -> ValueIterMut<'_> {
                 let ($($ident,)*) = self;
                 ValueIterMut::new([$($ident.as_reflect_mut(),)*])
             }
@@ -327,7 +327,7 @@ where
     {
         let mut out = Self::default();
         for value in iter {
-            out.push_element(value.to_value());
+            out.push_field(value.to_value());
         }
         out
     }

@@ -20,13 +20,13 @@ use std::any::Any;
 use std::fmt;
 
 pub trait TupleStruct: Reflect {
-    fn element(&self, index: usize) -> Option<&dyn Reflect>;
+    fn field(&self, index: usize) -> Option<&dyn Reflect>;
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
+    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
-    fn elements(&self) -> ValueIter<'_>;
+    fn fields(&self) -> ValueIter<'_>;
 
-    fn elements_mut(&mut self) -> ValueIterMut<'_>;
+    fn fields_mut(&mut self) -> ValueIterMut<'_>;
 }
 
 impl fmt::Debug for dyn TupleStruct {
@@ -57,14 +57,14 @@ impl TupleStructValue {
         Self::default()
     }
 
-    pub fn with_element(self, value: impl Into<Value>) -> Self {
+    pub fn with_field(self, value: impl Into<Value>) -> Self {
         Self {
-            tuple: self.tuple.with_element(value),
+            tuple: self.tuple.with_field(value),
         }
     }
 
-    pub fn push_element(&mut self, value: impl Into<Value>) {
-        self.tuple.push_element(value);
+    pub fn push_field(&mut self, value: impl Into<Value>) {
+        self.tuple.push_field(value);
     }
 }
 
@@ -96,8 +96,8 @@ impl Reflect for TupleStructValue {
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(tuple) = value.reflect_ref().as_tuple_struct() {
-            for (index, value) in self.elements_mut().enumerate() {
-                if let Some(new_value) = tuple.element(index) {
+            for (index, value) in self.fields_mut().enumerate() {
+                if let Some(new_value) = tuple.field(index) {
                     value.patch(new_value);
                 }
             }
@@ -130,20 +130,20 @@ impl Reflect for TupleStructValue {
 }
 
 impl TupleStruct for TupleStructValue {
-    fn element(&self, index: usize) -> Option<&dyn Reflect> {
-        self.tuple.element(index)
+    fn field(&self, index: usize) -> Option<&dyn Reflect> {
+        self.tuple.field(index)
     }
 
-    fn element_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
-        self.tuple.element_mut(index)
+    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+        self.tuple.field_mut(index)
     }
 
-    fn elements(&self) -> ValueIter<'_> {
-        self.tuple.elements()
+    fn fields(&self) -> ValueIter<'_> {
+        self.tuple.fields()
     }
 
-    fn elements_mut(&mut self) -> ValueIterMut<'_> {
-        self.tuple.elements_mut()
+    fn fields_mut(&mut self) -> ValueIterMut<'_> {
+        self.tuple.fields_mut()
     }
 }
 
@@ -151,9 +151,9 @@ impl FromReflect for TupleStructValue {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let tuple_struct = reflect.reflect_ref().as_tuple_struct()?;
         let this = tuple_struct
-            .elements()
+            .fields()
             .fold(TupleStructValue::default(), |builder, value| {
-                builder.with_element(value.to_value())
+                builder.with_field(value.to_value())
             });
         Some(this)
     }
@@ -169,7 +169,7 @@ where
     {
         let mut out = Self::default();
         for value in iter {
-            out.push_element(value.to_value());
+            out.push_field(value.to_value());
         }
         out
     }

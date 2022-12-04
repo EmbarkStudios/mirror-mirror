@@ -1,5 +1,8 @@
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
+use crate::type_info::graph::Id;
+use crate::type_info::graph::MapInfoNode;
+use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -77,6 +80,16 @@ where
     V: FromReflect + Typed,
 {
     fn type_info(&self) -> TypeInfoRoot {
+        impl<K, V> Typed for BTreeMap<K, V>
+        where
+            K: Typed,
+            V: Typed,
+        {
+            fn build(graph: &mut TypeInfoGraph) -> Id {
+                graph.get_or_build_with::<Self, _>(|graph| MapInfoNode::new::<Self, K, V>(graph))
+            }
+        }
+
         <Self as Typed>::type_info()
     }
 

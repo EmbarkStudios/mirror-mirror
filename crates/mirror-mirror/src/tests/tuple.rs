@@ -4,12 +4,12 @@ use crate::Reflect;
 
 #[test]
 fn tuple_value() {
-    let mut tuple = TupleValue::new().with_element(1_i32).with_element(false);
+    let mut tuple = TupleValue::new().with_field(1_i32).with_field(false);
 
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &1);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 
-    tuple.patch(&TupleValue::new().with_element(42_i32));
+    tuple.patch(&TupleValue::new().with_field(42_i32));
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 }
@@ -21,7 +21,7 @@ fn static_tuple() {
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &1);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 
-    tuple.patch(&TupleValue::new().with_element(42_i32));
+    tuple.patch(&TupleValue::new().with_field(42_i32));
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
 }
