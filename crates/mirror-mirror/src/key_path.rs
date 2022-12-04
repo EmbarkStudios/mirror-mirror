@@ -13,6 +13,20 @@ pub trait GetPath {
     fn at(&self, key_path: KeyPath) -> Option<&dyn Reflect>;
 
     fn at_mut(&mut self, key_path: KeyPath) -> Option<&mut dyn Reflect>;
+
+    fn get_at<T>(&self, key_path: KeyPath) -> Option<&T>
+    where
+        T: Reflect,
+    {
+        self.at(key_path)?.downcast_ref()
+    }
+
+    fn get_at_mut<T>(&mut self, key_path: KeyPath) -> Option<&mut T>
+    where
+        T: Reflect,
+    {
+        self.at_mut(key_path)?.downcast_mut()
+    }
 }
 
 impl<R> GetPath for R
