@@ -31,3 +31,15 @@ fn debug() {
     assert_eq!(format!("{:?}", list.as_reflect()), format!("{:?}", list));
     assert_eq!(format!("{:#?}", list.as_reflect()), format!("{:#?}", list));
 }
+
+#[test]
+fn remove() {
+    let mut list = Vec::from([1, 2, 3]);
+    let list = list.as_list_mut().unwrap();
+    assert_eq!(
+        list.try_remove(2).unwrap().downcast_ref::<i32>().unwrap(),
+        &3
+    );
+    assert!(list.try_remove(2).is_none());
+    assert!(list.try_remove(1337).is_none());
+}

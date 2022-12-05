@@ -8,6 +8,12 @@ pub trait List: Reflect {
 
     fn get_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
+    fn push(&mut self, value: &dyn Reflect);
+
+    fn pop(&mut self) -> Option<Box<dyn Reflect>>;
+
+    fn try_remove(&mut self, index: usize) -> Option<Box<dyn Reflect>>;
+
     fn len(&self) -> usize;
 
     fn is_empty(&self) -> bool;

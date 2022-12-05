@@ -214,6 +214,26 @@ where
             .map(|value| value.as_reflect_mut())
     }
 
+    fn push(&mut self, value: &dyn Reflect) {
+        if let Some(value) = T::from_reflect(value) {
+            Vec::push(self, value);
+        }
+    }
+
+    fn pop(&mut self) -> Option<Box<dyn Reflect>> {
+        let value = Vec::pop(self)?;
+        Some(Box::new(value))
+    }
+
+    fn try_remove(&mut self, index: usize) -> Option<Box<dyn Reflect>> {
+        if index < self.len() {
+            let value = Vec::remove(self, index);
+            Some(Box::new(value))
+        } else {
+            None
+        }
+    }
+
     fn len(&self) -> usize {
         Vec::len(self)
     }
@@ -331,6 +351,19 @@ where
         let key = key.downcast_ref::<K>()?;
         let value = self.get_mut(key)?;
         Some(value.as_reflect_mut())
+    }
+
+    fn insert(&mut self, key: &dyn Reflect, value: &dyn Reflect) -> Option<Box<dyn Reflect>> {
+        let key = K::from_reflect(key)?;
+        let value = V::from_reflect(value)?;
+        let previous = BTreeMap::insert(self, key, value)?;
+        Some(Box::new(previous))
+    }
+
+    fn remove(&mut self, key: &dyn Reflect) -> Option<Box<dyn Reflect>> {
+        let key = K::from_reflect(key)?;
+        let previous = BTreeMap::remove(self, &key)?;
+        Some(Box::new(previous))
     }
 
     fn len(&self) -> usize {

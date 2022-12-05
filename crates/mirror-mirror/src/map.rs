@@ -8,6 +8,10 @@ pub trait Map: Reflect {
 
     fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect>;
 
+    fn insert(&mut self, key: &dyn Reflect, value: &dyn Reflect) -> Option<Box<dyn Reflect>>;
+
+    fn remove(&mut self, key: &dyn Reflect) -> Option<Box<dyn Reflect>>;
+
     fn len(&self) -> usize;
 
     fn is_empty(&self) -> bool;
