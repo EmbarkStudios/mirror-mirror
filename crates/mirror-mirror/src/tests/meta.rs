@@ -2,7 +2,6 @@ use crate as mirror_mirror;
 use crate::type_info::GetMeta;
 use crate::Reflect;
 use crate::Typed;
-use mirror_mirror::type_info::TypeInfo;
 
 #[test]
 fn works() {
@@ -11,10 +10,7 @@ fn works() {
     struct Foo;
 
     let type_info = <Foo as Typed>::type_info();
-    let type_info = match type_info.type_() {
-        TypeInfo::Struct(Some(type_info)) => type_info,
-        other => panic!("expected struct got {other:?}"),
-    };
+    let type_info = type_info.type_().as_struct().unwrap();
 
     assert_eq!(
         type_info

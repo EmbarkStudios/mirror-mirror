@@ -72,10 +72,10 @@ type Metadata = HashMap<String, Value>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
 pub enum TypeInfoNode {
-    Struct(Option<StructInfoNode>),
-    TupleStruct(Option<TupleStructInfoNode>),
-    Tuple(Option<TupleInfoNode>),
-    Enum(Option<EnumInfoNode>),
+    Struct(StructInfoNode),
+    TupleStruct(TupleStructInfoNode),
+    Tuple(TupleInfoNode),
+    Enum(EnumInfoNode),
     List(ListInfoNode),
     Array(ArrayInfoNode),
     Map(MapInfoNode),
@@ -84,14 +84,6 @@ pub enum TypeInfoNode {
 }
 
 macro_rules! impl_from {
-    ($variant:ident(Option<$inner:ident>)) => {
-        impl From<$inner> for TypeInfoNode {
-            fn from(inner: $inner) -> Self {
-                Self::$variant(Some(inner))
-            }
-        }
-    };
-
     ($variant:ident($inner:ident)) => {
         impl From<$inner> for TypeInfoNode {
             fn from(inner: $inner) -> Self {
@@ -101,10 +93,10 @@ macro_rules! impl_from {
     };
 }
 
-impl_from! { Struct(Option<StructInfoNode>) }
-impl_from! { TupleStruct(Option<TupleStructInfoNode>) }
-impl_from! { Tuple(Option<TupleInfoNode>) }
-impl_from! { Enum(Option<EnumInfoNode>) }
+impl_from! { Struct(StructInfoNode) }
+impl_from! { TupleStruct(TupleStructInfoNode) }
+impl_from! { Tuple(TupleInfoNode) }
+impl_from! { Enum(EnumInfoNode) }
 impl_from! { List(ListInfoNode) }
 impl_from! { Array(ArrayInfoNode) }
 impl_from! { Map(MapInfoNode) }
