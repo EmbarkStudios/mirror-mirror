@@ -173,10 +173,9 @@ fn expand_from_reflect(
                 }
             } else {
                 quote_spanned! {span=>
-                    #field_index: tuple_struct
-                        .field(#field_index)?
-                        .downcast_ref::<#ty>()?
-                        .to_owned(),
+                    #field_index: <#ty as FromReflect>::from_reflect(
+                        tuple_struct.field(#field_index)?,
+                    )?.to_owned(),
                 }
             }
         });

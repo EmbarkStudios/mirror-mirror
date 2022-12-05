@@ -168,3 +168,23 @@ fn deeply_nested() {
 
     assert_eq!(forty_two, 42);
 }
+
+#[test]
+fn from_reflect_with_value() {
+    #[derive(Debug, Clone, Reflect, Default)]
+    pub struct Foo {
+        pub number: Number,
+    }
+
+    #[derive(Debug, Clone, Reflect, Default)]
+    pub enum Number {
+        #[default]
+        One,
+        Two,
+        Three,
+    }
+
+    let value = StructValue::new().with_field("number", Number::One);
+
+    assert!(Foo::from_reflect(&value).is_some());
+}

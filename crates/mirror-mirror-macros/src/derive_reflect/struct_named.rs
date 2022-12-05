@@ -170,7 +170,7 @@ fn expand_from_reflect(
                 let ty = &field.ty;
                 let field = stringify(ident);
                 quote_spanned! {span=>
-                    #ident: struct_.field(#field)?.downcast_ref::<#ty>()?.to_owned(),
+                    #ident: <#ty as FromReflect>::from_reflect(struct_.field(#field)?)?.to_owned(),
                 }
             }
         });

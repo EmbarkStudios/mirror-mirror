@@ -317,3 +317,25 @@ fn option() {
     assert_eq!(Option::<i32>::from_reflect(&Some(1)).unwrap(), Some(1));
     assert_eq!(Option::<i32>::from_reflect(&None::<i32>).unwrap(), None);
 }
+
+#[test]
+fn from_reflect_with_value() {
+    #[derive(Debug, Clone, Reflect)]
+    pub enum Foo {
+        Struct { number: Number },
+        Tuple(Number),
+    }
+
+    #[derive(Debug, Clone, Reflect)]
+    pub enum Number {
+        One,
+        Two,
+        Three,
+    }
+
+    let value = EnumValue::new_struct_variant("Struct").with_struct_field("number", Number::One);
+    assert!(Foo::from_reflect(&value).is_some());
+
+    let value = EnumValue::new_tuple_variant("Tuple").with_tuple_field(Number::One);
+    assert!(Foo::from_reflect(&value).is_some());
+}

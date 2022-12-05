@@ -42,3 +42,21 @@ fn static_tuple() {
     tuple.field_mut(1).unwrap().patch(&true);
     assert!(tuple.1);
 }
+
+#[test]
+fn from_reflect_with_value() {
+    #[derive(Debug, Clone, Reflect, Default)]
+    pub struct Foo(Number);
+
+    #[derive(Debug, Clone, Reflect, Default)]
+    pub enum Number {
+        #[default]
+        One,
+        Two,
+        Three,
+    }
+
+    let value = TupleStructValue::new().with_field(Number::One);
+
+    assert!(Foo::from_reflect(&value).is_some());
+}
