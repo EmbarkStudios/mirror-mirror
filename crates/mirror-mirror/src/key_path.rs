@@ -48,6 +48,7 @@ where
                     ReflectRef::TupleStruct(_)
                     | ReflectRef::Tuple(_)
                     | ReflectRef::List(_)
+                    | ReflectRef::Array(_)
                     | ReflectRef::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_ref() {
@@ -55,6 +56,7 @@ where
                     ReflectRef::Tuple(inner) => inner.field(*index)?,
                     ReflectRef::Enum(inner) => inner.field_at(*index)?,
                     ReflectRef::List(inner) => inner.get(*index)?,
+                    ReflectRef::Array(inner) => inner.get(*index)?,
                     ReflectRef::Map(inner) => inner.get(index)?,
                     ReflectRef::Struct(_) | ReflectRef::Scalar(_) => return None,
                 },
@@ -70,6 +72,7 @@ where
                     | ReflectRef::TupleStruct(_)
                     | ReflectRef::Tuple(_)
                     | ReflectRef::List(_)
+                    | ReflectRef::Array(_)
                     | ReflectRef::Map(_)
                     | ReflectRef::Scalar(_) => return None,
                 },
@@ -106,6 +109,7 @@ where
                     ReflectMut::TupleStruct(_)
                     | ReflectMut::Tuple(_)
                     | ReflectMut::List(_)
+                    | ReflectMut::Array(_)
                     | ReflectMut::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_mut() {
@@ -113,6 +117,7 @@ where
                     ReflectMut::Tuple(inner) => inner.field_mut(*index)?,
                     ReflectMut::Enum(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::List(inner) => inner.get_mut(*index)?,
+                    ReflectMut::Array(inner) => inner.get_mut(*index)?,
                     ReflectMut::Map(inner) => inner.get_mut(index)?,
                     ReflectMut::Struct(_) | ReflectMut::Scalar(_) => return None,
                 },
@@ -128,6 +133,7 @@ where
                     | ReflectMut::TupleStruct(_)
                     | ReflectMut::Tuple(_)
                     | ReflectMut::List(_)
+                    | ReflectMut::Array(_)
                     | ReflectMut::Map(_)
                     | ReflectMut::Scalar(_) => return None,
                 },

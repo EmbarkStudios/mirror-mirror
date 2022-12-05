@@ -1,26 +1,13 @@
-use crate::iter::ValueIter;
-use crate::iter::ValueIterMut;
+use crate::array::Array;
 use crate::Reflect;
 use std::fmt;
 
-pub trait List: Reflect {
-    fn get(&self, index: usize) -> Option<&dyn Reflect>;
-
-    fn get_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
-
+pub trait List: Array {
     fn push(&mut self, value: &dyn Reflect);
 
     fn pop(&mut self) -> Option<Box<dyn Reflect>>;
 
     fn try_remove(&mut self, index: usize) -> Option<Box<dyn Reflect>>;
-
-    fn len(&self) -> usize;
-
-    fn is_empty(&self) -> bool;
-
-    fn iter(&self) -> ValueIter<'_>;
-
-    fn iter_mut(&mut self) -> ValueIterMut<'_>;
 }
 
 impl fmt::Debug for dyn List {

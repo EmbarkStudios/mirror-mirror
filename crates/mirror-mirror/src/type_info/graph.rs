@@ -77,6 +77,7 @@ pub enum TypeInfoNode {
     Tuple(Option<TupleInfoNode>),
     Enum(Option<EnumInfoNode>),
     List(ListInfoNode),
+    Array(ArrayInfoNode),
     Map(MapInfoNode),
     Scalar(ScalarInfoNode),
     Opaque,
@@ -105,6 +106,7 @@ impl_from! { TupleStruct(Option<TupleStructInfoNode>) }
 impl_from! { Tuple(Option<TupleInfoNode>) }
 impl_from! { Enum(Option<EnumInfoNode>) }
 impl_from! { List(ListInfoNode) }
+impl_from! { Array(ArrayInfoNode) }
 impl_from! { Map(MapInfoNode) }
 impl_from! { Scalar(ScalarInfoNode) }
 
@@ -278,6 +280,27 @@ impl UnnamedFieldNode {
         Self {
             id: T::build(graph),
             metadata,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
+pub struct ArrayInfoNode {
+    pub(super) type_name: String,
+    pub(super) field_type_id: Id,
+    pub(super) len: usize,
+}
+
+impl ArrayInfoNode {
+    pub(crate) fn new<L, T, const N: usize>(graph: &mut TypeInfoGraph) -> Self
+    where
+        L: Typed,
+        T: Typed,
+    {
+        Self {
+            type_name: type_name::<L>().to_owned(),
+            field_type_id: T::build(graph),
+            len: N,
         }
     }
 }

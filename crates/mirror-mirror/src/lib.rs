@@ -5,6 +5,7 @@ use std::any::Any;
 use std::any::TypeId;
 use std::fmt;
 
+pub mod array;
 pub mod enum_;
 pub mod get_field;
 pub mod iter;
@@ -21,6 +22,8 @@ mod std_impls;
 #[cfg(test)]
 mod tests;
 
+#[doc(inline)]
+pub use self::array::Array;
 #[doc(inline)]
 pub use self::enum_::Enum;
 #[doc(inline)]
@@ -115,6 +118,14 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_list_mut(&mut self) -> Option<&mut dyn List> {
         self.reflect_mut().as_list_mut()
+    }
+
+    fn as_array(&self) -> Option<&dyn Array> {
+        self.reflect_ref().as_array()
+    }
+
+    fn as_array_mut(&mut self) -> Option<&mut dyn Array> {
+        self.reflect_mut().as_array_mut()
     }
 
     fn as_map(&self) -> Option<&dyn Map> {
@@ -365,6 +376,7 @@ pub enum ReflectRef<'a> {
     TupleStruct(&'a dyn TupleStruct),
     Tuple(&'a dyn Tuple),
     Enum(&'a dyn Enum),
+    Array(&'a dyn Array),
     List(&'a dyn List),
     Map(&'a dyn Map),
     Scalar(ScalarRef<'a>),
@@ -402,6 +414,13 @@ impl<'a> ReflectRef<'a> {
     pub fn as_list(self) -> Option<&'a dyn List> {
         match self {
             Self::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_array(self) -> Option<&'a dyn Array> {
+        match self {
+            Self::Array(inner) => Some(inner),
             _ => None,
         }
     }
@@ -448,6 +467,7 @@ pub enum ReflectMut<'a> {
     TupleStruct(&'a mut dyn TupleStruct),
     Tuple(&'a mut dyn Tuple),
     Enum(&'a mut dyn Enum),
+    Array(&'a mut dyn Array),
     List(&'a mut dyn List),
     Map(&'a mut dyn Map),
     Scalar(ScalarMut<'a>),
@@ -485,6 +505,13 @@ impl<'a> ReflectMut<'a> {
     pub fn as_list_mut(self) -> Option<&'a mut dyn List> {
         match self {
             Self::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_array_mut(self) -> Option<&'a mut dyn Array> {
+        match self {
+            Self::Array(inner) => Some(inner),
             _ => None,
         }
     }

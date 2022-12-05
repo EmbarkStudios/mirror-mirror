@@ -1,5 +1,5 @@
+use crate::Array;
 use crate::Enum;
-use crate::List;
 use crate::Map;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -46,6 +46,7 @@ impl<'a> GetField<'a, &str, private::Value> for &'a Value {
             ReflectRef::TupleStruct(_)
             | ReflectRef::Tuple(_)
             | ReflectRef::List(_)
+            | ReflectRef::Array(_)
             | ReflectRef::Scalar(_) => None,
         }
     }
@@ -63,6 +64,7 @@ impl<'a> GetFieldMut<'a, &str, private::Value> for &'a mut Value {
             ReflectMut::TupleStruct(_)
             | ReflectMut::Tuple(_)
             | ReflectMut::List(_)
+            | ReflectMut::Array(_)
             | ReflectMut::Scalar(_) => None,
         }
     }
@@ -81,6 +83,7 @@ where
                 ReflectRef::TupleStruct(inner) => inner.get_field(key),
                 ReflectRef::Tuple(inner) => inner.get_field(key),
                 ReflectRef::Enum(inner) => inner.get_field(key),
+                ReflectRef::Array(inner) => inner.get_field(key),
                 ReflectRef::List(inner) => inner.get_field(key),
                 ReflectRef::Map(inner) => inner.get_field(key),
                 ReflectRef::Struct(_) | ReflectRef::Scalar(_) => None,
@@ -93,6 +96,7 @@ where
                 | ReflectRef::Tuple(_)
                 | ReflectRef::Enum(_)
                 | ReflectRef::List(_)
+                | ReflectRef::Array(_)
                 | ReflectRef::Scalar(_) => None,
             }
         } else {
@@ -101,6 +105,7 @@ where
                 ReflectRef::TupleStruct(_)
                 | ReflectRef::Tuple(_)
                 | ReflectRef::Enum(_)
+                | ReflectRef::Array(_)
                 | ReflectRef::List(_)
                 | ReflectRef::Struct(_)
                 | ReflectRef::Scalar(_) => None,
@@ -123,6 +128,7 @@ where
                 ReflectMut::Tuple(inner) => inner.get_field_mut(key),
                 ReflectMut::Enum(inner) => inner.get_field_mut(key),
                 ReflectMut::List(inner) => inner.get_field_mut(key),
+                ReflectMut::Array(inner) => inner.get_field_mut(key),
                 ReflectMut::Map(inner) => inner.get_field_mut(key),
                 ReflectMut::Struct(_) | ReflectMut::Scalar(_) => None,
             }
@@ -134,6 +140,7 @@ where
                 | ReflectMut::Tuple(_)
                 | ReflectMut::Enum(_)
                 | ReflectMut::List(_)
+                | ReflectMut::Array(_)
                 | ReflectMut::Scalar(_) => None,
             }
         } else {
@@ -143,6 +150,7 @@ where
                 | ReflectMut::Tuple(_)
                 | ReflectMut::Enum(_)
                 | ReflectMut::List(_)
+                | ReflectMut::Array(_)
                 | ReflectMut::Struct(_)
                 | ReflectMut::Scalar(_) => None,
             }
@@ -270,9 +278,10 @@ where
     }
 }
 
-impl<'a, R> GetField<'a, usize, private::List> for &'a R
+// we don't need to implement this for `R: List` because `List` is a subtrait of `Array`
+impl<'a, R> GetField<'a, usize, private::Array> for &'a R
 where
-    R: List + ?Sized,
+    R: Array + ?Sized,
 {
     fn get_field<T>(self, key: usize) -> Option<&'a T>
     where
@@ -282,9 +291,9 @@ where
     }
 }
 
-impl<'a, R> GetFieldMut<'a, usize, private::List> for &'a mut R
+impl<'a, R> GetFieldMut<'a, usize, private::Array> for &'a mut R
 where
-    R: List + ?Sized,
+    R: Array + ?Sized,
 {
     fn get_field_mut<T>(self, key: usize) -> Option<&'a mut T>
     where
@@ -351,7 +360,7 @@ mod private {
     pub struct TupleStruct;
     pub struct Enum;
     pub struct Tuple;
-    pub struct List;
+    pub struct Array;
     pub struct Map;
     pub struct Value;
 }
