@@ -8,6 +8,9 @@ use syn::Expr;
 use syn::Field;
 use syn::FieldsNamed;
 use syn::FieldsUnnamed;
+use syn::Lit;
+use syn::LitStr;
+use syn::Meta;
 use syn::Token;
 
 mod kw {
@@ -18,21 +21,33 @@ mod kw {
     syn::custom_keyword!(opt_out);
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub(super) struct ItemAttrs {
     debug_opt_out: bool,
     clone_opt_out: bool,
     meta: HashMap<Ident, Expr>,
+    docs: Vec<LitStr>,
 }
 
 impl ItemAttrs {
+    fn new(docs: Vec<LitStr>) -> Self {
+        Self {
+            debug_opt_out: Default::default(),
+            clone_opt_out: Default::default(),
+            meta: Default::default(),
+            docs,
+        }
+    }
+
     pub(super) fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
+        let docs = parse_docs(attrs);
+
         let mut reflect_attrs = attrs
             .iter()
             .filter(|attr| attr.path.is_ident("reflect"))
             .peekable();
 
-        let Some(attr) = reflect_attrs.next() else { return Ok(Default::default()) };
+        let Some(attr) = reflect_attrs.next() else { return Ok(Self::new(docs)) };
 
         if let Some(next) = reflect_attrs.peek() {
             return Err(syn::Error::new_spanned(
@@ -42,7 +57,7 @@ impl ItemAttrs {
         }
 
         attr.parse_args_with(|input: ParseStream<'_>| {
-            let mut item_attrs = Self::default();
+            let mut item_attrs = Self::new(docs);
 
             while !input.is_empty() {
                 let lh = input.lookahead1();
@@ -133,6 +148,24 @@ impl ItemAttrs {
     pub(super) fn meta(&self) -> TokenStream {
         tokenize_meta(&self.meta)
     }
+
+    pub(super) fn docs(&self) -> TokenStream {
+        let docs = &self.docs;
+        quote! { &[#(#docs,)*] }
+    }
+}
+
+fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
+    attrs
+        .iter()
+        .filter(|attr| attr.path.is_ident("doc"))
+        .filter_map(|attr| {
+            let meta = attr.parse_meta().ok()?;
+            let Meta::NameValue(pair) = meta else { return None };
+            let Lit::Str(lit_str) = pair.lit else { return None };
+            Some(lit_str)
+        })
+        .collect::<Vec<_>>()
 }
 
 fn tokenize_meta(meta: &HashMap<Ident, Expr>) -> TokenStream {
@@ -147,7 +180,7 @@ fn tokenize_meta(meta: &HashMap<Ident, Expr>) -> TokenStream {
 }
 
 pub(super) struct AttrsDatabase<T> {
-    map: HashMap<T, FieldAttrs>,
+    map: HashMap<T, InnerAttrs>,
 }
 
 impl AttrsDatabase<Ident> {
@@ -156,7 +189,7 @@ impl AttrsDatabase<Ident> {
             .named
             .iter()
             .map(|field| {
-                let attrs = FieldAttrs::parse(&field.attrs)?;
+                let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((field.ident.clone().unwrap(), attrs))
             })
             .collect::<syn::Result<HashMap<_, _>>>()?;
@@ -176,7 +209,7 @@ impl AttrsDatabase<usize> {
             .iter()
             .enumerate()
             .map(|(index, field)| {
-                let attrs = FieldAttrs::parse(&field.attrs)?;
+                let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((index, attrs))
             })
             .collect::<syn::Result<HashMap<_, _>>>()?;
@@ -210,22 +243,38 @@ where
                 }
             })
     }
+
+    pub(super) fn docs(&self, key: &T) -> TokenStream {
+        let docs = self.map.get(key).into_iter().flat_map(|attrs| &attrs.docs);
+        quote! { &[#(#docs,)*] }
+    }
 }
 
-#[derive(Debug, Default)]
-pub(super) struct FieldAttrs {
+#[derive(Debug)]
+pub(super) struct InnerAttrs {
     pub(super) skip: bool,
     pub(super) meta: HashMap<Ident, Expr>,
+    pub(super) docs: Vec<LitStr>,
 }
 
-impl FieldAttrs {
+impl InnerAttrs {
+    pub(super) fn new(docs: Vec<LitStr>) -> Self {
+        Self {
+            skip: Default::default(),
+            meta: Default::default(),
+            docs,
+        }
+    }
+
     pub(super) fn parse(attrs: &[Attribute]) -> syn::Result<Self> {
+        let docs = parse_docs(attrs);
+
         let mut reflect_attrs = attrs
             .iter()
             .filter(|attr| attr.path.is_ident("reflect"))
             .peekable();
 
-        let Some(attr) = reflect_attrs.next() else { return Ok(Default::default()) };
+        let Some(attr) = reflect_attrs.next() else { return Ok(Self::new(docs)) };
 
         if let Some(next) = reflect_attrs.peek() {
             return Err(syn::Error::new_spanned(
@@ -235,7 +284,7 @@ impl FieldAttrs {
         }
 
         attr.parse_args_with(|input: ParseStream<'_>| {
-            let mut field_attrs = Self::default();
+            let mut field_attrs = Self::new(docs);
 
             while !input.is_empty() {
                 let lh = input.lookahead1();
@@ -272,5 +321,10 @@ impl FieldAttrs {
 
     pub(super) fn meta(&self) -> TokenStream {
         tokenize_meta(&self.meta)
+    }
+
+    pub(super) fn docs(&self) -> TokenStream {
+        let docs = &self.docs;
+        quote! { &[#(#docs,)*] }
     }
 }

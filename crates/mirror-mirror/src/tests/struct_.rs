@@ -1,9 +1,15 @@
+use std::collections::BTreeMap;
+
 use crate as mirror_mirror;
+use crate::key_path;
 use crate::struct_::StructValue;
+use crate::type_info::GetMeta;
+use crate::type_info::GetTypedPath;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
 use crate::Struct;
+use crate::Typed;
 use crate::Value;
 
 #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]
@@ -187,4 +193,40 @@ fn from_reflect_with_value() {
     let value = StructValue::new().with_field("number", Number::One);
 
     assert!(Foo::from_reflect(&value).is_some());
+}
+
+#[test]
+fn accessing_docs_in_type_info() {
+    /// Here are the docs.
+    ///
+    /// Foo bar.
+    #[derive(Reflect, Clone, Debug)]
+    struct Foo {
+        inner: Vec<BTreeMap<String, Vec<Option<Inner>>>>,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    enum Inner {
+        Variant {
+            /// Bingo!
+            field: String,
+        },
+    }
+
+    let type_info = <Foo as Typed>::type_info();
+
+    assert_eq!(
+        type_info.type_().docs(),
+        &[" Here are the docs.", "", " Foo bar."]
+    );
+
+    let variant_info = type_info
+        .type_()
+        .at_typed(key_path!(.inner[0].map_key[0]{Some}[0]{Variant}))
+        .unwrap()
+        .as_variant()
+        .unwrap();
+    let field = variant_info.fields().next().unwrap();
+    assert_eq!(field.name().unwrap(), "field");
+    assert_eq!(field.docs(), &[" Bingo!"]);
 }

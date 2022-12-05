@@ -172,10 +172,10 @@ macro_rules! impl_tuple {
                 graph.get_or_build_with::<Self, _>(|graph| {
                     let fields = &[
                         $(
-                            UnnamedFieldNode::new::<$ident>(Default::default(), graph),
+                            UnnamedFieldNode::new::<$ident>(Default::default(), Default::default(), graph),
                         )*
                     ];
-                    TupleInfoNode::new::<Self>(fields, Default::default())
+                    TupleInfoNode::new::<Self>(fields, Default::default(), Default::default())
                 })
             }
         }

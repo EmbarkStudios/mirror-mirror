@@ -93,12 +93,14 @@ fn expand_reflect(
             .map(|(idx, field)| {
                 let field_ty = &field.ty;
                 let meta = field_attrs.meta(&idx);
+                let docs = field_attrs.docs(&idx);
                 quote! {
-                    UnnamedFieldNode::new::<#field_ty>(#meta, graph)
+                    UnnamedFieldNode::new::<#field_ty>(#meta, #docs, graph)
                 }
             });
 
         let meta = attrs.meta();
+        let docs = attrs.docs();
 
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
@@ -106,7 +108,7 @@ fn expand_reflect(
                     fn build(graph: &mut TypeInfoGraph) -> Id {
                         let fields = &[#(#code_for_fields),*];
                         graph.get_or_build_with::<#ident, _>(|graph| {
-                            TupleStructInfoNode::new::<#ident>(fields, #meta)
+                            TupleStructInfoNode::new::<#ident>(fields, #meta, #docs)
                         })
                     }
                 }

@@ -1,5 +1,4 @@
 use crate::array::Array;
-use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::ArrayInfoNode;
 use crate::type_info::graph::Id;

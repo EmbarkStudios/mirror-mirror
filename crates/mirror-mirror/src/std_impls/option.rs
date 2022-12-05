@@ -36,11 +36,21 @@ where
                         &[
                             VariantNode::Tuple(TupleVariantInfoNode::new(
                                 "Some",
-                                &[UnnamedFieldNode::new::<T>(Default::default(), graph)],
+                                &[UnnamedFieldNode::new::<T>(
+                                    Default::default(),
+                                    Default::default(),
+                                    graph,
+                                )],
+                                Default::default(),
                                 Default::default(),
                             )),
-                            VariantNode::Unit(UnitVariantInfoNode::new("None", Default::default())),
+                            VariantNode::Unit(UnitVariantInfoNode::new(
+                                "None",
+                                Default::default(),
+                                Default::default(),
+                            )),
                         ],
+                        Default::default(),
                         Default::default(),
                     )
                 })

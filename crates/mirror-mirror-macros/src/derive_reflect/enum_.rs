@@ -1,4 +1,4 @@
-use super::attrs::FieldAttrs;
+use super::attrs::InnerAttrs;
 use super::attrs::ItemAttrs;
 use crate::stringify;
 use proc_macro2::TokenStream;
@@ -170,6 +170,7 @@ fn expand_reflect(
         let code_for_variants = variants.iter().filter(filter_out_skipped).map(|variant| {
             let variant_ident_string = stringify(&variant.ident);
             let meta = variant.attrs.meta();
+            let docs = variant.attrs.docs();
 
             match &variant.fields {
                 FieldsData::Named(fields) => {
@@ -178,8 +179,9 @@ fn expand_reflect(
                         let field_name = stringify(ident);
                         let field_ty = &field.ty;
                         let meta = field.attrs.meta();
+                        let docs = field.attrs.docs();
                         quote! {
-                            NamedFieldNode::new::<#field_ty>(#field_name, #meta, graph)
+                            NamedFieldNode::new::<#field_ty>(#field_name, #meta, #docs, graph)
                         }
                     });
 
@@ -188,7 +190,8 @@ fn expand_reflect(
                             StructVariantInfoNode::new(
                                 #variant_ident_string,
                                 &[#(#fields),*],
-                                #meta
+                                #meta,
+                                #docs,
                             )
                         )
                     }
@@ -197,8 +200,9 @@ fn expand_reflect(
                     let fields = fields.iter().filter(filter_out_skipped).map(|field| {
                         let field_ty = &field.ty;
                         let meta = field.attrs.meta();
+                        let docs = field.attrs.docs();
                         quote! {
-                            UnnamedFieldNode::new::<#field_ty>(#meta, graph)
+                            UnnamedFieldNode::new::<#field_ty>(#meta, #docs, graph)
                         }
                     });
 
@@ -208,17 +212,23 @@ fn expand_reflect(
                                 #variant_ident_string,
                                 &[#(#fields),*],
                                 #meta,
+                                #docs,
                             )
                         )
                     }
                 }
                 FieldsData::Unit => quote! {
-                    VariantNode::Unit(UnitVariantInfoNode::new(#variant_ident_string, #meta))
+                    VariantNode::Unit(UnitVariantInfoNode::new(
+                        #variant_ident_string,
+                        #meta,
+                        #docs,
+                    ))
                 },
             }
         });
 
         let meta = attrs.meta();
+        let docs = attrs.docs();
 
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
@@ -226,7 +236,7 @@ fn expand_reflect(
                     fn build(graph: &mut TypeInfoGraph) -> Id {
                         let variants = &[#(#code_for_variants),*];
                         graph.get_or_build_with::<#ident, _>(|graph| {
-                            EnumInfoNode::new::<#ident>(variants, #meta)
+                            EnumInfoNode::new::<#ident>(variants, #meta, #docs)
                         })
                     }
                 }
@@ -708,7 +718,7 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
 
 struct VariantData<'a> {
     ident: &'a Ident,
-    attrs: FieldAttrs,
+    attrs: InnerAttrs,
     fields: FieldsData<'a>,
 }
 
@@ -726,7 +736,7 @@ impl<'a> VariantData<'a> {
                             .map(|field| {
                                 let ident = field.ident.as_ref().unwrap();
                                 let ty = &field.ty;
-                                let attrs = FieldAttrs::parse(&field.attrs)?;
+                                let attrs = InnerAttrs::parse(&field.attrs)?;
 
                                 Ok(NamedField { ident, ty, attrs })
                             })
@@ -741,7 +751,7 @@ impl<'a> VariantData<'a> {
                             .enumerate()
                             .map(|(index, field)| {
                                 let ty = &field.ty;
-                                let attrs = FieldAttrs::parse(&field.attrs)?;
+                                let attrs = InnerAttrs::parse(&field.attrs)?;
                                 let fake_ident = quote::format_ident!("field_{index}");
 
                                 Ok(UnnamedField {
@@ -757,7 +767,7 @@ impl<'a> VariantData<'a> {
                     Fields::Unit => FieldsData::Unit,
                 };
 
-                let attrs = FieldAttrs::parse(&variant.attrs)?;
+                let attrs = InnerAttrs::parse(&variant.attrs)?;
 
                 Ok(VariantData {
                     ident: &variant.ident,
@@ -795,12 +805,12 @@ enum FieldsData<'a> {
 struct NamedField<'a> {
     ident: &'a Ident,
     ty: &'a Type,
-    attrs: FieldAttrs,
+    attrs: InnerAttrs,
 }
 
 struct UnnamedField<'a> {
     ty: &'a Type,
-    attrs: FieldAttrs,
+    attrs: InnerAttrs,
     fake_ident: Ident,
 }
 

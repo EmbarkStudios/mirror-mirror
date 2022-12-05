@@ -89,13 +89,16 @@ fn expand_reflect(
             .map(|field| {
                 let name = stringify(&field.ident);
                 let field_ty = &field.ty;
-                let meta = field_attrs.meta(field.ident.as_ref().unwrap());
+                let ident = field.ident.as_ref().unwrap();
+                let meta = field_attrs.meta(ident);
+                let docs = field_attrs.docs(ident);
                 quote! {
-                    NamedFieldNode::new::<#field_ty>(#name, #meta, graph)
+                    NamedFieldNode::new::<#field_ty>(#name, #meta, #docs, graph)
                 }
             });
 
         let meta = item_attrs.meta();
+        let docs = item_attrs.docs();
 
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
@@ -103,7 +106,7 @@ fn expand_reflect(
                     fn build(graph: &mut TypeInfoGraph) -> Id {
                         graph.get_or_build_with::<#ident, _>(|graph| {
                             let fields = &[#(#code_for_fields),*];
-                            StructInfoNode::new::<#ident>(fields, #meta)
+                            StructInfoNode::new::<#ident>(fields, #meta, #docs)
                         })
                     }
                 }

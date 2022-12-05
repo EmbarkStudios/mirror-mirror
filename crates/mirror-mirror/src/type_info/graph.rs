@@ -107,10 +107,11 @@ pub struct StructInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<NamedFieldNode>,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl StructInfoNode {
-    pub fn new<T>(fields: &[NamedFieldNode], metadata: Metadata) -> Self
+    pub fn new<T>(fields: &[NamedFieldNode], metadata: Metadata, docs: &[&'static str]) -> Self
     where
         T: Typed,
     {
@@ -118,8 +119,13 @@ impl StructInfoNode {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
             metadata,
+            docs: map_docs(docs),
         }
     }
+}
+
+fn map_docs(docs: &[&'static str]) -> Vec<String> {
+    docs.iter().map(|s| s.to_string()).collect()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
@@ -127,10 +133,11 @@ pub struct TupleStructInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl TupleStructInfoNode {
-    pub fn new<T>(fields: &[UnnamedFieldNode], metadata: Metadata) -> Self
+    pub fn new<T>(fields: &[UnnamedFieldNode], metadata: Metadata, docs: &[&'static str]) -> Self
     where
         T: Typed,
     {
@@ -138,6 +145,7 @@ impl TupleStructInfoNode {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -147,10 +155,11 @@ pub struct EnumInfoNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl EnumInfoNode {
-    pub fn new<T>(variants: &[VariantNode], metadata: Metadata) -> Self
+    pub fn new<T>(variants: &[VariantNode], metadata: Metadata, docs: &[&'static str]) -> Self
     where
         T: Typed,
     {
@@ -158,6 +167,7 @@ impl EnumInfoNode {
             type_name: type_name::<T>().to_owned(),
             variants: variants.to_vec(),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -174,14 +184,21 @@ pub struct StructVariantInfoNode {
     pub(super) name: String,
     pub(super) fields: Vec<NamedFieldNode>,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl StructVariantInfoNode {
-    pub fn new(name: &'static str, fields: &[NamedFieldNode], metadata: Metadata) -> Self {
+    pub fn new(
+        name: &'static str,
+        fields: &[NamedFieldNode],
+        metadata: Metadata,
+        docs: &[&'static str],
+    ) -> Self {
         Self {
             name: name.to_owned(),
             fields: fields.to_vec(),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -191,14 +208,21 @@ pub struct TupleVariantInfoNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl TupleVariantInfoNode {
-    pub fn new(name: &'static str, fields: &[UnnamedFieldNode], metadata: Metadata) -> Self {
+    pub fn new(
+        name: &'static str,
+        fields: &[UnnamedFieldNode],
+        metadata: Metadata,
+        docs: &[&'static str],
+    ) -> Self {
         Self {
             name: name.to_owned(),
             fields: fields.to_vec(),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -207,13 +231,15 @@ impl TupleVariantInfoNode {
 pub struct UnitVariantInfoNode {
     pub(super) name: String,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl UnitVariantInfoNode {
-    pub fn new(name: &'static str, metadata: Metadata) -> Self {
+    pub fn new(name: &'static str, metadata: Metadata, docs: &[&'static str]) -> Self {
         Self {
             name: name.to_owned(),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -223,10 +249,11 @@ pub struct TupleInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl TupleInfoNode {
-    pub fn new<T>(fields: &[UnnamedFieldNode], metadata: Metadata) -> Self
+    pub fn new<T>(fields: &[UnnamedFieldNode], metadata: Metadata, docs: &[&'static str]) -> Self
     where
         T: Typed,
     {
@@ -234,6 +261,7 @@ impl TupleInfoNode {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -243,10 +271,16 @@ pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: Id,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl NamedFieldNode {
-    pub fn new<T>(name: &'static str, metadata: Metadata, graph: &mut TypeInfoGraph) -> Self
+    pub fn new<T>(
+        name: &'static str,
+        metadata: Metadata,
+        docs: &[&'static str],
+        graph: &mut TypeInfoGraph,
+    ) -> Self
     where
         T: Typed,
     {
@@ -254,6 +288,7 @@ impl NamedFieldNode {
             name: name.to_owned(),
             id: T::build(graph),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }
@@ -262,16 +297,18 @@ impl NamedFieldNode {
 pub struct UnnamedFieldNode {
     pub(super) id: Id,
     pub(super) metadata: Metadata,
+    pub(super) docs: Vec<String>,
 }
 
 impl UnnamedFieldNode {
-    pub fn new<T>(metadata: Metadata, graph: &mut TypeInfoGraph) -> Self
+    pub fn new<T>(metadata: Metadata, docs: &[&'static str], graph: &mut TypeInfoGraph) -> Self
     where
         T: Typed,
     {
         Self {
             id: T::build(graph),
             metadata,
+            docs: map_docs(docs),
         }
     }
 }

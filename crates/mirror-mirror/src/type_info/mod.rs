@@ -329,6 +329,8 @@ impl<'a> GetTypedPath<'a> for VariantInfo<'a> {
 
 pub trait GetMeta<'a> {
     fn get_meta(self, key: &str) -> Option<&'a dyn Reflect>;
+
+    fn docs(self) -> &'a [String];
 }
 
 impl<'a> GetMeta<'a> for TypeInfo<'a> {
@@ -345,6 +347,20 @@ impl<'a> GetMeta<'a> for TypeInfo<'a> {
             | TypeInfo::Opaque => None,
         }
     }
+
+    fn docs(self) -> &'a [String] {
+        match self {
+            TypeInfo::Struct(inner) => inner.docs(),
+            TypeInfo::TupleStruct(inner) => inner.docs(),
+            TypeInfo::Enum(inner) => inner.docs(),
+            TypeInfo::Tuple(_)
+            | TypeInfo::List(_)
+            | TypeInfo::Array(_)
+            | TypeInfo::Map(_)
+            | TypeInfo::Scalar(_)
+            | TypeInfo::Opaque => &[],
+        }
+    }
 }
 
 macro_rules! impl_get_meta {
@@ -353,6 +369,10 @@ macro_rules! impl_get_meta {
             impl<'a> GetMeta<'a> for $ident<'a> {
                 fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
                     Some(self.node.metadata.get(key)?.as_reflect())
+                }
+
+                fn docs(self) -> &'a [String] {
+                    &self.node.docs
                 }
             }
         )*
@@ -569,6 +589,14 @@ impl<'a> GetMeta<'a> for VariantInfo<'a> {
             VariantInfo::Unit(inner) => inner.get_meta(key),
         }
     }
+
+    fn docs(self) -> &'a [String] {
+        match self {
+            VariantInfo::Struct(inner) => inner.docs(),
+            VariantInfo::Tuple(inner) => inner.docs(),
+            VariantInfo::Unit(inner) => inner.docs(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -582,6 +610,29 @@ impl<'a> VariantField<'a> {
         match self {
             VariantField::Named(inner) => inner.type_(),
             VariantField::Unnamed(inner) => inner.type_(),
+        }
+    }
+
+    pub fn name(self) -> Option<&'a str> {
+        match self {
+            VariantField::Named(inner) => Some(inner.name()),
+            VariantField::Unnamed(_) => None,
+        }
+    }
+}
+
+impl<'a> GetMeta<'a> for VariantField<'a> {
+    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+        match self {
+            VariantField::Named(inner) => inner.get_meta(key),
+            VariantField::Unnamed(inner) => inner.get_meta(key),
+        }
+    }
+
+    fn docs(self) -> &'a [String] {
+        match self {
+            VariantField::Named(inner) => inner.docs(),
+            VariantField::Unnamed(inner) => inner.docs(),
         }
     }
 }
@@ -787,6 +838,21 @@ impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
             | TypeInfoAtPath::Map(_)
             | TypeInfoAtPath::Scalar(_)
             | TypeInfoAtPath::Opaque => None,
+        }
+    }
+
+    fn docs(self) -> &'a [String] {
+        match self {
+            TypeInfoAtPath::Struct(inner) => inner.docs(),
+            TypeInfoAtPath::TupleStruct(inner) => inner.docs(),
+            TypeInfoAtPath::Enum(inner) => inner.docs(),
+            TypeInfoAtPath::Variant(_)
+            | TypeInfoAtPath::Tuple(_)
+            | TypeInfoAtPath::List(_)
+            | TypeInfoAtPath::Array(_)
+            | TypeInfoAtPath::Map(_)
+            | TypeInfoAtPath::Scalar(_)
+            | TypeInfoAtPath::Opaque => &[],
         }
     }
 }
