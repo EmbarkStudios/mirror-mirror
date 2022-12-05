@@ -1,11 +1,16 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use graph::*;
 
 use crate::{
+    enum_::EnumValue,
     key_path::{Key, KeyPath},
-    Reflect,
+    struct_::{StructValue, TupleStructValue},
+    tuple::TupleValue,
+    Reflect, Value,
 };
 
 pub mod graph;
@@ -137,6 +142,78 @@ impl<'a> TypeInfo<'a> {
             TypeInfo::Scalar(inner) => inner.into_type_info_at_path(),
             TypeInfo::Opaque => TypeInfoAtPath::Opaque,
         }
+    }
+
+    pub fn default_value(self) -> Option<Value> {
+        let value = match self {
+            TypeInfo::Struct(struct_) => {
+                let mut value = StructValue::new();
+                for field in struct_.fields() {
+                    value.set_field(field.name(), field.type_().default_value()?);
+                }
+                value.to_value()
+            }
+            TypeInfo::TupleStruct(tuple_struct) => {
+                let mut value = TupleStructValue::new();
+                for field in tuple_struct.fields() {
+                    value.push_field(field.type_().default_value()?);
+                }
+                value.to_value()
+            }
+            TypeInfo::Tuple(tuple) => {
+                let mut value = TupleValue::new();
+                for field in tuple.fields() {
+                    value.push_field(field.type_().default_value()?);
+                }
+                value.to_value()
+            }
+            TypeInfo::Enum(enum_) => {
+                let mut variants = enum_.variants();
+                let variant = variants.next()?;
+                match variant {
+                    VariantInfo::Struct(variant) => {
+                        let mut value = EnumValue::new_struct_variant(variant.name());
+                        for field in variant.fields() {
+                            value.set_struct_field(field.name(), field.type_().default_value()?);
+                        }
+                        value.to_value()
+                    }
+                    VariantInfo::Tuple(variant) => {
+                        let mut value = EnumValue::new_tuple_variant(variant.name());
+                        for field in variant.fields() {
+                            value.push_tuple_field(field.type_().default_value()?);
+                        }
+                        value.to_value()
+                    }
+                    VariantInfo::Unit(variant) => {
+                        EnumValue::new_unit_variant(variant.name()).to_value()
+                    }
+                }
+            }
+            TypeInfo::List(_) => Vec::<()>::new().to_value(),
+            TypeInfo::Array(_) => <[(); 0] as Reflect>::to_value(&[]),
+            TypeInfo::Map(_) => BTreeMap::<(), ()>::new().to_value(),
+            TypeInfo::Scalar(scalar) => match scalar {
+                ScalarInfo::usize => usize::default().to_value(),
+                ScalarInfo::u8 => u8::default().to_value(),
+                ScalarInfo::u16 => u16::default().to_value(),
+                ScalarInfo::u32 => u32::default().to_value(),
+                ScalarInfo::u64 => u64::default().to_value(),
+                ScalarInfo::u128 => u128::default().to_value(),
+                ScalarInfo::i8 => i8::default().to_value(),
+                ScalarInfo::i16 => i16::default().to_value(),
+                ScalarInfo::i32 => i32::default().to_value(),
+                ScalarInfo::i64 => i64::default().to_value(),
+                ScalarInfo::i128 => i128::default().to_value(),
+                ScalarInfo::bool => bool::default().to_value(),
+                ScalarInfo::char => char::default().to_value(),
+                ScalarInfo::f32 => f32::default().to_value(),
+                ScalarInfo::f64 => f64::default().to_value(),
+                ScalarInfo::String => String::default().to_value(),
+            },
+            TypeInfo::Opaque => return None,
+        };
+        Some(value)
     }
 
     pub fn as_struct(self) -> Option<StructInfo<'a>> {
