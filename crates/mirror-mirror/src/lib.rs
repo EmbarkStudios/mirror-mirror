@@ -16,6 +16,8 @@ pub mod tuple;
 pub mod type_info;
 pub mod value;
 
+mod std_impls;
+
 #[cfg(test)]
 mod tests;
 
