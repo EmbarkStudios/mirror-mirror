@@ -44,10 +44,10 @@ impl<'a> GetTypedPath<'a> for &'a TypeInfoRoot {
 
 #[derive(Copy, Clone, Debug)]
 pub enum TypeInfo<'a> {
-    Struct(Option<StructInfo<'a>>),
-    TupleStruct(Option<TupleStructInfo<'a>>),
-    Tuple(Option<TupleInfo<'a>>),
-    Enum(Option<EnumInfo<'a>>),
+    Struct(StructInfo<'a>),
+    TupleStruct(TupleStructInfo<'a>),
+    Tuple(TupleInfo<'a>),
+    Enum(EnumInfo<'a>),
     List(ListInfo<'a>),
     Array(ArrayInfo<'a>),
     Map(MapInfo<'a>),
@@ -59,19 +59,19 @@ impl<'a> TypeInfo<'a> {
     fn new(id: Id, graph: &'a TypeInfoGraph) -> Self {
         match graph.get(id) {
             TypeInfoNode::Struct(node) => {
-                let node = node.as_ref().map(|node| StructInfo { node, graph });
+                let node = StructInfo { node, graph };
                 TypeInfo::Struct(node)
             }
             TypeInfoNode::TupleStruct(node) => {
-                let node = node.as_ref().map(|node| TupleStructInfo { node, graph });
+                let node = TupleStructInfo { node, graph };
                 TypeInfo::TupleStruct(node)
             }
             TypeInfoNode::Tuple(node) => {
-                let node = node.as_ref().map(|node| TupleInfo { node, graph });
+                let node = TupleInfo { node, graph };
                 TypeInfo::Tuple(node)
             }
             TypeInfoNode::Enum(node) => {
-                let node = node.as_ref().map(|node| EnumInfo { node, graph });
+                let node = EnumInfo { node, graph };
                 TypeInfo::Enum(node)
             }
             TypeInfoNode::List(node) => {
@@ -113,10 +113,10 @@ impl<'a> TypeInfo<'a> {
 
     pub fn type_name(self) -> Option<&'a str> {
         match self {
-            TypeInfo::Struct(inner) => inner.map(|inner| inner.type_name()),
-            TypeInfo::TupleStruct(inner) => inner.map(|inner| inner.type_name()),
-            TypeInfo::Tuple(inner) => inner.map(|inner| inner.type_name()),
-            TypeInfo::Enum(inner) => inner.map(|inner| inner.type_name()),
+            TypeInfo::Struct(inner) => Some(inner.type_name()),
+            TypeInfo::TupleStruct(inner) => Some(inner.type_name()),
+            TypeInfo::Tuple(inner) => Some(inner.type_name()),
+            TypeInfo::Enum(inner) => Some(inner.type_name()),
             TypeInfo::List(inner) => Some(inner.type_name()),
             TypeInfo::Array(inner) => Some(inner.type_name()),
             TypeInfo::Map(inner) => Some(inner.type_name()),
@@ -125,44 +125,44 @@ impl<'a> TypeInfo<'a> {
         }
     }
 
-    fn into_type_info_at_path(self) -> Option<TypeInfoAtPath<'a>> {
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
         match self {
-            TypeInfo::Struct(inner) => inner.map(|inner| inner.into_type_info_at_path()),
-            TypeInfo::TupleStruct(inner) => inner.map(|inner| inner.into_type_info_at_path()),
-            TypeInfo::Tuple(inner) => inner.map(|inner| inner.into_type_info_at_path()),
-            TypeInfo::Enum(inner) => inner.map(|inner| inner.into_type_info_at_path()),
-            TypeInfo::List(inner) => Some(inner.into_type_info_at_path()),
-            TypeInfo::Array(inner) => Some(inner.into_type_info_at_path()),
-            TypeInfo::Map(inner) => Some(inner.into_type_info_at_path()),
-            TypeInfo::Scalar(inner) => Some(inner.into_type_info_at_path()),
-            TypeInfo::Opaque => Some(TypeInfoAtPath::Opaque),
+            TypeInfo::Struct(inner) => inner.into_type_info_at_path(),
+            TypeInfo::TupleStruct(inner) => inner.into_type_info_at_path(),
+            TypeInfo::Tuple(inner) => inner.into_type_info_at_path(),
+            TypeInfo::Enum(inner) => inner.into_type_info_at_path(),
+            TypeInfo::List(inner) => inner.into_type_info_at_path(),
+            TypeInfo::Array(inner) => inner.into_type_info_at_path(),
+            TypeInfo::Map(inner) => inner.into_type_info_at_path(),
+            TypeInfo::Scalar(inner) => inner.into_type_info_at_path(),
+            TypeInfo::Opaque => TypeInfoAtPath::Opaque,
         }
     }
 
     pub fn as_struct(self) -> Option<StructInfo<'a>> {
         match self {
-            TypeInfo::Struct(inner) => inner,
+            TypeInfo::Struct(inner) => Some(inner),
             _ => None,
         }
     }
 
     pub fn as_tuple_struct(self) -> Option<TupleStructInfo<'a>> {
         match self {
-            TypeInfo::TupleStruct(inner) => inner,
+            TypeInfo::TupleStruct(inner) => Some(inner),
             _ => None,
         }
     }
 
     pub fn as_tuple(self) -> Option<TupleInfo<'a>> {
         match self {
-            TypeInfo::Tuple(inner) => inner,
+            TypeInfo::Tuple(inner) => Some(inner),
             _ => None,
         }
     }
 
     pub fn as_enum(self) -> Option<EnumInfo<'a>> {
         match self {
-            TypeInfo::Enum(inner) => inner,
+            TypeInfo::Enum(inner) => Some(inner),
             _ => None,
         }
     }
@@ -198,7 +198,7 @@ impl<'a> TypeInfo<'a> {
 
 impl<'a> GetTypedPath<'a> for TypeInfo<'a> {
     fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>> {
-        self.into_type_info_at_path()?.at_typed(key_path)
+        self.into_type_info_at_path().at_typed(key_path)
     }
 }
 
@@ -257,9 +257,9 @@ pub trait GetMeta<'a> {
 impl<'a> GetMeta<'a> for TypeInfo<'a> {
     fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
         match self {
-            TypeInfo::Struct(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
-            TypeInfo::TupleStruct(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
-            TypeInfo::Enum(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
+            TypeInfo::Struct(inner) => inner.get_meta(key),
+            TypeInfo::TupleStruct(inner) => inner.get_meta(key),
+            TypeInfo::Enum(inner) => inner.get_meta(key),
             TypeInfo::Tuple(_)
             | TypeInfo::List(_)
             | TypeInfo::Array(_)
@@ -790,14 +790,14 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                         .fields()
                         .find(|field| field.name() == key)?
                         .type_()
-                        .into_type_info_at_path()?,
-                    TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path()?,
+                        .into_type_info_at_path(),
+                    TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeInfoAtPath::Variant(variant) => match variant {
                         VariantInfo::Struct(struct_variant) => struct_variant
                             .fields()
                             .find(|field| field.name() == key)?
                             .type_()
-                            .into_type_info_at_path()?,
+                            .into_type_info_at_path(),
                         VariantInfo::Tuple(_) | VariantInfo::Unit(_) => return None,
                     },
                     TypeInfoAtPath::Enum(enum_) => {
@@ -817,7 +817,7 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                                     VariantField::Unnamed(_) => None,
                                 })?
                                 .type_()
-                                .into_type_info_at_path()?
+                                .into_type_info_at_path()
                         } else {
                             return None;
                         }
@@ -830,26 +830,24 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     | TypeInfoAtPath::Opaque => return None,
                 },
                 Key::Element(index) => match type_info {
-                    TypeInfoAtPath::List(list) => list.field_type().into_type_info_at_path()?,
-                    TypeInfoAtPath::Array(array) => array.field_type().into_type_info_at_path()?,
-                    TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path()?,
+                    TypeInfoAtPath::List(list) => list.field_type().into_type_info_at_path(),
+                    TypeInfoAtPath::Array(array) => array.field_type().into_type_info_at_path(),
+                    TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeInfoAtPath::TupleStruct(tuple_struct) => tuple_struct
                         .fields()
                         .nth(index)?
                         .type_()
-                        .into_type_info_at_path()?,
-                    TypeInfoAtPath::Tuple(tuple) => tuple
-                        .fields()
-                        .nth(index)?
-                        .type_()
-                        .into_type_info_at_path()?,
+                        .into_type_info_at_path(),
+                    TypeInfoAtPath::Tuple(tuple) => {
+                        tuple.fields().nth(index)?.type_().into_type_info_at_path()
+                    }
 
                     TypeInfoAtPath::Variant(variant) => match variant {
                         VariantInfo::Tuple(tuple_variant) => tuple_variant
                             .fields()
                             .nth(index)?
                             .type_()
-                            .into_type_info_at_path()?,
+                            .into_type_info_at_path(),
                         VariantInfo::Struct(_) | VariantInfo::Unit(_) => return None,
                     },
 
@@ -919,10 +917,7 @@ mod tests {
             "mirror_mirror::type_info::tests::struct_::Foo"
         );
 
-        let struct_ = match type_info.type_() {
-            TypeInfo::Struct(Some(struct_)) => struct_,
-            _ => panic!("wat"),
-        };
+        let struct_ = type_info.type_().as_struct().unwrap();
 
         assert_eq!(
             struct_.type_name(),
@@ -937,10 +932,7 @@ mod tests {
                         "alloc::vec::Vec<mirror_mirror::type_info::tests::struct_::Foo>"
                     );
 
-                    let list = match field.type_() {
-                        TypeInfo::List(list) => list,
-                        _ => panic!("wat"),
-                    };
+                    let list = field.type_().as_list().unwrap();
 
                     assert_eq!(
                         list.type_name(),
@@ -954,10 +946,7 @@ mod tests {
                 }
                 "n" => {
                     assert_eq!(field.type_().type_name().unwrap(), "i32");
-                    let scalar = match field.type_() {
-                        TypeInfo::Scalar(scalar) => scalar,
-                        _ => panic!("wat"),
-                    };
+                    let scalar = field.type_().as_scalar().unwrap();
                     assert_eq!(scalar.type_name(), "i32");
                 }
                 _ => panic!("wat"),

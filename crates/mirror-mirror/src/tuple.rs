@@ -92,7 +92,7 @@ impl Reflect for TupleValue {
     fn type_info(&self) -> TypeInfoRoot {
         impl Typed for TupleValue {
             fn build(graph: &mut TypeInfoGraph) -> Id {
-                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Tuple(None))
+                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Opaque)
             }
         }
         <Self as Typed>::type_info()
