@@ -61,9 +61,8 @@ where
         Vec::is_empty(self)
     }
 
-    fn iter(&self) -> ValueIter<'_> {
-        let iter = self.as_slice().iter().map(|value| value.as_reflect());
-        ValueIter::new(iter)
+    fn iter(&self) -> crate::array::Iter<'_> {
+        crate::array::Iter::new(self)
     }
 
     fn iter_mut(&mut self) -> ValueIterMut<'_> {
