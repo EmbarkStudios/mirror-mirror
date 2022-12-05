@@ -107,7 +107,7 @@ pub struct StructInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<NamedFieldNode>,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl StructInfoNode {
@@ -124,7 +124,7 @@ impl StructInfoNode {
     }
 }
 
-fn map_docs(docs: &[&'static str]) -> Vec<String> {
+fn map_docs(docs: &[&'static str]) -> Box<[String]> {
     docs.iter().map(|s| s.to_string()).collect()
 }
 
@@ -133,7 +133,7 @@ pub struct TupleStructInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl TupleStructInfoNode {
@@ -155,7 +155,7 @@ pub struct EnumInfoNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl EnumInfoNode {
@@ -184,7 +184,7 @@ pub struct StructVariantInfoNode {
     pub(super) name: String,
     pub(super) fields: Vec<NamedFieldNode>,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl StructVariantInfoNode {
@@ -208,7 +208,7 @@ pub struct TupleVariantInfoNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl TupleVariantInfoNode {
@@ -231,7 +231,7 @@ impl TupleVariantInfoNode {
 pub struct UnitVariantInfoNode {
     pub(super) name: String,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl UnitVariantInfoNode {
@@ -249,7 +249,7 @@ pub struct TupleInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl TupleInfoNode {
@@ -271,7 +271,7 @@ pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: Id,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl NamedFieldNode {
@@ -297,7 +297,7 @@ impl NamedFieldNode {
 pub struct UnnamedFieldNode {
     pub(super) id: Id,
     pub(super) metadata: Metadata,
-    pub(super) docs: Vec<String>,
+    pub(super) docs: Box<[String]>,
 }
 
 impl UnnamedFieldNode {
