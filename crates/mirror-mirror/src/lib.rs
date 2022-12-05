@@ -380,6 +380,9 @@ pub enum ReflectRef<'a> {
     List(&'a dyn List),
     Map(&'a dyn Map),
     Scalar(ScalarRef<'a>),
+    /// Not all `Reflect` implementations allow access to the underlying value. This variant can be
+    /// used for such types.
+    Opaque(&'a dyn Reflect),
 }
 
 impl<'a> ReflectRef<'a> {
@@ -438,6 +441,13 @@ impl<'a> ReflectRef<'a> {
             _ => None,
         }
     }
+
+    pub fn as_opaque(self) -> Option<&'a dyn Reflect> {
+        match self {
+            Self::Opaque(inner) => Some(inner),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -471,6 +481,9 @@ pub enum ReflectMut<'a> {
     List(&'a mut dyn List),
     Map(&'a mut dyn Map),
     Scalar(ScalarMut<'a>),
+    /// Not all `Reflect` implementations allow mutable access to the underlying value (such as
+    /// [`std::num::NonZeroU8`]). This variant can be used for such types.
+    Opaque(&'a mut dyn Reflect),
 }
 
 impl<'a> ReflectMut<'a> {
@@ -526,6 +539,13 @@ impl<'a> ReflectMut<'a> {
     pub fn as_scalar_mut(self) -> Option<ScalarMut<'a>> {
         match self {
             Self::Scalar(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_opaque_mut(self) -> Option<&'a mut dyn Reflect> {
+        match self {
+            Self::Opaque(inner) => Some(inner),
             _ => None,
         }
     }
