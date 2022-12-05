@@ -417,55 +417,6 @@ impl From<EnumValue> for Value {
     }
 }
 
-impl<T> From<Option<T>> for Value
-where
-    T: Reflect,
-{
-    fn from(option: Option<T>) -> Self {
-        option.map(|inner| inner.to_value()).to_value()
-    }
-}
-
-impl<T> From<Vec<T>> for Value
-where
-    T: Reflect,
-{
-    fn from(list: Vec<T>) -> Self {
-        let list = list
-            .into_iter()
-            .map(|value| value.to_value())
-            .collect::<Vec<_>>();
-        Value::List(list)
-    }
-}
-
-impl<T, const N: usize> From<[T; N]> for Value
-where
-    T: Reflect,
-{
-    fn from(list: [T; N]) -> Self {
-        let list = list
-            .iter()
-            .map(|value| value.to_value())
-            .collect::<Vec<_>>();
-        Value::List(list)
-    }
-}
-
-impl<K, V> From<BTreeMap<K, V>> for Value
-where
-    K: Reflect,
-    V: Reflect,
-{
-    fn from(map: BTreeMap<K, V>) -> Self {
-        let map = map
-            .into_iter()
-            .map(|(key, value)| (key.to_value(), value.to_value()))
-            .collect();
-        Value::Map(map)
-    }
-}
-
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
         value.to_owned().into()
