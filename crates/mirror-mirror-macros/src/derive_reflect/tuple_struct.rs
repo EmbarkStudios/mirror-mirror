@@ -175,9 +175,14 @@ fn expand_from_reflect(
                 }
             } else {
                 quote_spanned! {span=>
-                    #field_index: <#ty as FromReflect>::from_reflect(
-                        tuple_struct.field(#field_index)?,
-                    )?.to_owned(),
+                    #field_index: {
+                        let value = tuple_struct.field(#field_index)?;
+                        if let Some(value) = value.downcast_ref::<#ty>() {
+                            value.to_owned()
+                        } else {
+                            <#ty as FromReflect>::from_reflect(value)?.to_owned()
+                        }
+                    },
                 }
             }
         });

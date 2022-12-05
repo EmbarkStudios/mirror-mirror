@@ -302,7 +302,14 @@ fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStre
                         let ident_string = stringify(ident);
                         let ty = &field.ty;
                         quote! {
-                            #ident: <#ty as FromReflect>::from_reflect(enum_.field(#ident_string)?)?.to_owned(),
+                            #ident: {
+                                let value = enum_.field(#ident_string)?;
+                                if let Some(value) = value.downcast_ref::<#ty>() {
+                                    value.to_owned()
+                                } else {
+                                    <#ty as FromReflect>::from_reflect(value)?.to_owned()
+                                }
+                            },
                         }
                     }
                 });
@@ -322,7 +329,14 @@ fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStre
                     } else {
                         let ty = &field.ty;
                         quote! {
-                            <#ty as FromReflect>::from_reflect(enum_.field_at(#idx)?)?.to_owned(),
+                            {
+                                let value = enum_.field_at(#idx)?;
+                                if let Some(value) = value.downcast_ref::<#ty>() {
+                                    value.to_owned()
+                                } else {
+                                    <#ty as FromReflect>::from_reflect(value)?.to_owned()
+                                }
+                            },
                         }
                     }
                 });
