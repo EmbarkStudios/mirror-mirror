@@ -14,7 +14,7 @@ fn works() {
 
     assert_eq!(
         type_info
-            .get_meta("foo")
+            .meta("foo")
             .unwrap()
             .downcast_ref::<String>()
             .unwrap(),
@@ -23,7 +23,7 @@ fn works() {
 
     assert_eq!(
         type_info
-            .get_meta("baz")
+            .meta("baz")
             .unwrap()
             .downcast_ref::<i32>()
             .unwrap(),

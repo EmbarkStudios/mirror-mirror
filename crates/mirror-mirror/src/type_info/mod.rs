@@ -328,17 +328,25 @@ impl<'a> GetTypedPath<'a> for VariantInfo<'a> {
 }
 
 pub trait GetMeta<'a> {
-    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect>;
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect>;
+
+    fn get_meta<T>(self, key: &str) -> Option<&'a T>
+    where
+        T: Reflect,
+        Self: Sized,
+    {
+        self.meta(key)?.downcast_ref()
+    }
 
     fn docs(self) -> &'a [String];
 }
 
 impl<'a> GetMeta<'a> for TypeInfo<'a> {
-    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
         match self {
-            TypeInfo::Struct(inner) => inner.get_meta(key),
-            TypeInfo::TupleStruct(inner) => inner.get_meta(key),
-            TypeInfo::Enum(inner) => inner.get_meta(key),
+            TypeInfo::Struct(inner) => inner.meta(key),
+            TypeInfo::TupleStruct(inner) => inner.meta(key),
+            TypeInfo::Enum(inner) => inner.meta(key),
             TypeInfo::Tuple(_)
             | TypeInfo::List(_)
             | TypeInfo::Array(_)
@@ -367,7 +375,7 @@ macro_rules! impl_get_meta {
     ($($ident:ident)*) => {
         $(
             impl<'a> GetMeta<'a> for $ident<'a> {
-                fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+                fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
                     Some(self.node.metadata.get(key)?.as_reflect())
                 }
 
@@ -582,11 +590,11 @@ impl<'a> VariantInfo<'a> {
 }
 
 impl<'a> GetMeta<'a> for VariantInfo<'a> {
-    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
         match self {
-            VariantInfo::Struct(inner) => inner.get_meta(key),
-            VariantInfo::Tuple(inner) => inner.get_meta(key),
-            VariantInfo::Unit(inner) => inner.get_meta(key),
+            VariantInfo::Struct(inner) => inner.meta(key),
+            VariantInfo::Tuple(inner) => inner.meta(key),
+            VariantInfo::Unit(inner) => inner.meta(key),
         }
     }
 
@@ -622,10 +630,10 @@ impl<'a> VariantField<'a> {
 }
 
 impl<'a> GetMeta<'a> for VariantField<'a> {
-    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
         match self {
-            VariantField::Named(inner) => inner.get_meta(key),
-            VariantField::Unnamed(inner) => inner.get_meta(key),
+            VariantField::Named(inner) => inner.meta(key),
+            VariantField::Unnamed(inner) => inner.meta(key),
         }
     }
 
@@ -826,11 +834,11 @@ pub enum TypeInfoAtPath<'a> {
 }
 
 impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
-    fn get_meta(self, key: &str) -> Option<&'a dyn Reflect> {
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
         match self {
-            TypeInfoAtPath::Struct(inner) => inner.get_meta(key),
-            TypeInfoAtPath::TupleStruct(inner) => inner.get_meta(key),
-            TypeInfoAtPath::Enum(inner) => inner.get_meta(key),
+            TypeInfoAtPath::Struct(inner) => inner.meta(key),
+            TypeInfoAtPath::TupleStruct(inner) => inner.meta(key),
+            TypeInfoAtPath::Enum(inner) => inner.meta(key),
             TypeInfoAtPath::Variant(_)
             | TypeInfoAtPath::Tuple(_)
             | TypeInfoAtPath::List(_)
