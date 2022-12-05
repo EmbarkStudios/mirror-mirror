@@ -417,6 +417,15 @@ impl From<EnumValue> for Value {
     }
 }
 
+impl<T> From<Option<T>> for Value
+where
+    T: Reflect,
+{
+    fn from(option: Option<T>) -> Self {
+        option.map(|inner| inner.to_value()).to_value()
+    }
+}
+
 impl<T> From<Vec<T>> for Value
 where
     T: Reflect,

@@ -85,3 +85,14 @@ mod skip {
     #[derive(Debug, Clone, Default)]
     struct NotReflect;
 }
+
+mod option_f32 {
+    #![allow(dead_code)]
+
+    use super::*;
+
+    #[derive(Debug, Clone, Reflect)]
+    struct Foo {
+        maybe_float: Option<f32>,
+    }
+}
