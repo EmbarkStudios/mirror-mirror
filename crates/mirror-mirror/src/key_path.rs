@@ -49,6 +49,7 @@ where
                     | ReflectRef::Tuple(_)
                     | ReflectRef::List(_)
                     | ReflectRef::Array(_)
+                    | ReflectRef::Opaque(_)
                     | ReflectRef::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_ref() {
@@ -58,7 +59,9 @@ where
                     ReflectRef::List(inner) => inner.get(*index)?,
                     ReflectRef::Array(inner) => inner.get(*index)?,
                     ReflectRef::Map(inner) => inner.get(index)?,
-                    ReflectRef::Struct(_) | ReflectRef::Scalar(_) => return None,
+                    ReflectRef::Struct(_) | ReflectRef::Scalar(_) | ReflectRef::Opaque(_) => {
+                        return None
+                    }
                 },
                 Key::Variant(variant) => match value.reflect_ref() {
                     ReflectRef::Enum(enum_) => {
@@ -74,6 +77,7 @@ where
                     | ReflectRef::List(_)
                     | ReflectRef::Array(_)
                     | ReflectRef::Map(_)
+                    | ReflectRef::Opaque(_)
                     | ReflectRef::Scalar(_) => return None,
                 },
             };
@@ -110,6 +114,7 @@ where
                     | ReflectMut::Tuple(_)
                     | ReflectMut::List(_)
                     | ReflectMut::Array(_)
+                    | ReflectMut::Opaque(_)
                     | ReflectMut::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_mut() {
@@ -119,7 +124,9 @@ where
                     ReflectMut::List(inner) => inner.get_mut(*index)?,
                     ReflectMut::Array(inner) => inner.get_mut(*index)?,
                     ReflectMut::Map(inner) => inner.get_mut(index)?,
-                    ReflectMut::Struct(_) | ReflectMut::Scalar(_) => return None,
+                    ReflectMut::Struct(_) | ReflectMut::Scalar(_) | ReflectMut::Opaque(_) => {
+                        return None
+                    }
                 },
                 Key::Variant(variant) => match value.reflect_mut() {
                     ReflectMut::Enum(enum_) => {
@@ -135,6 +142,7 @@ where
                     | ReflectMut::List(_)
                     | ReflectMut::Array(_)
                     | ReflectMut::Map(_)
+                    | ReflectMut::Opaque(_)
                     | ReflectMut::Scalar(_) => return None,
                 },
             };

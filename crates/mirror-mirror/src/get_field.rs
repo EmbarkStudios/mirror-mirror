@@ -47,6 +47,7 @@ impl<'a> GetField<'a, &str, private::Value> for &'a Value {
             | ReflectRef::Tuple(_)
             | ReflectRef::List(_)
             | ReflectRef::Array(_)
+            | ReflectRef::Opaque(_)
             | ReflectRef::Scalar(_) => None,
         }
     }
@@ -65,6 +66,7 @@ impl<'a> GetFieldMut<'a, &str, private::Value> for &'a mut Value {
             | ReflectMut::Tuple(_)
             | ReflectMut::List(_)
             | ReflectMut::Array(_)
+            | ReflectMut::Opaque(_)
             | ReflectMut::Scalar(_) => None,
         }
     }
@@ -86,7 +88,7 @@ where
                 ReflectRef::Array(inner) => inner.get_field(key),
                 ReflectRef::List(inner) => inner.get_field(key),
                 ReflectRef::Map(inner) => inner.get_field(key),
-                ReflectRef::Struct(_) | ReflectRef::Scalar(_) => None,
+                ReflectRef::Struct(_) | ReflectRef::Scalar(_) | ReflectRef::Opaque(_) => None,
             }
         } else if let Some(key) = key.as_any().downcast_ref::<String>() {
             match self.reflect_ref() {
@@ -97,6 +99,7 @@ where
                 | ReflectRef::Enum(_)
                 | ReflectRef::List(_)
                 | ReflectRef::Array(_)
+                | ReflectRef::Opaque(_)
                 | ReflectRef::Scalar(_) => None,
             }
         } else {
@@ -108,6 +111,7 @@ where
                 | ReflectRef::Array(_)
                 | ReflectRef::List(_)
                 | ReflectRef::Struct(_)
+                | ReflectRef::Opaque(_)
                 | ReflectRef::Scalar(_) => None,
             }
         }
@@ -130,7 +134,7 @@ where
                 ReflectMut::List(inner) => inner.get_field_mut(key),
                 ReflectMut::Array(inner) => inner.get_field_mut(key),
                 ReflectMut::Map(inner) => inner.get_field_mut(key),
-                ReflectMut::Struct(_) | ReflectMut::Scalar(_) => None,
+                ReflectMut::Struct(_) | ReflectMut::Scalar(_) | ReflectMut::Opaque(_) => None,
             }
         } else if let Some(key) = key.as_any().downcast_ref::<String>() {
             match self.reflect_mut() {
@@ -141,6 +145,7 @@ where
                 | ReflectMut::Enum(_)
                 | ReflectMut::List(_)
                 | ReflectMut::Array(_)
+                | ReflectMut::Opaque(_)
                 | ReflectMut::Scalar(_) => None,
             }
         } else {
@@ -152,6 +157,7 @@ where
                 | ReflectMut::List(_)
                 | ReflectMut::Array(_)
                 | ReflectMut::Struct(_)
+                | ReflectMut::Opaque(_)
                 | ReflectMut::Scalar(_) => None,
             }
         }
