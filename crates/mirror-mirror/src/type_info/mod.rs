@@ -49,6 +49,7 @@ pub enum TypeInfo<'a> {
     Tuple(Option<TupleInfo<'a>>),
     Enum(Option<EnumInfo<'a>>),
     List(ListInfo<'a>),
+    Array(ArrayInfo<'a>),
     Map(MapInfo<'a>),
     Scalar(ScalarInfo),
     Opaque,
@@ -76,6 +77,10 @@ impl<'a> TypeInfo<'a> {
             TypeInfoNode::List(node) => {
                 let node = ListInfo { node, graph };
                 TypeInfo::List(node)
+            }
+            TypeInfoNode::Array(node) => {
+                let node = ArrayInfo { node, graph };
+                TypeInfo::Array(node)
             }
             TypeInfoNode::Map(node) => {
                 let node = MapInfo { node, graph };
@@ -113,6 +118,7 @@ impl<'a> TypeInfo<'a> {
             TypeInfo::Tuple(inner) => inner.map(|inner| inner.type_name()),
             TypeInfo::Enum(inner) => inner.map(|inner| inner.type_name()),
             TypeInfo::List(inner) => Some(inner.type_name()),
+            TypeInfo::Array(inner) => Some(inner.type_name()),
             TypeInfo::Map(inner) => Some(inner.type_name()),
             TypeInfo::Scalar(inner) => Some(inner.type_name()),
             TypeInfo::Opaque => None,
@@ -126,6 +132,7 @@ impl<'a> TypeInfo<'a> {
             TypeInfo::Tuple(inner) => inner.map(|inner| inner.into_type_info_at_path()),
             TypeInfo::Enum(inner) => inner.map(|inner| inner.into_type_info_at_path()),
             TypeInfo::List(inner) => Some(inner.into_type_info_at_path()),
+            TypeInfo::Array(inner) => Some(inner.into_type_info_at_path()),
             TypeInfo::Map(inner) => Some(inner.into_type_info_at_path()),
             TypeInfo::Scalar(inner) => Some(inner.into_type_info_at_path()),
             TypeInfo::Opaque => Some(TypeInfoAtPath::Opaque),
@@ -156,6 +163,13 @@ impl<'a> TypeInfo<'a> {
     pub fn as_enum(self) -> Option<EnumInfo<'a>> {
         match self {
             TypeInfo::Enum(inner) => inner,
+            _ => None,
+        }
+    }
+
+    pub fn as_array(self) -> Option<ArrayInfo<'a>> {
+        match self {
+            TypeInfo::Array(inner) => Some(inner),
             _ => None,
         }
     }
@@ -248,6 +262,7 @@ impl<'a> GetMeta<'a> for TypeInfo<'a> {
             TypeInfo::Enum(inner) => inner.as_ref().and_then(|inner| inner.get_meta(key)),
             TypeInfo::Tuple(_)
             | TypeInfo::List(_)
+            | TypeInfo::Array(_)
             | TypeInfo::Map(_)
             | TypeInfo::Scalar(_)
             | TypeInfo::Opaque => None,
@@ -597,6 +612,34 @@ impl<'a> NamedField<'a> {
 }
 
 #[derive(Copy, Clone, Debug)]
+pub struct ArrayInfo<'a> {
+    node: &'a ArrayInfoNode,
+    graph: &'a TypeInfoGraph,
+}
+
+impl<'a> ArrayInfo<'a> {
+    pub fn type_name(self) -> &'a str {
+        &self.node.type_name
+    }
+
+    pub fn field_type(self) -> TypeInfo<'a> {
+        TypeInfo::new(self.node.field_type_id, self.graph)
+    }
+
+    pub fn len(self) -> usize {
+        self.node.len
+    }
+
+    pub fn is_empty(self) -> bool {
+        self.node.len == 0
+    }
+
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Array(self)
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
 pub struct ListInfo<'a> {
     node: &'a ListInfoNode,
     graph: &'a TypeInfoGraph,
@@ -648,6 +691,7 @@ pub enum TypeInfoAtPath<'a> {
     Enum(EnumInfo<'a>),
     Variant(VariantInfo<'a>),
     List(ListInfo<'a>),
+    Array(ArrayInfo<'a>),
     Map(MapInfo<'a>),
     Scalar(ScalarInfo),
     Opaque,
@@ -662,6 +706,7 @@ impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
             TypeInfoAtPath::Variant(_)
             | TypeInfoAtPath::Tuple(_)
             | TypeInfoAtPath::List(_)
+            | TypeInfoAtPath::Array(_)
             | TypeInfoAtPath::Map(_)
             | TypeInfoAtPath::Scalar(_)
             | TypeInfoAtPath::Opaque => None,
@@ -701,6 +746,13 @@ impl<'a> TypeInfoAtPath<'a> {
     pub fn as_variant(self) -> Option<VariantInfo<'a>> {
         match self {
             Self::Variant(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_array(self) -> Option<ArrayInfo<'a>> {
+        match self {
+            Self::Array(inner) => Some(inner),
             _ => None,
         }
     }
@@ -773,11 +825,13 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     TypeInfoAtPath::TupleStruct(_)
                     | TypeInfoAtPath::Tuple(_)
                     | TypeInfoAtPath::List(_)
+                    | TypeInfoAtPath::Array(_)
                     | TypeInfoAtPath::Scalar(_)
                     | TypeInfoAtPath::Opaque => return None,
                 },
                 Key::Element(index) => match type_info {
                     TypeInfoAtPath::List(list) => list.field_type().into_type_info_at_path()?,
+                    TypeInfoAtPath::Array(array) => array.field_type().into_type_info_at_path()?,
                     TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path()?,
                     TypeInfoAtPath::TupleStruct(tuple_struct) => tuple_struct
                         .fields()
@@ -820,6 +874,7 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     | TypeInfoAtPath::TupleStruct(_)
                     | TypeInfoAtPath::Tuple(_)
                     | TypeInfoAtPath::List(_)
+                    | TypeInfoAtPath::Array(_)
                     | TypeInfoAtPath::Map(_)
                     | TypeInfoAtPath::Scalar(_)
                     | TypeInfoAtPath::Opaque => return None,

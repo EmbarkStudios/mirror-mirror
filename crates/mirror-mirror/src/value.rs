@@ -439,6 +439,19 @@ where
     }
 }
 
+impl<T, const N: usize> From<[T; N]> for Value
+where
+    T: Reflect,
+{
+    fn from(list: [T; N]) -> Self {
+        let list = list
+            .iter()
+            .map(|value| value.to_value())
+            .collect::<Vec<_>>();
+        Value::List(list)
+    }
+}
+
 impl<K, V> From<BTreeMap<K, V>> for Value
 where
     K: Reflect,
