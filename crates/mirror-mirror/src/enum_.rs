@@ -18,8 +18,6 @@ use crate::Typed;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
-use speedy::Readable;
-use speedy::Writable;
 use std::any::Any;
 use std::fmt;
 
@@ -54,17 +52,15 @@ pub enum VariantKind {
     Unit,
 }
 
-#[derive(
-    Readable, Writable, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd,
-)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct EnumValue {
     name: String,
     kind: EnumValueKind,
 }
 
-#[derive(
-    Readable, Writable, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd,
-)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 enum EnumValueKind {
     Struct(StructValue),
     Tuple(TupleValue),

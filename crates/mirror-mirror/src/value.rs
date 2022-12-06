@@ -16,15 +16,14 @@ use crate::Typed;
 use ordered_float::OrderedFloat;
 use serde::Deserialize;
 use serde::Serialize;
-use speedy::Readable;
-use speedy::Writable;
 use std::any::Any;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt;
 
 #[allow(non_camel_case_types)]
-#[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub enum Value {
     usize(usize),
     u8(u8),

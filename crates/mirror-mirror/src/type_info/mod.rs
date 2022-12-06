@@ -2,8 +2,6 @@ use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
-use speedy::Readable;
-use speedy::Writable;
 
 use graph::*;
 
@@ -32,7 +30,8 @@ pub trait GetTypedPath<'a> {
     fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>>;
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct TypeInfoRoot {
     root: Id,
     graph: TypeInfoGraph,
@@ -422,7 +421,8 @@ impl<'a> GetMeta<'a> for OpaqueInfo<'a> {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Writable, Readable)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub enum ScalarInfo {
     usize,
     u8,

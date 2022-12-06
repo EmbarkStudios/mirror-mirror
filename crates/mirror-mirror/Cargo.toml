@@ -10,14 +10,14 @@ rust-version = "1.65"
 description = "Reflection library for Rust"
 keywords = ["reflection"]
 
+[features]
+default = ["speedy"]
+
 [dependencies]
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.0" }
 ordered-float = "3.4.0"
 serde = { version = "1.0", features = ["derive"] }
-speedy = "0.8"
-
-[dev-dependencies]
-serde_json = "1.0"
+speedy = { version = "0.8", optional = true }
 
 [package.metadata.docs.rs]
 all-features = true

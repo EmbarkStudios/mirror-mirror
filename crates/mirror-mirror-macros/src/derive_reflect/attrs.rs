@@ -23,7 +23,7 @@ mod kw {
     syn::custom_keyword!(crate_name);
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(super) struct ItemAttrs {
     pub(super) debug_opt_out: bool,
     pub(super) clone_opt_out: bool,
@@ -352,7 +352,6 @@ where
     }
 }
 
-#[derive(Debug)]
 pub(super) struct InnerAttrs {
     pub(super) skip: bool,
     pub(super) meta: HashMap<Ident, Expr>,
