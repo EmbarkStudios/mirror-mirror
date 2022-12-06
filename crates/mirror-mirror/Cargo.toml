@@ -2,6 +2,13 @@
 name = "mirror-mirror"
 version = "0.1.0"
 edition = "2021"
+authors = ["Embark <opensource@embark-studios.com>", "David Pedersen <david.pdrsn@gmail.com>"]
+repository = "https://github.com/EmbarkStudios/mirror-mirror"
+homepage = "https://github.com/EmbarkStudios/mirror-mirror"
+license = "MIT OR Apache-2.0"
+rust-version = "1.65"
+description = "Reflection library for Rust"
+keywords = ["reflection"]
 
 [dependencies]
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.0" }
@@ -11,3 +18,7 @@ speedy = "0.8"
 
 [dev-dependencies]
 serde_json = "1.0"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
