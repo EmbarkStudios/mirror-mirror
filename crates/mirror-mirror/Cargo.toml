@@ -11,9 +11,9 @@ description = "Reflection library for Rust"
 keywords = ["reflection"]
 
 [features]
-default = ["dep:speedy", "std"]
+default = ["speedy", "std"]
 std = []
-speedy = ["std"]
+speedy = ["std", "dep:speedy"]
 
 [dependencies]
 ahash = { version = "0.8.2", default-features = false }
