@@ -1,8 +1,9 @@
-use std::{
-    any::{type_name, TypeId},
-    collections::{hash_map::DefaultHasher, HashMap},
-    hash::{Hash, Hasher},
-};
+use std::any::type_name;
+use std::any::TypeId;
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
+use std::hash::Hash;
+use std::hash::Hasher;
 
 use crate::Value;
 
@@ -80,7 +81,7 @@ pub enum TypeInfoNode {
     Array(ArrayInfoNode),
     Map(MapInfoNode),
     Scalar(ScalarInfoNode),
-    Opaque,
+    Opaque(OpaqueInfoNode),
 }
 
 macro_rules! impl_from {
@@ -101,6 +102,7 @@ impl_from! { List(ListInfoNode) }
 impl_from! { Array(ArrayInfoNode) }
 impl_from! { Map(MapInfoNode) }
 impl_from! { Scalar(ScalarInfoNode) }
+impl_from! { Opaque(OpaqueInfoNode) }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
 pub struct StructInfoNode {
@@ -414,4 +416,22 @@ scalar_typed! {
     i8 i16 i32 i64 i128
     f32 f64
     bool char String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]
+pub struct OpaqueInfoNode {
+    pub(super) type_name: String,
+    pub(super) metadata: Metadata,
+}
+
+impl OpaqueInfoNode {
+    pub fn new<T>(metadata: Metadata, _graph: &mut TypeInfoGraph) -> Self
+    where
+        T: Typed,
+    {
+        Self {
+            type_name: type_name::<T>().to_owned(),
+            metadata,
+        }
+    }
 }

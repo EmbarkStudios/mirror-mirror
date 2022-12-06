@@ -2,14 +2,17 @@ use std::collections::BTreeMap;
 
 use crate::key_path;
 use crate::key_path::*;
-use crate::type_info::{GetTypedPath, ScalarInfo, TypeInfoAtPath};
-use crate::{self as mirror_mirror, Typed};
-use mirror_mirror::Reflect;
+use crate::type_info::GetTypedPath;
+use crate::type_info::ScalarInfo;
+use crate::type_info::TypeInfoAtPath;
+use crate::Reflect;
+use crate::Typed;
 
 #[test]
 #[allow(clippy::bool_assert_comparison)]
 fn works() {
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct A {
         a: i32,
         b: B,
@@ -19,11 +22,13 @@ fn works() {
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct B {
         c: bool,
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     enum C {
         C { d: String },
     }
@@ -66,16 +71,19 @@ fn display() {
 #[test]
 fn query_type_info_struct() {
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct User {
         employer: Company,
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct Company {
         countries: Vec<Country>,
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct Country {
         name: String,
     }
@@ -103,6 +111,7 @@ fn query_type_info_struct() {
 #[test]
 fn query_type_info_enum() {
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     enum Foo {
         A { a: String },
         B(i32),

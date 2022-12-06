@@ -1,17 +1,20 @@
 use std::collections::BTreeMap;
 
-use serde::{Deserialize, Serialize};
-use speedy::{Readable, Writable};
+use serde::Deserialize;
+use serde::Serialize;
+use speedy::Readable;
+use speedy::Writable;
 
 use graph::*;
 
-use crate::{
-    enum_::EnumValue,
-    key_path::{Key, KeyPath},
-    struct_::{StructValue, TupleStructValue},
-    tuple::TupleValue,
-    Reflect, Value,
-};
+use crate::enum_::EnumValue;
+use crate::key_path::Key;
+use crate::key_path::KeyPath;
+use crate::struct_::StructValue;
+use crate::struct_::TupleStructValue;
+use crate::tuple::TupleValue;
+use crate::Reflect;
+use crate::Value;
 
 pub mod graph;
 
@@ -57,7 +60,7 @@ pub enum TypeInfo<'a> {
     Array(ArrayInfo<'a>),
     Map(MapInfo<'a>),
     Scalar(ScalarInfo),
-    Opaque,
+    Opaque(OpaqueInfo<'a>),
 }
 
 impl<'a> TypeInfo<'a> {
@@ -112,21 +115,24 @@ impl<'a> TypeInfo<'a> {
                 };
                 TypeInfo::Scalar(node)
             }
-            TypeInfoNode::Opaque => TypeInfo::Opaque,
+            TypeInfoNode::Opaque(node) => {
+                let node = OpaqueInfo { node, graph };
+                TypeInfo::Opaque(node)
+            }
         }
     }
 
-    pub fn type_name(self) -> Option<&'a str> {
+    pub fn type_name(self) -> &'a str {
         match self {
-            TypeInfo::Struct(inner) => Some(inner.type_name()),
-            TypeInfo::TupleStruct(inner) => Some(inner.type_name()),
-            TypeInfo::Tuple(inner) => Some(inner.type_name()),
-            TypeInfo::Enum(inner) => Some(inner.type_name()),
-            TypeInfo::List(inner) => Some(inner.type_name()),
-            TypeInfo::Array(inner) => Some(inner.type_name()),
-            TypeInfo::Map(inner) => Some(inner.type_name()),
-            TypeInfo::Scalar(inner) => Some(inner.type_name()),
-            TypeInfo::Opaque => None,
+            TypeInfo::Struct(inner) => inner.type_name(),
+            TypeInfo::TupleStruct(inner) => inner.type_name(),
+            TypeInfo::Tuple(inner) => inner.type_name(),
+            TypeInfo::Enum(inner) => inner.type_name(),
+            TypeInfo::List(inner) => inner.type_name(),
+            TypeInfo::Array(inner) => inner.type_name(),
+            TypeInfo::Map(inner) => inner.type_name(),
+            TypeInfo::Scalar(inner) => inner.type_name(),
+            TypeInfo::Opaque(inner) => inner.type_name(),
         }
     }
 
@@ -140,7 +146,7 @@ impl<'a> TypeInfo<'a> {
             TypeInfo::Array(inner) => inner.into_type_info_at_path(),
             TypeInfo::Map(inner) => inner.into_type_info_at_path(),
             TypeInfo::Scalar(inner) => inner.into_type_info_at_path(),
-            TypeInfo::Opaque => TypeInfoAtPath::Opaque,
+            TypeInfo::Opaque(inner) => inner.into_type_info_at_path(),
         }
     }
 
@@ -211,7 +217,7 @@ impl<'a> TypeInfo<'a> {
                 ScalarInfo::f64 => f64::default().to_value(),
                 ScalarInfo::String => String::default().to_value(),
             },
-            TypeInfo::Opaque => return None,
+            TypeInfo::Opaque(_) => return None,
         };
         Some(value)
     }
@@ -268,6 +274,13 @@ impl<'a> TypeInfo<'a> {
     pub fn as_scalar(self) -> Option<ScalarInfo> {
         match self {
             TypeInfo::Scalar(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_opaque(self) -> Option<OpaqueInfo<'a>> {
+        match self {
+            TypeInfo::Opaque(inner) => Some(inner),
             _ => None,
         }
     }
@@ -347,12 +360,12 @@ impl<'a> GetMeta<'a> for TypeInfo<'a> {
             TypeInfo::Struct(inner) => inner.meta(key),
             TypeInfo::TupleStruct(inner) => inner.meta(key),
             TypeInfo::Enum(inner) => inner.meta(key),
+            TypeInfo::Opaque(inner) => inner.meta(key),
             TypeInfo::Tuple(_)
             | TypeInfo::List(_)
             | TypeInfo::Array(_)
             | TypeInfo::Map(_)
-            | TypeInfo::Scalar(_)
-            | TypeInfo::Opaque => None,
+            | TypeInfo::Scalar(_) => None,
         }
     }
 
@@ -366,7 +379,7 @@ impl<'a> GetMeta<'a> for TypeInfo<'a> {
             | TypeInfo::Array(_)
             | TypeInfo::Map(_)
             | TypeInfo::Scalar(_)
-            | TypeInfo::Opaque => &[],
+            | TypeInfo::Opaque(_) => &[],
         }
     }
 }
@@ -396,6 +409,16 @@ impl_get_meta! {
     UnitVariantInfo
     UnnamedField
     NamedField
+}
+
+impl<'a> GetMeta<'a> for OpaqueInfo<'a> {
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
+        Some(self.node.metadata.get(key)?.as_reflect())
+    }
+
+    fn docs(self) -> &'a [String] {
+        &[]
+    }
 }
 
 #[allow(non_camel_case_types)]
@@ -820,6 +843,23 @@ impl<'a> MapInfo<'a> {
 }
 
 #[derive(Copy, Clone, Debug)]
+pub struct OpaqueInfo<'a> {
+    node: &'a OpaqueInfoNode,
+    #[allow(dead_code)]
+    graph: &'a TypeInfoGraph,
+}
+
+impl<'a> OpaqueInfo<'a> {
+    pub fn type_name(self) -> &'a str {
+        &self.node.type_name
+    }
+
+    fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
+        TypeInfoAtPath::Opaque(self)
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
 pub enum TypeInfoAtPath<'a> {
     Struct(StructInfo<'a>),
     TupleStruct(TupleStructInfo<'a>),
@@ -830,7 +870,7 @@ pub enum TypeInfoAtPath<'a> {
     Array(ArrayInfo<'a>),
     Map(MapInfo<'a>),
     Scalar(ScalarInfo),
-    Opaque,
+    Opaque(OpaqueInfo<'a>),
 }
 
 impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
@@ -839,13 +879,13 @@ impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
             TypeInfoAtPath::Struct(inner) => inner.meta(key),
             TypeInfoAtPath::TupleStruct(inner) => inner.meta(key),
             TypeInfoAtPath::Enum(inner) => inner.meta(key),
+            TypeInfoAtPath::Opaque(inner) => inner.meta(key),
             TypeInfoAtPath::Variant(_)
             | TypeInfoAtPath::Tuple(_)
             | TypeInfoAtPath::List(_)
             | TypeInfoAtPath::Array(_)
             | TypeInfoAtPath::Map(_)
-            | TypeInfoAtPath::Scalar(_)
-            | TypeInfoAtPath::Opaque => None,
+            | TypeInfoAtPath::Scalar(_) => None,
         }
     }
 
@@ -860,7 +900,7 @@ impl<'a> GetMeta<'a> for TypeInfoAtPath<'a> {
             | TypeInfoAtPath::Array(_)
             | TypeInfoAtPath::Map(_)
             | TypeInfoAtPath::Scalar(_)
-            | TypeInfoAtPath::Opaque => &[],
+            | TypeInfoAtPath::Opaque(_) => &[],
         }
     }
 }
@@ -928,6 +968,13 @@ impl<'a> TypeInfoAtPath<'a> {
             _ => None,
         }
     }
+
+    pub fn as_opaque(self) -> Option<OpaqueInfo<'a>> {
+        match self {
+            Self::Opaque(inner) => Some(inner),
+            _ => None,
+        }
+    }
 }
 
 impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
@@ -978,7 +1025,7 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     | TypeInfoAtPath::List(_)
                     | TypeInfoAtPath::Array(_)
                     | TypeInfoAtPath::Scalar(_)
-                    | TypeInfoAtPath::Opaque => return None,
+                    | TypeInfoAtPath::Opaque(_) => return None,
                 },
                 Key::Element(index) => match type_info {
                     TypeInfoAtPath::List(list) => list.field_type().into_type_info_at_path(),
@@ -1005,7 +1052,7 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     TypeInfoAtPath::Enum(_)
                     | TypeInfoAtPath::Scalar(_)
                     | TypeInfoAtPath::Struct(_)
-                    | TypeInfoAtPath::Opaque => return None,
+                    | TypeInfoAtPath::Opaque(_) => return None,
                 },
                 Key::Variant(variant) => match type_info {
                     TypeInfoAtPath::Variant(v) => {
@@ -1026,7 +1073,7 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     | TypeInfoAtPath::Array(_)
                     | TypeInfoAtPath::Map(_)
                     | TypeInfoAtPath::Scalar(_)
-                    | TypeInfoAtPath::Opaque => return None,
+                    | TypeInfoAtPath::Opaque(_) => return None,
                 },
             };
 
@@ -1050,12 +1097,12 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate as mirror_mirror;
     use crate::Reflect;
 
     #[test]
     fn struct_() {
         #[derive(Reflect, Clone, Debug)]
+        #[reflect(crate_name(crate))]
         struct Foo {
             n: i32,
             foos: Vec<Foo>,
@@ -1064,7 +1111,7 @@ mod tests {
         let type_info = <Foo as Typed>::type_info();
 
         assert_eq!(
-            type_info.type_().type_name().unwrap(),
+            type_info.type_().type_name(),
             "mirror_mirror::type_info::tests::struct_::Foo"
         );
 
@@ -1079,7 +1126,7 @@ mod tests {
             match field.name() {
                 "foos" => {
                     assert_eq!(
-                        field.type_().type_name().unwrap(),
+                        field.type_().type_name(),
                         "alloc::vec::Vec<mirror_mirror::type_info::tests::struct_::Foo>"
                     );
 
@@ -1091,12 +1138,12 @@ mod tests {
                     );
 
                     assert_eq!(
-                        list.field_type().type_name().unwrap(),
+                        list.field_type().type_name(),
                         "mirror_mirror::type_info::tests::struct_::Foo"
                     );
                 }
                 "n" => {
-                    assert_eq!(field.type_().type_name().unwrap(), "i32");
+                    assert_eq!(field.type_().type_name(), "i32");
                     let scalar = field.type_().as_scalar().unwrap();
                     assert_eq!(scalar.type_name(), "i32");
                 }
@@ -1108,6 +1155,7 @@ mod tests {
     #[test]
     fn enum_() {
         #[derive(Reflect, Clone, Debug)]
+        #[reflect(crate_name(crate))]
         enum Foo {
             A { a: String },
             B(Vec<Foo>),
