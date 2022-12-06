@@ -1,7 +1,6 @@
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::UseTree;
 use std::collections::HashMap;
 use syn::parse::ParseStream;
 use syn::Attribute;
@@ -13,6 +12,7 @@ use syn::Lit;
 use syn::LitStr;
 use syn::Meta;
 use syn::Token;
+use syn::UseTree;
 
 mod kw {
     syn::custom_keyword!(Debug);
