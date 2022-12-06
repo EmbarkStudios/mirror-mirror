@@ -69,19 +69,6 @@ fn from_reflect() {
 }
 
 #[test]
-fn serialize_deserialize() {
-    let foo = Foo::default();
-    let struct_value = foo.to_value();
-
-    let json = serde_json::to_string(&struct_value).unwrap();
-
-    let struct_value = serde_json::from_str::<Value>(&json).unwrap();
-    let foo = Foo::from_reflect(&struct_value).unwrap();
-
-    assert_eq!(foo.field, 0);
-}
-
-#[test]
 fn fields() {
     let foo = Foo::default();
 

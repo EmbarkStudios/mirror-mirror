@@ -14,8 +14,6 @@ use crate::Typed;
 use crate::Value;
 use serde::Deserialize;
 use serde::Serialize;
-use speedy::Readable;
-use speedy::Writable;
 use std::any::Any;
 use std::fmt;
 
@@ -35,19 +33,8 @@ impl fmt::Debug for dyn TupleStruct {
     }
 }
 
-#[derive(
-    Default,
-    Readable,
-    Writable,
-    Serialize,
-    Deserialize,
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct TupleStructValue {
     tuple: TupleValue,
 }

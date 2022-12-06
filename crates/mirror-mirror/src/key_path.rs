@@ -2,8 +2,6 @@ use std::fmt;
 
 use serde::Deserialize;
 use serde::Serialize;
-use speedy::Readable;
-use speedy::Writable;
 
 use crate::Reflect;
 use crate::ReflectMut;
@@ -164,7 +162,8 @@ where
     }
 }
 
-#[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct KeyPath {
     pub(crate) path: Vec<Key>,
 }
@@ -215,7 +214,8 @@ mod private {
     impl Sealed for String {}
     impl Sealed for usize {}
 
-    #[derive(Readable, Writable, Serialize, Deserialize, Debug, Clone)]
+    #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
     pub enum Key {
         Field(String),
         Element(usize),
