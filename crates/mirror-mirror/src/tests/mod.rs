@@ -1,4 +1,3 @@
-use crate as mirror_mirror;
 use crate::Reflect;
 
 mod enum_;
@@ -11,7 +10,7 @@ mod tuple;
 mod tuple_struct;
 
 #[derive(Reflect)]
-#[reflect(opt_out(Debug, Clone))]
+#[reflect(crate_name(crate), opt_out(Debug, Clone))]
 #[allow(dead_code)]
 struct DebugOptOut;
 
@@ -26,11 +25,11 @@ where
 mod complex_types {
     #![allow(dead_code)]
 
-    use crate as mirror_mirror;
     use crate::Reflect;
     use std::collections::BTreeMap;
 
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     struct A {
         a: String,
         b: Vec<B>,
@@ -38,15 +37,18 @@ mod complex_types {
     }
 
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     enum B {
         C(C),
         D { d: D },
     }
 
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     struct C(String, i32, Vec<bool>);
 
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     struct D;
 }
 
@@ -56,15 +58,18 @@ mod skip {
     use super::*;
 
     #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate))]
     struct TestStruct {
         #[reflect(skip)]
         not_reflect: NotReflect,
     }
 
     #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate))]
     struct TestTupleStruct(#[reflect(skip)] NotReflect);
 
     #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate))]
     #[allow(clippy::enum_variant_names)]
     enum TestEnum {
         #[reflect(skip)]
@@ -92,6 +97,7 @@ mod option_f32 {
     use super::*;
 
     #[derive(Debug, Clone, Reflect)]
+    #[reflect(crate_name(crate))]
     struct Foo {
         maybe_float: Option<f32>,
         maybe_string: Option<String>,
@@ -101,7 +107,8 @@ mod option_f32 {
 mod derive_foreign {
     #![allow(dead_code)]
 
-    use crate::{FromReflect, Typed};
+    use crate::FromReflect;
+    use crate::Typed;
     use mirror_mirror_macros::*;
 
     enum Foo<A, B>

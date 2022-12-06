@@ -1,10 +1,14 @@
 use mirror_mirror_macros::__private_derive_reflect_foreign;
-use std::ops::{Range, RangeFrom, RangeFull, RangeTo, RangeToInclusive};
+use std::ops::Range;
+use std::ops::RangeFrom;
+use std::ops::RangeFull;
+use std::ops::RangeTo;
+use std::ops::RangeToInclusive;
 
 mod array;
 mod btree_map;
-mod non_zero;
 mod vec;
+mod via_scalar;
 
 __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]

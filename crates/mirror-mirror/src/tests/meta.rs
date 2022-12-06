@@ -1,4 +1,3 @@
-use crate as mirror_mirror;
 use crate::type_info::GetMeta;
 use crate::Reflect;
 use crate::Typed;
@@ -6,7 +5,7 @@ use crate::Typed;
 #[test]
 fn works() {
     #[derive(Reflect, Debug, Clone)]
-    #[reflect(meta(foo = "bar", baz = 42))]
+    #[reflect(crate_name(crate), meta(foo = "bar", baz = 42))]
     struct Foo;
 
     let type_info = <Foo as Typed>::type_info();
@@ -32,18 +31,18 @@ fn works() {
 }
 
 #[derive(Reflect, Debug, Clone)]
-#[reflect(meta(n = 1))]
+#[reflect(crate_name(crate), meta(n = 1))]
 struct A {
     #[reflect(meta(n = 1))]
     a: String,
 }
 
 #[derive(Reflect, Debug, Clone)]
-#[reflect(meta(n = 1))]
+#[reflect(crate_name(crate), meta(n = 1))]
 struct B(#[reflect(meta(n = 1))] String);
 
 #[derive(Reflect, Debug, Clone)]
-#[reflect(meta(n = 1))]
+#[reflect(crate_name(crate), meta(n = 1))]
 enum C {
     #[reflect(meta(n = 1))]
     A {

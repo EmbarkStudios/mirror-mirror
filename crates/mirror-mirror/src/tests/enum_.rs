@@ -1,11 +1,10 @@
-use crate as mirror_mirror;
 use crate::enum_::EnumValue;
 use crate::enum_::VariantKind;
 use crate::get_field::GetField;
 use crate::get_field::GetFieldMut;
 use crate::Enum;
-use mirror_mirror::FromReflect;
-use mirror_mirror::Reflect;
+use crate::FromReflect;
+use crate::Reflect;
 
 #[test]
 fn enum_value() {
@@ -33,7 +32,7 @@ fn enum_value() {
     for field in value.reflect_ref().as_enum().unwrap().fields() {
         has_fields = true;
         match field {
-            mirror_mirror::enum_::VariantField::Struct(key, value) => {
+            crate::enum_::VariantField::Struct(key, value) => {
                 if key == "foo" {
                     assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
                 } else if key == "bar" {
@@ -42,7 +41,7 @@ fn enum_value() {
                     panic!("unknown field: {key}");
                 }
             }
-            mirror_mirror::enum_::VariantField::Tuple(_) => panic!("bad variant"),
+            crate::enum_::VariantField::Tuple(_) => panic!("bad variant"),
         }
     }
     assert!(has_fields);
@@ -51,6 +50,7 @@ fn enum_value() {
 #[test]
 fn static_enum() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
     enum Foo {
         Foo { foo: i32, bar: bool },
         Bar { baz: String },
@@ -85,7 +85,7 @@ fn static_enum() {
     for field in value.reflect_ref().as_enum().unwrap().fields() {
         has_fields = true;
         match field {
-            mirror_mirror::enum_::VariantField::Struct(key, value) => {
+            crate::enum_::VariantField::Struct(key, value) => {
                 if key == "foo" {
                     assert_eq!(value.downcast_ref::<i32>().unwrap(), &42);
                 } else if key == "bar" {
@@ -94,7 +94,7 @@ fn static_enum() {
                     panic!("unknown field: {key}");
                 }
             }
-            mirror_mirror::enum_::VariantField::Tuple(_) => panic!("bad variant"),
+            crate::enum_::VariantField::Tuple(_) => panic!("bad variant"),
         }
     }
     assert!(has_fields);
@@ -109,6 +109,7 @@ fn static_enum() {
 #[test]
 fn patching() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
     enum Foo {
         A { a: i32 },
         B { b: bool },
@@ -160,6 +161,7 @@ fn patching() {
 #[test]
 fn static_tuple_enum() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
     enum Foo {
         A(i32, bool),
         B(String),
@@ -220,6 +222,7 @@ fn static_tuple_enum() {
 #[test]
 fn unit_variant() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
     enum Foo {
         A,
         B,
@@ -321,12 +324,14 @@ fn option() {
 #[test]
 fn from_reflect_with_value() {
     #[derive(Debug, Clone, Reflect)]
+    #[reflect(crate_name(crate))]
     pub enum Foo {
         Struct { number: Number },
         Tuple(Number),
     }
 
     #[derive(Debug, Clone, Reflect)]
+    #[reflect(crate_name(crate))]
     pub enum Number {
         One,
         Two,

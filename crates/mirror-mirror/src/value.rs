@@ -3,8 +3,8 @@ use crate::struct_::StructValue;
 use crate::struct_::TupleStructValue;
 use crate::tuple::TupleValue;
 use crate::type_info::graph::Id;
+use crate::type_info::graph::OpaqueInfoNode;
 use crate::type_info::graph::TypeInfoGraph;
-use crate::type_info::graph::TypeInfoNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -136,7 +136,9 @@ impl Reflect for Value {
     fn type_info(&self) -> TypeInfoRoot {
         impl Typed for Value {
             fn build(graph: &mut TypeInfoGraph) -> Id {
-                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Opaque)
+                graph.get_or_build_with::<Self, _>(|graph| {
+                    OpaqueInfoNode::new::<Self>(Default::default(), graph)
+                })
             }
         }
 

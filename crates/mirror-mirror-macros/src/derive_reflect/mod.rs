@@ -1,7 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::quote_spanned;
 use syn::spanned::Spanned;
-use syn::{DeriveInput, ImplGenerics, TypeGenerics, WhereClause};
+use syn::DeriveInput;
+use syn::ImplGenerics;
+use syn::TypeGenerics;
+use syn::WhereClause;
 
 mod attrs;
 mod enum_;

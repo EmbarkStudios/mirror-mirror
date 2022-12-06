@@ -1,8 +1,8 @@
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::type_info::graph::Id;
+use crate::type_info::graph::OpaqueInfoNode;
 use crate::type_info::graph::TypeInfoGraph;
-use crate::type_info::graph::TypeInfoNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -71,7 +71,9 @@ impl Reflect for StructValue {
     fn type_info(&self) -> TypeInfoRoot {
         impl Typed for StructValue {
             fn build(graph: &mut TypeInfoGraph) -> Id {
-                graph.get_or_build_with::<Self, _>(|_graph| TypeInfoNode::Opaque)
+                graph.get_or_build_with::<Self, _>(|graph| {
+                    OpaqueInfoNode::new::<Self>(Default::default(), graph)
+                })
             }
         }
         <Self as Typed>::type_info()
