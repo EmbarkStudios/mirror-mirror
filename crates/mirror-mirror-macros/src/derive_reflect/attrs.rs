@@ -19,12 +19,14 @@ mod kw {
     syn::custom_keyword!(skip);
     syn::custom_keyword!(meta);
     syn::custom_keyword!(opt_out);
+    syn::custom_keyword!(crate_name);
 }
 
 #[derive(Debug, Clone)]
 pub(super) struct ItemAttrs {
-    debug_opt_out: bool,
-    clone_opt_out: bool,
+    pub(super) debug_opt_out: bool,
+    pub(super) clone_opt_out: bool,
+    pub(super) crate_name: TokenStream,
     meta: HashMap<Ident, Expr>,
     docs: Vec<LitStr>,
 }
@@ -36,6 +38,7 @@ impl ItemAttrs {
             clone_opt_out: Default::default(),
             meta: Default::default(),
             docs,
+            crate_name: quote! { mirror_mirror },
         }
     }
 
@@ -97,6 +100,11 @@ impl ItemAttrs {
 
                         let _ = content.parse::<Token![,]>();
                     }
+                } else if lh.peek(kw::crate_name) {
+                    input.parse::<kw::crate_name>()?;
+                    let content;
+                    syn::parenthesized!(content in input);
+                    item_attrs.crate_name = content.parse::<TokenStream>()?;
                 } else {
                     return Err(lh.error());
                 }
@@ -112,7 +120,100 @@ impl ItemAttrs {
         if self.debug_opt_out {
             quote! {
                 fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    write!(f, "{}", std::any::type_name::<Self>())
+                    fn go(value: impl ::core::fmt::Debug, f: &mut ::core::fmt::Formatter<'_>) -> fmt::Result {
+                        if f.alternate() {
+                            write!(f, "{:#?}", value)
+                        } else {
+                            write!(f, "{:?}", value)
+                        }
+                    }
+
+                    match self.reflect_ref() {
+                        ReflectRef::Struct(inner) => {
+                            let mut f = f.debug_struct(inner.type_name());
+                            for (name, value) in inner.fields() {
+                                f.field(name, &value as &dyn ::core::fmt::Debug);
+                            }
+                            f.finish()
+                        },
+                        ReflectRef::TupleStruct(inner) => {
+                            let mut f = f.debug_tuple(inner.type_name());
+                            for field in inner.fields() {
+                                f.field(&field as &dyn ::core::fmt::Debug);
+                            }
+                            f.finish()
+                        },
+                        ReflectRef::Tuple(inner) => {
+                            let mut f = f.debug_tuple("");
+                            for field in inner.fields() {
+                                f.field(&field as &dyn ::core::fmt::Debug);
+                            }
+                            f.finish()
+                        },
+                        ReflectRef::Enum(inner) => {
+                            match inner.variant_kind() {
+                                VariantKind::Struct => {
+                                    let mut f = f.debug_struct(inner.variant_name());
+                                    for field in inner.fields() {
+                                        match field {
+                                            VariantField::Struct(name, value) => {
+                                                f.field(name, &value as &dyn ::core::fmt::Debug);
+                                            }
+                                            VariantField::Tuple { .. } => {
+                                                unreachable!("unit variant yielded struct field")
+                                            }
+                                        }
+                                    }
+                                    f.finish()
+                                },
+                                VariantKind::Tuple => {
+                                    let mut f = f.debug_tuple(inner.variant_name());
+                                    for field in inner.fields() {
+                                        match field {
+                                            VariantField::Struct { .. } => unreachable!("unit variant yielded struct field"),
+                                            VariantField::Tuple(value) => {
+                                                f.field(&value as &dyn ::core::fmt::Debug);
+                                            }
+                                        }
+                                    }
+                                    f.finish()
+                                },
+                                VariantKind::Unit => write!(f, "{}", inner.variant_name()),
+                            }
+                        },
+                        ReflectRef::Array(inner) => {
+                            f.debug_list().entries(inner.iter()).finish()
+                        },
+                        ReflectRef::List(inner) => {
+                            f.debug_list().entries(inner.iter()).finish()
+                        },
+                        ReflectRef::Map(inner) => {
+                            f.debug_map().entries(inner.iter()).finish()
+                        },
+                        ReflectRef::Scalar(inner) => {
+                            match inner {
+                                ScalarRef::usize(inner) => go(inner, f),
+                                ScalarRef::u8(inner) => go(inner, f),
+                                ScalarRef::u16(inner) => go(inner, f),
+                                ScalarRef::u32(inner) => go(inner, f),
+                                ScalarRef::u64(inner) => go(inner, f),
+                                ScalarRef::u128(inner) => go(inner, f),
+                                ScalarRef::i8(inner) => go(inner, f),
+                                ScalarRef::i16(inner) => go(inner, f),
+                                ScalarRef::i32(inner) => go(inner, f),
+                                ScalarRef::i64(inner) => go(inner, f),
+                                ScalarRef::i128(inner) => go(inner, f),
+                                ScalarRef::bool(inner) => go(inner, f),
+                                ScalarRef::char(inner) => go(inner, f),
+                                ScalarRef::f32(inner) => go(inner, f),
+                                ScalarRef::f64(inner) => go(inner, f),
+                                ScalarRef::String(inner) => go(inner, f),
+                            }
+                        },
+                        ReflectRef::Opaque(_) => {
+                            write!(f, "{}", std::any::type_name::<Self>())
+                        }
+                    }
                 }
             }
         } else {

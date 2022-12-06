@@ -1,31 +1,40 @@
 use proc_macro2::TokenStream;
 use quote::quote_spanned;
 use syn::spanned::Spanned;
-use syn::DeriveInput;
+use syn::{DeriveInput, ImplGenerics, TypeGenerics, WhereClause};
 
 mod attrs;
 mod enum_;
 mod struct_named;
 mod tuple_struct;
 
+struct Generics<'a> {
+    impl_generics: ImplGenerics<'a>,
+    type_generics: TypeGenerics<'a>,
+    where_clause: Option<&'a WhereClause>,
+}
+
 pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
-    if !item.generics.params.is_empty() || item.generics.where_clause.is_some() {
-        return Err(syn::Error::new_spanned(
-            &item.generics,
-            "`#[derive(Reflect)]` doesn't support generics",
-        ));
-    }
+    let (impl_generics, type_generics, where_clause) = item.generics.split_for_impl();
+    let generics = Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    };
 
     let ident = &item.ident;
     let span = item.span();
     let attrs = attrs::ItemAttrs::parse(&item.attrs)?;
+    let crate_name = attrs.crate_name.clone();
 
     check_for_known_unsupported_types(&item)?;
 
     let tokens = match item.data {
         syn::Data::Struct(data) => match data.fields {
-            syn::Fields::Named(named) => struct_named::expand(ident, named, attrs)?,
-            syn::Fields::Unnamed(unnamed) => tuple_struct::expand(ident, unnamed, attrs)?,
+            syn::Fields::Named(named) => struct_named::expand(ident, named, attrs, &generics)?,
+            syn::Fields::Unnamed(unnamed) => {
+                tuple_struct::expand(ident, unnamed, attrs, &generics)?
+            }
             // bevy_reflect only implements `Struct` for unit structs, not `TupleStruct`
             // so lets just do the same here
             syn::Fields::Unit => struct_named::expand(
@@ -35,9 +44,10 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
                     named: Default::default(),
                 },
                 attrs,
+                &generics,
             )?,
         },
-        syn::Data::Enum(enum_) => enum_::expand(ident, enum_, attrs)?,
+        syn::Data::Enum(enum_) => enum_::expand(ident, enum_, attrs, &generics)?,
         syn::Data::Union(_) => {
             return Err(syn::Error::new(
                 span,
@@ -46,19 +56,25 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
         }
     };
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     Ok(quote_spanned! {span=>
         #[allow(clippy::implicit_clone, clippy::redundant_clone, unused_variables)]
         const _: () = {
 
             #[allow(unused_imports)]
-            use mirror_mirror::*;
+            use #crate_name::*;
             #[allow(unused_imports)]
-            use mirror_mirror::__private::*;
+            use #crate_name::__private::*;
 
             #tokens
 
-            impl From<#ident> for Value {
-                fn from(data: #ident) -> Value {
+            impl #impl_generics From<#ident #type_generics> for Value #where_clause {
+                fn from(data: #ident #type_generics) -> Value {
                     data.to_value()
                 }
             }

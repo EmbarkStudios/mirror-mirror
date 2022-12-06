@@ -1,5 +1,6 @@
 use super::attrs::AttrsDatabase;
 use super::attrs::ItemAttrs;
+use super::Generics;
 use proc_macro2::TokenStream;
 use quote::quote;
 use quote::quote_spanned;
@@ -17,6 +18,7 @@ pub(super) fn expand(
     ident: &Ident,
     fields: FieldsUnnamed,
     attrs: ItemAttrs,
+    generics: &Generics<'_>,
 ) -> syn::Result<TokenStream> {
     let field_attrs = AttrsDatabase::new_from_unnamed(&fields)?;
 
