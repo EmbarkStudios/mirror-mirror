@@ -1,3 +1,12 @@
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::string::String;
+use core::any::Any;
+use core::fmt;
+
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::iter::ValueIter;
@@ -16,10 +25,6 @@ use crate::Tuple;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
-use serde::Deserialize;
-use serde::Serialize;
-use std::any::Any;
-use std::fmt;
 
 pub trait Enum: Reflect {
     fn variant_name(&self) -> &str;

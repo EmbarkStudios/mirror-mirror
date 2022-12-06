@@ -1,3 +1,6 @@
+use alloc::borrow::ToOwned;
+use alloc::string::String;
+
 use crate::Array;
 use crate::Enum;
 use crate::Map;

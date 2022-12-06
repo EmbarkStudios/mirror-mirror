@@ -1,7 +1,8 @@
+use alloc::collections::BTreeMap;
+
 use crate::GetField;
 use crate::GetFieldMut;
 use crate::Reflect;
-use std::collections::BTreeMap;
 
 #[test]
 fn works() {

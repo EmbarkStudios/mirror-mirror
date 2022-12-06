@@ -1,14 +1,16 @@
-use super::attrs::InnerAttrs;
-use super::attrs::ItemAttrs;
-use super::Generics;
-use crate::stringify;
+use alloc::borrow::Cow;
+
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::borrow::Cow;
 use syn::DataEnum;
 use syn::Fields;
 use syn::Ident;
 use syn::Type;
+
+use super::attrs::InnerAttrs;
+use super::attrs::ItemAttrs;
+use super::Generics;
+use crate::stringify;
 
 pub(super) fn expand(
     ident: &Ident,
@@ -338,7 +340,7 @@ fn expand_from_reflect(
 
                     if field.skip() {
                         quote! {
-                            #ident: std::default::Default::default(),
+                            #ident: ::core::default::Default::default(),
                         }
                     } else {
                         let ident_string = stringify(ident);
@@ -375,7 +377,7 @@ fn expand_from_reflect(
                 let set_fields = fields.iter().enumerate().map(|(idx, field)| {
                     if field.skip() {
                         quote! {
-                            std::default::Default::default(),
+                            ::core::default::Default::default(),
                         }
                     } else {
                         let ty = &field.ty;
@@ -881,7 +883,7 @@ impl<'a> VariantData<'a> {
                     .enumerate()
                     .map(|(index, _)| Cow::Owned(quote::format_ident!("field_{index}"))),
             ),
-            FieldsData::Unit => Box::new(std::iter::empty()),
+            FieldsData::Unit => Box::new(core::iter::empty()),
         }
     }
 }

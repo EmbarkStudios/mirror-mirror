@@ -41,6 +41,18 @@ jobs:
       - name: cargo hack check
         run: cargo hack check --each-feature --no-dev-deps --all
 
+  no-std-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: Swatinem/rust-cache@v1
+      - run: rustup target add thumbv6m-none-eabi
+      - run: cargo build --target thumbv6m-none-eabi --no-default-features
+
   test:
     name: Test
     strategy:

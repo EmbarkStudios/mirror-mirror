@@ -1,9 +1,11 @@
-use std::collections::BTreeMap;
-
-use serde::Deserialize;
-use serde::Serialize;
+use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 use graph::*;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::enum_::EnumValue;
 use crate::key_path::Key;
@@ -595,7 +597,7 @@ impl<'a> VariantInfo<'a> {
             VariantInfo::Struct(inner) => Box::new(inner.fields().map(VariantField::Named))
                 as Box<dyn Iterator<Item = VariantField<'a>>>,
             VariantInfo::Tuple(inner) => Box::new(inner.fields().map(VariantField::Unnamed)),
-            VariantInfo::Unit(_) => Box::new(std::iter::empty()),
+            VariantInfo::Unit(_) => Box::new(core::iter::empty()),
         }
     }
 

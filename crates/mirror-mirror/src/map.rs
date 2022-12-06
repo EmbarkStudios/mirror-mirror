@@ -1,7 +1,9 @@
+use alloc::boxed::Box;
+use core::fmt;
+
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::Reflect;
-use std::fmt;
 
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;

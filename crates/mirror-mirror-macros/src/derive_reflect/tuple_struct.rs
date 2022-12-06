@@ -1,6 +1,3 @@
-use super::attrs::AttrsDatabase;
-use super::attrs::ItemAttrs;
-use super::Generics;
 use proc_macro2::TokenStream;
 use quote::quote;
 use quote::quote_spanned;
@@ -11,6 +8,10 @@ use syn::FieldsUnnamed;
 use syn::Ident;
 use syn::Index;
 use syn::Token;
+
+use super::attrs::AttrsDatabase;
+use super::attrs::ItemAttrs;
+use super::Generics;
 
 type Fields = Punctuated<Field, Token![,]>;
 
@@ -186,7 +187,7 @@ fn expand_from_reflect(
             let span = ty.span();
             if field_attrs.skip(&idx) {
                 quote_spanned! {span=>
-                    #field_index: ::std::default::Default::default(),
+                    #field_index: ::core::default::Default::default(),
                 }
             } else if attrs.clone_opt_out {
                 quote_spanned! {span=>

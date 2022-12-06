@@ -1,7 +1,8 @@
+use alloc::collections::BTreeMap;
+
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::collections::HashMap;
 use syn::parse::ParseStream;
 use syn::Attribute;
 use syn::Expr;
@@ -28,7 +29,7 @@ pub(super) struct ItemAttrs {
     pub(super) debug_opt_out: bool,
     pub(super) clone_opt_out: bool,
     pub(super) crate_name: UseTree,
-    meta: HashMap<Ident, Expr>,
+    meta: BTreeMap<Ident, Expr>,
     docs: Vec<LitStr>,
 }
 
@@ -212,7 +213,7 @@ impl ItemAttrs {
                             }
                         },
                         ReflectRef::Opaque(_) => {
-                            write!(f, "{}", std::any::type_name::<Self>())
+                            write!(f, "{}", ::core::any::type_name::<Self>())
                         }
                     }
                 }
@@ -270,19 +271,19 @@ fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
         .collect::<Vec<_>>()
 }
 
-fn tokenize_meta(meta: &HashMap<Ident, Expr>) -> TokenStream {
+fn tokenize_meta(meta: &BTreeMap<Ident, Expr>) -> TokenStream {
     let pairs = meta.iter().map(|(ident, expr)| {
         quote! {
             (stringify!(#ident).to_owned(), IntoValue::into_value(#expr)),
         }
     });
     quote! {
-        HashMap::from([#(#pairs)*])
+        BTreeMap::from([#(#pairs)*])
     }
 }
 
 pub(super) struct AttrsDatabase<T> {
-    map: HashMap<T, InnerAttrs>,
+    map: BTreeMap<T, InnerAttrs>,
 }
 
 impl AttrsDatabase<Ident> {
@@ -294,7 +295,7 @@ impl AttrsDatabase<Ident> {
                 let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((field.ident.clone().unwrap(), attrs))
             })
-            .collect::<syn::Result<HashMap<_, _>>>()?;
+            .collect::<syn::Result<BTreeMap<_, _>>>()?;
 
         Ok(Self { map })
     }
@@ -314,7 +315,7 @@ impl AttrsDatabase<usize> {
                 let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((index, attrs))
             })
-            .collect::<syn::Result<HashMap<_, _>>>()?;
+            .collect::<syn::Result<BTreeMap<_, _>>>()?;
 
         Ok(Self { map })
     }
@@ -326,7 +327,7 @@ impl AttrsDatabase<usize> {
 
 impl<T> AttrsDatabase<T>
 where
-    T: std::hash::Hash + Eq,
+    T: core::cmp::Ord + Eq,
 {
     pub(super) fn skip(&self, key: &T) -> bool {
         self.map
@@ -354,7 +355,7 @@ where
 
 pub(super) struct InnerAttrs {
     pub(super) skip: bool,
-    pub(super) meta: HashMap<Ident, Expr>,
+    pub(super) meta: BTreeMap<Ident, Expr>,
     pub(super) docs: Vec<LitStr>,
 }
 

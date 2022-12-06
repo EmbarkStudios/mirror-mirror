@@ -1,3 +1,12 @@
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use core::any::Any;
+use core::fmt;
+use core::fmt::Debug;
+
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::Id;
@@ -12,11 +21,6 @@ use crate::ReflectRef;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
-use serde::Deserialize;
-use serde::Serialize;
-use std::any::Any;
-use std::fmt;
-use std::fmt::Debug;
 
 pub trait Tuple: Reflect {
     fn field(&self, index: usize) -> Option<&dyn Reflect>;
@@ -121,7 +125,7 @@ impl Reflect for TupleValue {
         Box::new(self.clone())
     }
 
-    fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if f.alternate() {
             write!(f, "{:#?}", self)
         } else {
@@ -221,8 +225,8 @@ macro_rules! impl_tuple {
                 Box::new(self.clone())
             }
 
-            fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", std::any::type_name::<Self>())
+            fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                write!(f, "{}", core::any::type_name::<Self>())
             }
 
             fn reflect_ref(&self) -> ReflectRef<'_> {

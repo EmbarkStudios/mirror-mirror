@@ -1,9 +1,10 @@
+use core::ops::Range;
+use core::ops::RangeFrom;
+use core::ops::RangeFull;
+use core::ops::RangeTo;
+use core::ops::RangeToInclusive;
+
 use mirror_mirror_macros::__private_derive_reflect_foreign;
-use std::ops::Range;
-use std::ops::RangeFrom;
-use std::ops::RangeFull;
-use std::ops::RangeTo;
-use std::ops::RangeToInclusive;
 
 mod array;
 mod btree_map;

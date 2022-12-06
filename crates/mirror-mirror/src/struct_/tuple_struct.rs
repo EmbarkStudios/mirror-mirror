@@ -1,3 +1,10 @@
+use alloc::boxed::Box;
+use core::any::Any;
+use core::fmt;
+
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::tuple::TupleValue;
@@ -12,10 +19,6 @@ use crate::Tuple;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
-use serde::Deserialize;
-use serde::Serialize;
-use std::any::Any;
-use std::fmt;
 
 pub trait TupleStruct: Reflect {
     fn field(&self, index: usize) -> Option<&dyn Reflect>;
@@ -101,7 +104,7 @@ impl Reflect for TupleStructValue {
         Box::new(self.clone())
     }
 
-    fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if f.alternate() {
             write!(f, "{:#?}", self)
         } else {

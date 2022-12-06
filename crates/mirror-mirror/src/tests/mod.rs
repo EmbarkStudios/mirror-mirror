@@ -25,8 +25,9 @@ where
 mod complex_types {
     #![allow(dead_code)]
 
+    use alloc::collections::BTreeMap;
+
     use crate::Reflect;
-    use std::collections::BTreeMap;
 
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
     #[reflect(crate_name(crate))]
@@ -107,9 +108,10 @@ mod option_f32 {
 mod derive_foreign {
     #![allow(dead_code)]
 
+    use mirror_mirror_macros::*;
+
     use crate::FromReflect;
     use crate::Typed;
-    use mirror_mirror_macros::*;
 
     enum Foo<A, B>
     where

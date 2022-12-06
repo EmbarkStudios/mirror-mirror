@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+
 use crate::Reflect;
 
 /// Iterator that yields key + value pairs.

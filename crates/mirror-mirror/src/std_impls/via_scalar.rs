@@ -1,15 +1,15 @@
-use std::num::NonZeroI128;
-use std::num::NonZeroI16;
-use std::num::NonZeroI32;
-use std::num::NonZeroI64;
-use std::num::NonZeroI8;
-use std::num::NonZeroU128;
-use std::num::NonZeroU16;
-use std::num::NonZeroU32;
-use std::num::NonZeroU64;
-use std::num::NonZeroU8;
-use std::num::NonZeroUsize;
-use std::time::Duration;
+use core::num::NonZeroI128;
+use core::num::NonZeroI16;
+use core::num::NonZeroI32;
+use core::num::NonZeroI64;
+use core::num::NonZeroI8;
+use core::num::NonZeroU128;
+use core::num::NonZeroU16;
+use core::num::NonZeroU32;
+use core::num::NonZeroU64;
+use core::num::NonZeroU8;
+use core::num::NonZeroUsize;
+use core::time::Duration;
 
 macro_rules! impl_reflect_via_scalar {
     ($ty:ty, $via_ty:ty, $get_fn:expr, $new_fn:expr $(,)?) => {

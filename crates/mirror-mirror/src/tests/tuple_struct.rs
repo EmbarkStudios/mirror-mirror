@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::struct_::TupleStructValue;
 use crate::FromReflect;
 use crate::GetField;
