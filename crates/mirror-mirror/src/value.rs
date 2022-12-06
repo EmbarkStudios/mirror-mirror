@@ -1,3 +1,16 @@
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::any::Any;
+use core::cmp::Ordering;
+use core::fmt;
+
+use ordered_float::OrderedFloat;
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;
 use crate::struct_::TupleStructValue;
@@ -13,13 +26,6 @@ use crate::ScalarMut;
 use crate::ScalarRef;
 use crate::TypeInfoRoot;
 use crate::Typed;
-use ordered_float::OrderedFloat;
-use serde::Deserialize;
-use serde::Serialize;
-use std::any::Any;
-use std::cmp::Ordering;
-use std::collections::BTreeMap;
-use std::fmt;
 
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -441,6 +447,6 @@ mod tests {
     fn has_small_stack_size() {
         // if we can get the value to be smaller than 32 then that'd be cool
         // but 32 is probably also fine
-        assert_eq!(std::mem::size_of::<Value>(), 32);
+        assert_eq!(core::mem::size_of::<Value>(), 32);
     }
 }

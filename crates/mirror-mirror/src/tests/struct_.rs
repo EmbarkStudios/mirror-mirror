@@ -1,4 +1,7 @@
-use std::collections::BTreeMap;
+use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::key_path;
 use crate::struct_::StructValue;

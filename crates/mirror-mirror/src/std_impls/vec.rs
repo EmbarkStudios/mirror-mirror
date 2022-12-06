@@ -1,3 +1,7 @@
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use core::any::Any;
+
 use crate::array::Array;
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::Id;
@@ -11,7 +15,6 @@ use crate::ReflectRef;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
-use std::any::Any;
 
 impl<T> List for Vec<T>
 where
@@ -126,7 +129,7 @@ where
         Box::new(Self::from_reflect(&value).unwrap())
     }
 
-    fn debug(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list().entries(self.iter()).finish()
     }
 

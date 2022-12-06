@@ -1,3 +1,12 @@
+use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
+use alloc::string::String;
+use core::any::Any;
+use core::fmt;
+
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::type_info::graph::Id;
@@ -10,11 +19,6 @@ use crate::ReflectRef;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
-use serde::Deserialize;
-use serde::Serialize;
-use std::any::Any;
-use std::collections::BTreeMap;
-use std::fmt;
 
 pub trait Struct: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;

@@ -39,6 +39,8 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
+extern crate alloc;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use quote::ToTokens;
@@ -79,13 +81,7 @@ where
     T: ToTokens,
 {
     match result {
-        Ok(tokens) => {
-            let tokens = quote! { #tokens }.into();
-            if std::env::var_os("MIRROR_MIRROR_DEBUG").is_some() {
-                eprintln!("{tokens}");
-            }
-            tokens
-        }
+        Ok(tokens) => quote! { #tokens }.into(),
         Err(err) => err.into_compile_error().into(),
     }
 }
@@ -103,7 +99,7 @@ where
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let token = &self.0;
         tokens.extend(quote::quote! {
-            ::std::stringify!(#token)
+            ::core::stringify!(#token)
         })
     }
 }

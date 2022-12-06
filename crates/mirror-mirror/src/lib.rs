@@ -1,3 +1,4 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     clippy::all,
     clippy::dbg_macro,
@@ -44,9 +45,14 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
-use std::any::Any;
-use std::any::TypeId;
-use std::fmt;
+extern crate alloc;
+
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::string::String;
+use core::any::Any;
+use core::any::TypeId;
+use core::fmt;
 
 pub mod array;
 pub mod enum_;
@@ -64,6 +70,9 @@ mod std_impls;
 
 #[cfg(test)]
 mod tests;
+
+#[doc(inline)]
+pub use mirror_mirror_macros::*;
 
 #[doc(inline)]
 pub use self::array::Array;
@@ -89,8 +98,6 @@ pub use self::type_info::TypeInfoRoot;
 pub use self::type_info::Typed;
 #[doc(inline)]
 pub use self::value::Value;
-#[doc(inline)]
-pub use mirror_mirror_macros::*;
 
 pub trait Reflect: Any + Send + 'static {
     fn type_info(&self) -> TypeInfoRoot;
@@ -120,7 +127,7 @@ pub trait Reflect: Any + Send + 'static {
     }
 
     fn type_name(&self) -> &str {
-        std::any::type_name::<Self>()
+        core::any::type_name::<Self>()
     }
 
     fn as_tuple(&self) -> Option<&dyn Tuple> {
@@ -525,7 +532,7 @@ pub enum ReflectMut<'a> {
     Map(&'a mut dyn Map),
     Scalar(ScalarMut<'a>),
     /// Not all `Reflect` implementations allow mutable access to the underlying value (such as
-    /// [`std::num::NonZeroU8`]). This variant can be used for such types.
+    /// [`core::num::NonZeroU8`]). This variant can be used for such types.
     Opaque(&'a mut dyn Reflect),
 }
 
@@ -618,6 +625,10 @@ pub enum ScalarMut<'a> {
 /// Private. Used by macros
 #[doc(hidden)]
 pub mod __private {
+    pub use alloc::collections::BTreeMap;
+    pub use core::any::Any;
+    pub use core::fmt;
+
     pub use self::enum_::*;
     pub use self::key_path::*;
     pub use self::struct_::*;
@@ -626,9 +637,6 @@ pub mod __private {
     pub use crate::iter::*;
     pub use crate::type_info::graph::*;
     pub use crate::*;
-    pub use std::any::Any;
-    pub use std::collections::HashMap;
-    pub use std::fmt;
 
     pub trait IntoValue {
         fn into_value(self) -> Value;

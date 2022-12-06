@@ -1,3 +1,8 @@
+use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
+use core::any::Any;
+use core::fmt;
+
 use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::type_info::graph::Id;
@@ -11,9 +16,6 @@ use crate::ReflectRef;
 use crate::TypeInfoRoot;
 use crate::Typed;
 use crate::Value;
-use std::any::Any;
-use std::collections::BTreeMap;
-use std::fmt;
 
 impl<K, V> Map for BTreeMap<K, V>
 where

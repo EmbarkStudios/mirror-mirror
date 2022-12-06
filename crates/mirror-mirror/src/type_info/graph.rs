@@ -1,24 +1,27 @@
-use std::any::type_name;
-use std::any::TypeId;
-use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::hash::Hasher;
-
-use crate::Value;
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::any::type_name;
+use core::any::TypeId;
 
 use super::*;
+use crate::Value;
 
 #[derive(Clone, Copy, Serialize, Deserialize, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct Id(u64);
 
 impl Id {
-    pub fn new<T>() -> Self
+    fn new<T>() -> Self
     where
         T: 'static,
     {
-        let mut hasher = DefaultHasher::default();
+        use core::hash::Hash;
+        use core::hash::Hasher;
+
+        let mut hasher = ahash::AHasher::default();
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
     }
@@ -27,7 +30,7 @@ impl Id {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct TypeInfoGraph {
-    pub(super) map: HashMap<Id, Option<TypeInfoNode>>,
+    pub(super) map: BTreeMap<Id, Option<TypeInfoNode>>,
 }
 
 impl TypeInfoGraph {
@@ -58,7 +61,7 @@ impl TypeInfoGraph {
     }
 }
 
-type Metadata = HashMap<String, Value>;
+type Metadata = BTreeMap<String, Value>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]

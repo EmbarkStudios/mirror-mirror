@@ -1,6 +1,7 @@
+use core::fmt;
+
 use crate::iter::ValueIterMut;
 use crate::Reflect;
-use std::fmt;
 
 pub trait Array: Reflect {
     fn get(&self, index: usize) -> Option<&dyn Reflect>;
