@@ -1,4 +1,3 @@
-use crate as mirror_mirror;
 use crate::struct_::TupleStructValue;
 use crate::FromReflect;
 use crate::GetField;
@@ -20,6 +19,7 @@ fn tuple_value() {
 #[test]
 fn static_tuple() {
     #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]
+    #[reflect(crate_name(crate))]
     struct A(i32, bool);
 
     let mut tuple = A(1_i32, false);
@@ -46,9 +46,11 @@ fn static_tuple() {
 #[test]
 fn from_reflect_with_value() {
     #[derive(Debug, Clone, Reflect, Default)]
+    #[reflect(crate_name(crate))]
     pub struct Foo(Number);
 
     #[derive(Debug, Clone, Reflect, Default)]
+    #[reflect(crate_name(crate))]
     pub enum Number {
         #[default]
         One,

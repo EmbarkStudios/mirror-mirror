@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 
-use crate as mirror_mirror;
 use crate::key_path;
 use crate::struct_::StructValue;
 use crate::type_info::GetMeta;
@@ -13,6 +12,7 @@ use crate::Typed;
 use crate::Value;
 
 #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]
+#[reflect(crate_name(crate))]
 struct Foo {
     field: i32,
 }
@@ -145,16 +145,19 @@ fn box_dyn_reflect_as_reflect() {
 #[test]
 fn deeply_nested() {
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct Foo {
         bar: Bar,
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct Bar {
         baz: Baz,
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct Baz {
         qux: i32,
     }
@@ -178,11 +181,13 @@ fn deeply_nested() {
 #[test]
 fn from_reflect_with_value() {
     #[derive(Debug, Clone, Reflect, Default)]
+    #[reflect(crate_name(crate))]
     pub struct Foo {
         pub number: Number,
     }
 
     #[derive(Debug, Clone, Reflect, Default)]
+    #[reflect(crate_name(crate))]
     pub enum Number {
         #[default]
         One,
@@ -201,11 +206,13 @@ fn accessing_docs_in_type_info() {
     ///
     /// Foo bar.
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     struct Foo {
         inner: Vec<BTreeMap<String, Vec<Option<Inner>>>>,
     }
 
     #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
     enum Inner {
         Variant {
             /// Bingo!
