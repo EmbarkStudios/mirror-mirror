@@ -1,6 +1,7 @@
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::UseTree;
 use std::collections::HashMap;
 use syn::parse::ParseStream;
 use syn::Attribute;
@@ -26,7 +27,7 @@ mod kw {
 pub(super) struct ItemAttrs {
     pub(super) debug_opt_out: bool,
     pub(super) clone_opt_out: bool,
-    pub(super) crate_name: TokenStream,
+    pub(super) crate_name: UseTree,
     meta: HashMap<Ident, Expr>,
     docs: Vec<LitStr>,
 }
@@ -38,7 +39,7 @@ impl ItemAttrs {
             clone_opt_out: Default::default(),
             meta: Default::default(),
             docs,
-            crate_name: quote! { mirror_mirror },
+            crate_name: syn::parse_quote!(mirror_mirror),
         }
     }
 
@@ -104,7 +105,7 @@ impl ItemAttrs {
                     input.parse::<kw::crate_name>()?;
                     let content;
                     syn::parenthesized!(content in input);
-                    item_attrs.crate_name = content.parse::<TokenStream>()?;
+                    item_attrs.crate_name = content.parse()?;
                 } else {
                     return Err(lh.error());
                 }
