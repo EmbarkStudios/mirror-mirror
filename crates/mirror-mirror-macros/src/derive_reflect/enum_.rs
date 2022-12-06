@@ -1,5 +1,6 @@
 use super::attrs::InnerAttrs;
 use super::attrs::ItemAttrs;
+use super::Generics;
 use crate::stringify;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -9,12 +10,17 @@ use syn::Fields;
 use syn::Ident;
 use syn::Type;
 
-pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::Result<TokenStream> {
+pub(super) fn expand(
+    ident: &Ident,
+    enum_: DataEnum,
+    attrs: ItemAttrs,
+    generics: &Generics<'_>,
+) -> syn::Result<TokenStream> {
     let variants = VariantData::try_from_enum(&enum_)?;
 
-    let reflect = expand_reflect(ident, attrs, &variants)?;
-    let from_reflect = expand_from_reflect(ident, &variants);
-    let enum_ = expand_enum(ident, &variants);
+    let reflect = expand_reflect(ident, &variants, &attrs, generics)?;
+    let from_reflect = expand_from_reflect(ident, &variants, &attrs, generics);
+    let enum_ = expand_enum(ident, &variants, generics);
 
     Ok(quote! {
         #reflect
@@ -25,8 +31,9 @@ pub(super) fn expand(ident: &Ident, enum_: DataEnum, attrs: ItemAttrs) -> syn::R
 
 fn expand_reflect(
     ident: &Ident,
-    attrs: ItemAttrs,
     variants: &[VariantData<'_>],
+    attrs: &ItemAttrs,
+    generics: &Generics<'_>,
 ) -> syn::Result<TokenStream> {
     let fn_patch = {
         let match_arms = variants.iter().filter(filter_out_skipped).map(|variant| {
@@ -83,18 +90,36 @@ fn expand_reflect(
             }
         });
 
-        quote! {
-            fn patch(&mut self, value: &dyn Reflect) {
-                if let Some(new) = value.downcast_ref::<Self>() {
-                    *self = new.clone();
-                } else if let Some(enum_) = value.reflect_ref().as_enum() {
-                    if let Some(new) = Self::from_reflect(value) {
-                        *self = new;
-                    } else {
-                        let variant_matches = self.variant_name() == enum_.variant_name();
-                        match self {
-                            #(#match_arms)*
-                            _ => {}
+        if attrs.clone_opt_out {
+            quote! {
+                fn patch(&mut self, value: &dyn Reflect) {
+                    if let Some(enum_) = value.reflect_ref().as_enum() {
+                        if let Some(new) = Self::from_reflect(value) {
+                            *self = new;
+                        } else {
+                            let variant_matches = self.variant_name() == enum_.variant_name();
+                            match self {
+                                #(#match_arms)*
+                                _ => {}
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            quote! {
+                fn patch(&mut self, value: &dyn Reflect) {
+                    if let Some(new) = value.downcast_ref::<Self>() {
+                        *self = new.clone();
+                    } else if let Some(enum_) = value.reflect_ref().as_enum() {
+                        if let Some(new) = Self::from_reflect(value) {
+                            *self = new;
+                        } else {
+                            let variant_matches = self.variant_name() == enum_.variant_name();
+                            match self {
+                                #(#match_arms)*
+                                _ => {}
+                            }
                         }
                     }
                 }
@@ -114,7 +139,7 @@ fn expand_reflect(
                         let ident = &field.ident;
                         let ident_string = stringify(ident);
                         quote! {
-                            value.set_struct_field(#ident_string, #ident.to_owned());
+                            value.set_struct_field(#ident_string, #ident.to_value());
                         }
                     });
 
@@ -138,7 +163,7 @@ fn expand_reflect(
                         Self::#variant_ident(#(#field_names,)*) => {
                             let mut value = EnumValue::new_tuple_variant(#variant_ident_string);
                             #(
-                                value.push_tuple_field(#included_fields.to_owned());
+                                value.push_tuple_field(#included_fields.to_value());
                             )*
                             value.into()
                         }
@@ -230,13 +255,19 @@ fn expand_reflect(
         let meta = attrs.meta();
         let docs = attrs.docs();
 
+        let Generics {
+            impl_generics,
+            type_generics,
+            where_clause,
+        } = generics;
+
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
-                impl Typed for #ident {
+                impl #impl_generics Typed for #ident #type_generics #where_clause {
                     fn build(graph: &mut TypeInfoGraph) -> Id {
                         let variants = &[#(#code_for_variants),*];
-                        graph.get_or_build_with::<#ident, _>(|graph| {
-                            EnumInfoNode::new::<#ident>(variants, #meta, #docs)
+                        graph.get_or_build_with::<Self, _>(|graph| {
+                            EnumInfoNode::new::<Self>(variants, #meta, #docs)
                         })
                     }
                 }
@@ -249,8 +280,14 @@ fn expand_reflect(
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     Ok(quote! {
-        impl Reflect for #ident {
+        impl #impl_generics Reflect for #ident #type_generics #where_clause {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -284,7 +321,12 @@ fn expand_reflect(
     })
 }
 
-fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
+fn expand_from_reflect(
+    ident: &Ident,
+    variants: &[VariantData<'_>],
+    attrs: &ItemAttrs,
+    generics: &Generics<'_>,
+) -> TokenStream {
     let match_arms = variants.iter().filter(filter_out_skipped).map(|variant| {
         let variant_ident = &variant.ident;
         let variant_ident_string = stringify(&variant.ident);
@@ -301,15 +343,24 @@ fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStre
                     } else {
                         let ident_string = stringify(ident);
                         let ty = &field.ty;
-                        quote! {
-                            #ident: {
-                                let value = enum_.field(#ident_string)?;
-                                if let Some(value) = value.downcast_ref::<#ty>() {
-                                    value.to_owned()
-                                } else {
-                                    <#ty as FromReflect>::from_reflect(value)?.to_owned()
-                                }
-                            },
+                        if attrs.clone_opt_out {
+                            quote! {
+                                #ident: {
+                                    let value = enum_.field(#ident_string)?;
+                                    FromReflect::from_reflect(value)?
+                                },
+                            }
+                        } else {
+                            quote! {
+                                #ident: {
+                                    let value = enum_.field(#ident_string)?;
+                                    if let Some(value) = value.downcast_ref::<#ty>() {
+                                        value.to_owned()
+                                    } else {
+                                        FromReflect::from_reflect(value)?
+                                    }
+                                },
+                            }
                         }
                     }
                 });
@@ -328,15 +379,24 @@ fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStre
                         }
                     } else {
                         let ty = &field.ty;
-                        quote! {
-                            {
-                                let value = enum_.field_at(#idx)?;
-                                if let Some(value) = value.downcast_ref::<#ty>() {
-                                    value.to_owned()
-                                } else {
-                                    <#ty as FromReflect>::from_reflect(value)?.to_owned()
-                                }
-                            },
+                        if attrs.clone_opt_out {
+                            quote! {
+                                {
+                                    let value = enum_.field_at(#idx)?;
+                                    FromReflect::from_reflect(value)?
+                                },
+                            }
+                        } else {
+                            quote! {
+                                {
+                                    let value = enum_.field_at(#idx)?;
+                                    if let Some(value) = value.downcast_ref::<#ty>() {
+                                        value.to_owned()
+                                    } else {
+                                        FromReflect::from_reflect(value)?
+                                    }
+                                },
+                            }
                         }
                     }
                 });
@@ -357,8 +417,14 @@ fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStre
         }
     });
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl FromReflect for #ident {
+        impl #impl_generics FromReflect for #ident #type_generics #where_clause {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
                 let enum_ = reflect.reflect_ref().as_enum()?;
                 match enum_.variant_name() {
@@ -370,7 +436,11 @@ fn expand_from_reflect(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStre
     }
 }
 
-fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
+fn expand_enum(
+    ident: &Ident,
+    variants: &[VariantData<'_>],
+    generics: &Generics<'_>,
+) -> TokenStream {
     let fn_variant_name = {
         let match_arms = variants.iter().map(|variant| {
             let ident = &variant.ident;
@@ -716,8 +786,14 @@ fn expand_enum(ident: &Ident, variants: &[VariantData<'_>]) -> TokenStream {
         }
     };
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl Enum for #ident {
+        impl #impl_generics Enum for #ident #type_generics #where_clause {
             #fn_variant_name
             #fn_variant_kind
             #fn_field

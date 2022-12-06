@@ -1,5 +1,6 @@
 use super::attrs::AttrsDatabase;
 use super::attrs::ItemAttrs;
+use super::Generics;
 use proc_macro2::TokenStream;
 use quote::quote;
 use quote::quote_spanned;
@@ -17,14 +18,15 @@ pub(super) fn expand(
     ident: &Ident,
     fields: FieldsUnnamed,
     attrs: ItemAttrs,
+    generics: &Generics<'_>,
 ) -> syn::Result<TokenStream> {
     let field_attrs = AttrsDatabase::new_from_unnamed(&fields)?;
 
     let fields = fields.unnamed;
 
-    let reflect = expand_reflect(ident, &fields, attrs, &field_attrs);
-    let from_reflect = expand_from_reflect(ident, &fields, &field_attrs);
-    let tuple_struct = expand_tuple_struct(ident, &fields, &field_attrs);
+    let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
+    let from_reflect = expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics);
+    let tuple_struct = expand_tuple_struct(ident, &fields, &field_attrs, generics);
 
     Ok(quote! {
         #reflect
@@ -36,8 +38,9 @@ pub(super) fn expand(
 fn expand_reflect(
     ident: &Ident,
     fields: &Fields,
-    attrs: ItemAttrs,
+    attrs: &ItemAttrs,
     field_attrs: &AttrsDatabase<usize>,
+    generics: &Generics<'_>,
 ) -> TokenStream {
     let fn_patch = {
         let code_for_fields = fields
@@ -72,7 +75,7 @@ fn expand_reflect(
                     span: field.span(),
                 };
                 quote! {
-                    let value = value.with_field(self.#field_index.clone());
+                    let value = value.with_field(self.#field_index.to_value());
                 }
             });
 
@@ -101,14 +104,19 @@ fn expand_reflect(
 
         let meta = attrs.meta();
         let docs = attrs.docs();
+        let Generics {
+            impl_generics,
+            type_generics,
+            where_clause,
+        } = generics;
 
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
-                impl Typed for #ident {
+                impl #impl_generics Typed for #ident #type_generics #where_clause {
                     fn build(graph: &mut TypeInfoGraph) -> Id {
                         let fields = &[#(#code_for_fields),*];
-                        graph.get_or_build_with::<#ident, _>(|graph| {
-                            TupleStructInfoNode::new::<#ident>(fields, #meta, #docs)
+                        graph.get_or_build_with::<Self, _>(|graph| {
+                            TupleStructInfoNode::new::<Self>(fields, #meta, #docs)
                         })
                     }
                 }
@@ -120,9 +128,14 @@ fn expand_reflect(
 
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
 
     quote! {
-        impl Reflect for #ident {
+        impl #impl_generics Reflect for #ident #type_generics #where_clause {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -158,8 +171,10 @@ fn expand_reflect(
 
 fn expand_from_reflect(
     ident: &Ident,
+    attrs: &ItemAttrs,
     fields: &Fields,
     field_attrs: &AttrsDatabase<usize>,
+    generics: &Generics<'_>,
 ) -> TokenStream {
     let fn_from_reflect = {
         let code_for_fields = fields.iter().enumerate().map(|(idx, field)| {
@@ -172,6 +187,13 @@ fn expand_from_reflect(
             if field_attrs.skip(&idx) {
                 quote_spanned! {span=>
                     #field_index: ::std::default::Default::default(),
+                }
+            } else if attrs.clone_opt_out {
+                quote_spanned! {span=>
+                    #field_index: {
+                        let value = tuple_struct.field(#field_index)?;
+                        <#ty as FromReflect>::from_reflect(value)?
+                    },
                 }
             } else {
                 quote_spanned! {span=>
@@ -197,8 +219,14 @@ fn expand_from_reflect(
         }
     };
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl FromReflect for #ident {
+        impl #impl_generics FromReflect for #ident #type_generics #where_clause {
             #fn_from_reflect
         }
     }
@@ -208,6 +236,7 @@ fn expand_tuple_struct(
     ident: &Ident,
     fields: &Fields,
     field_attrs: &AttrsDatabase<usize>,
+    generics: &Generics<'_>,
 ) -> TokenStream {
     let fn_field = {
         let match_arms = fields
@@ -305,8 +334,14 @@ fn expand_tuple_struct(
         }
     };
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl TupleStruct for #ident {
+        impl #impl_generics TupleStruct for #ident #type_generics #where_clause {
             #fn_field
             #fn_field_mut
             #fn_fields

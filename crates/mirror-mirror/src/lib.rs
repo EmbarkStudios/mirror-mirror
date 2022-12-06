@@ -622,7 +622,6 @@ pub mod __private {
     pub use self::key_path::*;
     pub use self::struct_::*;
     pub use self::tuple::*;
-    pub use self::type_info::*;
     pub use self::value::*;
     pub use crate::iter::*;
     pub use crate::type_info::graph::*;

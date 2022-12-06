@@ -94,5 +94,77 @@ mod option_f32 {
     #[derive(Debug, Clone, Reflect)]
     struct Foo {
         maybe_float: Option<f32>,
+        maybe_string: Option<String>,
+    }
+}
+
+mod derive_foreign {
+    #![allow(dead_code)]
+
+    use crate::{FromReflect, Typed};
+    use mirror_mirror_macros::*;
+
+    enum Foo<A, B>
+    where
+        A: FromReflect + Typed,
+        B: FromReflect + Typed,
+    {
+        Struct { a: A },
+        Tuple(B),
+        Unit,
+    }
+
+    __private_derive_reflect_foreign! {
+        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        enum Foo<A, B>
+        where
+            A: FromReflect + Typed,
+            B: FromReflect + Typed,
+        {
+            Struct { a: A },
+            Tuple(B),
+            Unit,
+        }
+    }
+
+    struct Bar<A, B>
+    where
+        A: FromReflect + Typed,
+        B: FromReflect + Typed,
+    {
+        a: A,
+        b: B,
+    }
+
+    __private_derive_reflect_foreign! {
+        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        struct Bar<A, B>
+        where
+            A: FromReflect + Typed,
+            B: FromReflect + Typed,
+        {
+            a: A,
+            b: B,
+        }
+    }
+
+    struct Baz<A, B>(A, B)
+    where
+        A: FromReflect + Typed,
+        B: FromReflect + Typed;
+
+    __private_derive_reflect_foreign! {
+        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        struct Baz<A, B>(A, B)
+        where
+            A: FromReflect + Typed,
+            B: FromReflect + Typed;
+    }
+
+    struct Qux;
+
+    __private_derive_reflect_foreign! {
+        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        struct Qux;
     }
 }
