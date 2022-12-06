@@ -57,6 +57,14 @@ pub fn __private_derive_reflect_foreign(item: TokenStream) -> TokenStream {
     expand_with(item, derive_reflect::expand)
 }
 
+/// Private API: Do not use!
+#[proc_macro]
+pub fn __private_derive_reflect_foreign_debug(item: TokenStream) -> TokenStream {
+    let tokens = expand_with(item, derive_reflect::expand);
+    eprintln!("{tokens}");
+    tokens
+}
+
 fn expand_with<F, I, K>(input: TokenStream, f: F) -> TokenStream
 where
     F: FnOnce(I) -> syn::Result<K>,

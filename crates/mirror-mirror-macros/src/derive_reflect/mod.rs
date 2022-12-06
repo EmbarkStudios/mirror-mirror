@@ -63,7 +63,12 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
     } = generics;
 
     Ok(quote_spanned! {span=>
-        #[allow(clippy::implicit_clone, clippy::redundant_clone, unused_variables)]
+        #[allow(
+            clippy::implicit_clone,
+            clippy::redundant_clone,
+            clippy::clone_on_copy,
+            unused_variables,
+        )]
         const _: () = {
 
             #[allow(unused_imports)]

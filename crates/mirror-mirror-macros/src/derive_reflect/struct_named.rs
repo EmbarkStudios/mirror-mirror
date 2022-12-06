@@ -24,9 +24,9 @@ pub(super) fn expand(
 
     let fields = fields.named;
 
-    let reflect = expand_reflect(ident, &fields, item_attrs, &field_attrs);
-    let from_reflect = expand_from_reflect(ident, &fields, &field_attrs);
-    let struct_ = expand_struct(ident, &fields, &field_attrs);
+    let reflect = expand_reflect(ident, &fields, &item_attrs, &field_attrs, generics);
+    let from_reflect = expand_from_reflect(ident, &item_attrs, &fields, &field_attrs, generics);
+    let struct_ = expand_struct(ident, &fields, &field_attrs, generics);
 
     Ok(quote! {
         #reflect
@@ -38,8 +38,9 @@ pub(super) fn expand(
 fn expand_reflect(
     ident: &Ident,
     fields: &Fields,
-    item_attrs: ItemAttrs,
+    item_attrs: &ItemAttrs,
     field_attrs: &AttrsDatabase<Ident>,
+    generics: &Generics<'_>,
 ) -> TokenStream {
     let fn_patch = {
         let code_for_fields = fields
@@ -71,7 +72,7 @@ fn expand_reflect(
                 let ident = &field.ident;
                 let field = stringify(ident);
                 quote! {
-                    let value = value.with_field(#field, self.#ident.clone());
+                    let value = value.with_field(#field, self.#ident.to_value());
                 }
             });
 
@@ -101,14 +102,19 @@ fn expand_reflect(
 
         let meta = item_attrs.meta();
         let docs = item_attrs.docs();
+        let Generics {
+            impl_generics,
+            type_generics,
+            where_clause,
+        } = generics;
 
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
-                impl Typed for #ident {
+                impl #impl_generics Typed for #ident #type_generics #where_clause {
                     fn build(graph: &mut TypeInfoGraph) -> Id {
-                        graph.get_or_build_with::<#ident, _>(|graph| {
+                        graph.get_or_build_with::<Self, _>(|graph| {
                             let fields = &[#(#code_for_fields),*];
-                            StructInfoNode::new::<#ident>(fields, #meta, #docs)
+                            StructInfoNode::new::<Self>(fields, #meta, #docs)
                         })
                     }
                 }
@@ -121,8 +127,14 @@ fn expand_reflect(
     let fn_debug = item_attrs.fn_debug_tokens();
     let fn_clone_reflect = item_attrs.fn_clone_reflect_tokens();
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl Reflect for #ident {
+        impl #impl_generics Reflect for #ident #type_generics #where_clause {
             fn as_any(&self) -> &dyn Any {
                 self
             }
@@ -158,8 +170,10 @@ fn expand_reflect(
 
 fn expand_from_reflect(
     ident: &Ident,
+    attrs: &ItemAttrs,
     fields: &Fields,
     field_attrs: &AttrsDatabase<Ident>,
+    generics: &Generics<'_>,
 ) -> TokenStream {
     let fn_from_reflect = {
         let code_for_fields = fields.iter().map(|field| {
@@ -174,15 +188,24 @@ fn expand_from_reflect(
             } else {
                 let ty = &field.ty;
                 let field = stringify(ident);
-                quote_spanned! {span=>
-                    #ident: {
-                        let value = struct_.field(#field)?;
-                        if let Some(value) = value.downcast_ref::<#ty>() {
-                            value.to_owned()
-                        } else {
-                            <#ty as FromReflect>::from_reflect(value)?.to_owned()
-                        }
-                    },
+                if attrs.clone_opt_out {
+                    quote_spanned! {span=>
+                        #ident: {
+                            let value = struct_.field(#field)?;
+                            <#ty as FromReflect>::from_reflect(value)?
+                        },
+                    }
+                } else {
+                    quote_spanned! {span=>
+                        #ident: {
+                            let value = struct_.field(#field)?;
+                            if let Some(value) = value.downcast_ref::<#ty>() {
+                                value.clone()
+                            } else {
+                                <#ty as FromReflect>::from_reflect(value)?
+                            }
+                        },
+                    }
                 }
             }
         });
@@ -197,8 +220,14 @@ fn expand_from_reflect(
         }
     };
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl FromReflect for #ident {
+        impl #impl_generics FromReflect for #ident #type_generics #where_clause {
             #fn_from_reflect
         }
     }
@@ -208,6 +237,7 @@ fn expand_struct(
     ident: &Ident,
     fields: &Fields,
     field_attrs: &AttrsDatabase<Ident>,
+    generics: &Generics<'_>,
 ) -> TokenStream {
     let fn_field = {
         let code_for_fields = fields
@@ -293,8 +323,14 @@ fn expand_struct(
         }
     };
 
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
     quote! {
-        impl Struct for #ident {
+        impl #impl_generics Struct for #ident #type_generics #where_clause {
             #fn_field
             #fn_field_mut
             #fn_fields
