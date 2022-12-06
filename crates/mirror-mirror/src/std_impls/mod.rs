@@ -15,3 +15,15 @@ __private_derive_reflect_foreign! {
         None,
     }
 }
+
+__private_derive_reflect_foreign! {
+    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    enum Result<T, E>
+    where
+        T: FromReflect + Typed,
+        E: FromReflect + Typed,
+    {
+        Ok(T),
+        Err(E),
+    }
+}
