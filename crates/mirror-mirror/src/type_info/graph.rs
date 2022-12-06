@@ -125,7 +125,7 @@ impl StructInfoNode {
 }
 
 fn map_docs(docs: &[&'static str]) -> Box<[String]> {
-    docs.iter().map(|s| s.to_string()).collect()
+    docs.iter().map(|s| (*s).to_owned()).collect()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Writable, Readable)]

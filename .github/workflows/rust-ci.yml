@@ -1,0 +1,46 @@
+on:
+  push:
+    branches:
+    - main
+  pull_request: {}
+
+name: CI
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: Swatinem/rust-cache@v1
+      - name: check rustfmt
+        run: |
+          rustup component add rustfmt
+          cargo fmt -- --check --color always
+      - run: cargo fetch
+      - name: cargo clippy
+        run: |
+          rustup component add clippy
+          cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    name: Test
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: Swatinem/rust-cache@v1
+      - run: cargo fetch
+      - name: cargo test build
+        run: cargo build --tests
+      - name: cargo test
+        run: cargo test
