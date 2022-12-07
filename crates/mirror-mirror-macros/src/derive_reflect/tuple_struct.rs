@@ -27,7 +27,7 @@ pub(super) fn expand(
 
     let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
     let from_reflect = expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics);
-    let tuple_struct = expand_tuple_struct(ident, &fields, &field_attrs, generics);
+    let tuple_struct = expand_tuple_struct(ident, &fields, &attrs, &field_attrs, generics);
 
     Ok(quote! {
         #reflect
@@ -236,6 +236,7 @@ fn expand_from_reflect(
 fn expand_tuple_struct(
     ident: &Ident,
     fields: &Fields,
+    attrs: &ItemAttrs,
     field_attrs: &AttrsDatabase<usize>,
     generics: &Generics<'_>,
 ) -> TokenStream {
@@ -290,24 +291,11 @@ fn expand_tuple_struct(
     };
 
     let fn_fields = {
-        let code_for_fields = fields
-            .iter()
-            .enumerate()
-            .filter(field_attrs.filter_out_skipped_unnamed())
-            .map(|(idx, field)| {
-                let field_index = Index {
-                    index: idx as u32,
-                    span: field.span(),
-                };
-                quote! {
-                    self.#field_index.as_reflect(),
-                }
-            });
+        let crate_name = &attrs.crate_name;
 
         quote! {
-            fn fields(&self) -> ValueIter<'_> {
-                let iter = [#(#code_for_fields)*];
-                ValueIter::new(iter)
+            fn fields(&self) -> #crate_name::tuple_struct::Iter<'_> {
+                #crate_name::tuple_struct::Iter::new(self)
             }
         }
     };
@@ -335,6 +323,20 @@ fn expand_tuple_struct(
         }
     };
 
+    let fn_fields_len = {
+        let len = fields
+            .iter()
+            .enumerate()
+            .filter(field_attrs.filter_out_skipped_unnamed())
+            .count();
+
+        quote! {
+            fn fields_len(&self) -> usize {
+                #len
+            }
+        }
+    };
+
     let Generics {
         impl_generics,
         type_generics,
@@ -347,6 +349,7 @@ fn expand_tuple_struct(
             #fn_field_mut
             #fn_fields
             #fn_fields_mut
+            #fn_fields_len
         }
     }
 }

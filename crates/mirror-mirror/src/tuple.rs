@@ -345,10 +345,7 @@ pub struct Iter<'a> {
 
 impl<'a> Iter<'a> {
     pub fn new(tuple: &'a dyn Tuple) -> Self {
-        Self {
-            tuple,
-            index: 0,
-        }
+        Self { tuple, index: 0 }
     }
 }
 
@@ -356,7 +353,7 @@ impl<'a> Iterator for Iter<'a> {
     type Item = &'a dyn Reflect;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let value = self.tuple.field(self.index)?.as_reflect();
+        let value = self.tuple.field(self.index)?;
         self.index += 1;
         Some(value)
     }
