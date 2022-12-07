@@ -190,7 +190,14 @@ fn expand_from_reflect(
             } else {
                 let ty = &field.ty;
                 let field = stringify(ident);
-                if attrs.clone_opt_out {
+                if let Some(from_reflect_with) = field_attrs.from_reflect_with(ident) {
+                    quote_spanned! {span=>
+                        #ident: {
+                            let value = struct_.field(#field)?;
+                            #from_reflect_with(value)?
+                        },
+                    }
+                } else if attrs.clone_opt_out {
                     quote_spanned! {span=>
                         #ident: {
                             let value = struct_.field(#field)?;

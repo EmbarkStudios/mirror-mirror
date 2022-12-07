@@ -242,3 +242,57 @@ mod from_reflect_opt_out {
         }
     }
 }
+
+mod from_reflect_with {
+    #![allow(warnings)]
+
+    use crate::FromReflect;
+
+    use super::*;
+
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate))]
+    struct A {
+        #[reflect(from_reflect_with(clamp_ratio))]
+        a: f32,
+    }
+
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate))]
+    struct B(#[reflect(from_reflect_with(clamp_ratio))] f32);
+
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate))]
+    enum C {
+        C(#[reflect(from_reflect_with(clamp_ratio))] f32),
+        D {
+            #[reflect(from_reflect_with(clamp_ratio))]
+            d: f32,
+        },
+    }
+
+    fn clamp_ratio(ratio: &dyn Reflect) -> Option<f32> {
+        Some(ratio.downcast_ref::<f32>()?.clamp(0.0, 1.0))
+    }
+
+    #[test]
+    fn works() {
+        assert_eq!(A::from_reflect(&A { a: 100.0 }).unwrap(), A { a: 1.0 });
+        assert_eq!(A::from_reflect(&A { a: -100.0 }).unwrap(), A { a: 0.0 });
+
+        assert_eq!(B::from_reflect(&B(100.0)).unwrap(), B(1.0));
+        assert_eq!(B::from_reflect(&B(-100.0)).unwrap(), B(0.0));
+
+        assert_eq!(C::from_reflect(&C::C(100.0)).unwrap(), C::C(1.0));
+        assert_eq!(C::from_reflect(&C::C(-100.0)).unwrap(), C::C(0.0));
+
+        assert_eq!(
+            C::from_reflect(&C::D { d: 100.0 }).unwrap(),
+            C::D { d: 1.0 }
+        );
+        assert_eq!(
+            C::from_reflect(&C::D { d: -100.0 }).unwrap(),
+            C::D { d: 0.0 }
+        );
+    }
+}

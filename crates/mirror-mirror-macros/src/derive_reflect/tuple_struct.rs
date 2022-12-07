@@ -190,6 +190,13 @@ fn expand_from_reflect(
                 quote_spanned! {span=>
                     #field_index: ::core::default::Default::default(),
                 }
+            } else if let Some(from_reflect_with) = field_attrs.from_reflect_with(&idx) {
+                quote_spanned! {span=>
+                    #field_index: {
+                        let value = tuple_struct.field(#field_index)?;
+                        #from_reflect_with(value)?
+                    }
+                }
             } else if attrs.clone_opt_out {
                 quote_spanned! {span=>
                     #field_index: {

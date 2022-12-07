@@ -346,7 +346,14 @@ fn expand_from_reflect(
                     } else {
                         let ident_string = stringify(ident);
                         let ty = &field.ty;
-                        if attrs.clone_opt_out {
+                        if let Some(from_reflect_with) = field.from_reflect_with() {
+                            quote! {
+                                #ident: {
+                                    let value = enum_.field(#ident_string)?;
+                                    #from_reflect_with(value)?
+                                },
+                            }
+                        } else if attrs.clone_opt_out {
                             quote! {
                                 #ident: {
                                     let value = enum_.field(#ident_string)?;
@@ -382,7 +389,14 @@ fn expand_from_reflect(
                         }
                     } else {
                         let ty = &field.ty;
-                        if attrs.clone_opt_out {
+                        if let Some(from_reflect_with) = field.from_reflect_with() {
+                            quote! {
+                                {
+                                    let value = enum_.field_at(#idx)?;
+                                    #from_reflect_with(value)?
+                                },
+                            }
+                        } else if attrs.clone_opt_out {
                             quote! {
                                 {
                                     let value = enum_.field_at(#idx)?;
@@ -1000,10 +1014,24 @@ struct NamedField<'a> {
     attrs: InnerAttrs,
 }
 
+impl<'a> NamedField<'a> {
+    #[allow(clippy::wrong_self_convention)]
+    fn from_reflect_with(&self) -> Option<&Ident> {
+        self.attrs.from_reflect_with.as_ref()
+    }
+}
+
 struct UnnamedField<'a> {
     ty: &'a Type,
     attrs: InnerAttrs,
     fake_ident: Ident,
+}
+
+impl<'a> UnnamedField<'a> {
+    #[allow(clippy::wrong_self_convention)]
+    fn from_reflect_with(&self) -> Option<&Ident> {
+        self.attrs.from_reflect_with.as_ref()
+    }
 }
 
 fn filter_out_skipped<T>(skippable: &T) -> bool
