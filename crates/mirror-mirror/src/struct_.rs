@@ -1,13 +1,13 @@
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
+use alloc::vec::Vec;
 use core::any::Any;
 use core::fmt;
 
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::type_info::graph::Id;
 use crate::type_info::graph::OpaqueInfoNode;
@@ -25,9 +25,17 @@ pub trait Struct: Reflect {
 
     fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect>;
 
-    fn fields(&self) -> PairIter<'_>;
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
+
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
+
+    fn name_at(&self, index: usize) -> Option<&str>;
+
+    fn fields(&self) -> Iter<'_>;
 
     fn fields_mut(&mut self) -> PairIterMut<'_>;
+
+    fn fields_len(&self) -> usize;
 }
 
 impl fmt::Debug for dyn Struct {
@@ -39,6 +47,7 @@ impl fmt::Debug for dyn Struct {
 #[derive(Default, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 pub struct StructValue {
+    field_names: Vec<String>,
     // use a `BTreeMap` because `HashMap` isn't `Hash`
     fields: BTreeMap<String, Value>,
 }
@@ -54,7 +63,9 @@ impl StructValue {
     }
 
     pub fn set_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
-        self.fields.insert(name.into(), value.into());
+        let name = name.into();
+        self.field_names.push(name.clone());
+        self.fields.insert(name, value.into());
     }
 }
 
@@ -130,12 +141,8 @@ impl Struct for StructValue {
         Some(self.fields.get_mut(name)?)
     }
 
-    fn fields(&self) -> PairIter<'_> {
-        let iter = self
-            .fields
-            .iter()
-            .map(|(key, value)| (&**key, value.as_reflect()));
-        PairIter::new(iter)
+    fn fields(&self) -> Iter<'_> {
+        Iter::new(self)
     }
 
     fn fields_mut(&mut self) -> PairIterMut<'_> {
@@ -143,7 +150,25 @@ impl Struct for StructValue {
             .fields
             .iter_mut()
             .map(|(key, value)| (&**key, value.as_reflect_mut()));
-        PairIterMut::new(iter)
+        Box::new(iter)
+    }
+
+    fn fields_len(&self) -> usize {
+        self.field_names.len()
+    }
+
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
+        let key = self.field_names.get(index)?;
+        Some(self.fields.get(key)?)
+    }
+
+    fn name_at(&self, index: usize) -> Option<&str> {
+        self.field_names.get(index).map(|s| &**s)
+    }
+
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+        let key = self.field_names.get(index)?;
+        Some(self.fields.get_mut(key)?)
     }
 }
 
@@ -173,5 +198,27 @@ where
             out.set_field(name, value.to_value());
         }
         out
+    }
+}
+
+pub struct Iter<'a> {
+    struct_: &'a dyn Struct,
+    index: usize,
+}
+
+impl<'a> Iter<'a> {
+    pub fn new(struct_: &'a dyn Struct) -> Self {
+        Self { struct_, index: 0 }
+    }
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = (&'a str, &'a dyn Reflect);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let name = self.struct_.name_at(self.index)?;
+        let value = self.struct_.field_at(self.index)?;
+        self.index += 1;
+        Some((name, value))
     }
 }

@@ -3,7 +3,6 @@ use alloc::collections::BTreeMap;
 use core::any::Any;
 use core::fmt;
 
-use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::type_info::graph::Id;
 use crate::type_info::graph::MapInfoNode;
@@ -55,18 +54,18 @@ where
         self.is_empty()
     }
 
-    fn iter(&self) -> PairIter<'_, dyn Reflect> {
+    fn iter(&self) -> crate::map::Iter<'_> {
         let iter = self
             .iter()
             .map(|(key, value)| (key.as_reflect(), value.as_reflect()));
-        PairIter::new(iter)
+        Box::new(iter)
     }
 
     fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect> {
         let iter = self
             .iter_mut()
             .map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
-        PairIterMut::new(iter)
+        Box::new(iter)
     }
 }
 

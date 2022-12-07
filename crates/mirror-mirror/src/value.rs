@@ -13,8 +13,8 @@ use serde::Serialize;
 
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;
-use crate::struct_::TupleStructValue;
 use crate::tuple::TupleValue;
+use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::Id;
 use crate::type_info::graph::OpaqueInfoNode;
 use crate::type_info::graph::TypeInfoGraph;

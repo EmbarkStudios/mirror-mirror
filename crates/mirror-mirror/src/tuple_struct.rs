@@ -5,7 +5,6 @@ use core::fmt;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::tuple::TupleValue;
 use crate::type_info::graph::Id;
@@ -25,9 +24,11 @@ pub trait TupleStruct: Reflect {
 
     fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
-    fn fields(&self) -> ValueIter<'_>;
+    fn fields(&self) -> Iter<'_>;
 
     fn fields_mut(&mut self) -> ValueIterMut<'_>;
+
+    fn fields_len(&self) -> usize;
 }
 
 impl fmt::Debug for dyn TupleStruct {
@@ -130,12 +131,16 @@ impl TupleStruct for TupleStructValue {
         self.tuple.field_mut(index)
     }
 
-    fn fields(&self) -> ValueIter<'_> {
-        self.tuple.fields()
+    fn fields(&self) -> Iter<'_> {
+        Iter::new(self)
     }
 
     fn fields_mut(&mut self) -> ValueIterMut<'_> {
         self.tuple.fields_mut()
+    }
+
+    fn fields_len(&self) -> usize {
+        self.tuple.fields_len()
     }
 }
 
@@ -164,5 +169,29 @@ where
             out.push_field(value.to_value());
         }
         out
+    }
+}
+
+pub struct Iter<'a> {
+    tuple_struct: &'a dyn TupleStruct,
+    index: usize,
+}
+
+impl<'a> Iter<'a> {
+    pub fn new(tuple_struct: &'a dyn TupleStruct) -> Self {
+        Self {
+            tuple_struct,
+            index: 0,
+        }
+    }
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = &'a dyn Reflect;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let value = self.tuple_struct.field(self.index)?;
+        self.index += 1;
+        Some(value)
     }
 }

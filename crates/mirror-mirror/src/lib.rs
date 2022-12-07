@@ -63,6 +63,7 @@ pub mod list;
 pub mod map;
 pub mod struct_;
 pub mod tuple;
+pub mod tuple_struct;
 pub mod type_info;
 pub mod value;
 
@@ -90,9 +91,9 @@ pub use self::map::Map;
 #[doc(inline)]
 pub use self::struct_::Struct;
 #[doc(inline)]
-pub use self::struct_::TupleStruct;
-#[doc(inline)]
 pub use self::tuple::Tuple;
+#[doc(inline)]
+pub use self::tuple_struct::TupleStruct;
 #[doc(inline)]
 pub use self::type_info::TypeInfoRoot;
 #[doc(inline)]
@@ -634,6 +635,7 @@ pub mod __private {
     pub use self::key_path::*;
     pub use self::struct_::*;
     pub use self::tuple::*;
+    pub use self::tuple_struct::*;
     pub use self::value::*;
     pub use crate::iter::*;
     pub use crate::type_info::graph::*;

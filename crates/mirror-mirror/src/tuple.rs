@@ -7,7 +7,6 @@ use core::fmt::Debug;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::Id;
 use crate::type_info::graph::OpaqueInfoNode;
@@ -27,9 +26,11 @@ pub trait Tuple: Reflect {
 
     fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
-    fn fields(&self) -> ValueIter<'_>;
+    fn fields(&self) -> Iter<'_>;
 
     fn fields_mut(&mut self) -> ValueIterMut<'_>;
+
+    fn fields_len(&self) -> usize;
 }
 
 impl fmt::Debug for dyn Tuple {
@@ -68,14 +69,17 @@ impl Tuple for TupleValue {
         Some(self.fields.get_mut(index)?.as_reflect_mut())
     }
 
-    fn fields(&self) -> ValueIter<'_> {
-        let iter = self.fields.iter().map(|value| value.as_reflect());
-        ValueIter::new(iter)
+    fn fields(&self) -> Iter<'_> {
+        Iter::new(self)
     }
 
     fn fields_mut(&mut self) -> ValueIterMut<'_> {
         let iter = self.fields.iter_mut().map(|value| value.as_reflect_mut());
-        ValueIterMut::new(iter)
+        Box::new(iter)
+    }
+
+    fn fields_len(&self) -> usize {
+        self.fields.len()
     }
 }
 
@@ -267,14 +271,22 @@ macro_rules! impl_tuple {
                 None
             }
 
-            fn fields(&self) -> ValueIter<'_> {
-                let ($($ident,)*) = self;
-                ValueIter::new([$($ident.as_reflect(),)*])
+            fn fields(&self) -> Iter<'_> {
+                Iter::new(self)
             }
 
             fn fields_mut(&mut self) -> ValueIterMut<'_> {
                 let ($($ident,)*) = self;
-                ValueIterMut::new([$($ident.as_reflect_mut(),)*])
+                Box::new([$($ident.as_reflect_mut(),)*].into_iter())
+            }
+
+            fn fields_len(&self) -> usize {
+                let mut n = 0;
+                $(
+                    let _ = stringify!($ident);
+                    n += 1;
+                )*
+                n
             }
         }
 
@@ -323,5 +335,26 @@ where
             out.push_field(value.to_value());
         }
         out
+    }
+}
+
+pub struct Iter<'a> {
+    tuple: &'a dyn Tuple,
+    index: usize,
+}
+
+impl<'a> Iter<'a> {
+    pub fn new(tuple: &'a dyn Tuple) -> Self {
+        Self { tuple, index: 0 }
+    }
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = &'a dyn Reflect;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let value = self.tuple.field(self.index)?;
+        self.index += 1;
+        Some(value)
     }
 }

@@ -11,8 +11,8 @@ use crate::enum_::EnumValue;
 use crate::key_path::Key;
 use crate::key_path::KeyPath;
 use crate::struct_::StructValue;
-use crate::struct_::TupleStructValue;
 use crate::tuple::TupleValue;
+use crate::tuple_struct::TupleStructValue;
 use crate::Reflect;
 use crate::Value;
 
