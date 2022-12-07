@@ -18,16 +18,17 @@ type Fields = Punctuated<Field, Token![,]>;
 pub(super) fn expand(
     ident: &Ident,
     fields: FieldsNamed,
-    item_attrs: ItemAttrs,
+    attrs: ItemAttrs,
     generics: &Generics<'_>,
 ) -> syn::Result<TokenStream> {
     let field_attrs = AttrsDatabase::new_from_named(&fields)?;
 
     let fields = fields.named;
 
-    let reflect = expand_reflect(ident, &fields, &item_attrs, &field_attrs, generics);
-    let from_reflect = expand_from_reflect(ident, &item_attrs, &fields, &field_attrs, generics);
-    let struct_ = expand_struct(ident, &fields, &item_attrs, &field_attrs, generics);
+    let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
+    let from_reflect = (!attrs.from_reflect_opt_out)
+        .then(|| expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics));
+    let struct_ = expand_struct(ident, &fields, &attrs, &field_attrs, generics);
 
     Ok(quote! {
         #reflect
@@ -39,7 +40,7 @@ pub(super) fn expand(
 fn expand_reflect(
     ident: &Ident,
     fields: &Fields,
-    item_attrs: &ItemAttrs,
+    attrs: &ItemAttrs,
     field_attrs: &AttrsDatabase<Ident>,
     generics: &Generics<'_>,
 ) -> TokenStream {
@@ -101,8 +102,8 @@ fn expand_reflect(
                 }
             });
 
-        let meta = item_attrs.meta();
-        let docs = item_attrs.docs();
+        let meta = attrs.meta();
+        let docs = attrs.docs();
         let Generics {
             impl_generics,
             type_generics,
@@ -125,8 +126,8 @@ fn expand_reflect(
         }
     };
 
-    let fn_debug = item_attrs.fn_debug_tokens();
-    let fn_clone_reflect = item_attrs.fn_clone_reflect_tokens();
+    let fn_debug = attrs.fn_debug_tokens();
+    let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
     let Generics {
         impl_generics,

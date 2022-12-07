@@ -177,3 +177,68 @@ mod derive_foreign {
         struct Qux;
     }
 }
+
+mod from_reflect_opt_out {
+    #![allow(warnings)]
+
+    use crate::FromReflect;
+
+    use super::*;
+
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(FromReflect))]
+    struct Percentage(f32);
+
+    impl FromReflect for Percentage {
+        fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+            if let Some(this) = reflect.downcast_ref::<Self>() {
+                Some(*this)
+            } else if let Some(value) = f32::from_reflect(reflect) {
+                Some(Self(value.clamp(0.0, 100.0)))
+            } else if let Some(value) = f64::from_reflect(reflect) {
+                Some(Self((value as f32).clamp(0.0, 100.0)))
+            } else {
+                None
+            }
+        }
+    }
+
+    #[test]
+    fn works() {
+        assert_eq!(
+            Percentage::from_reflect(&Percentage(10.0)).unwrap(),
+            Percentage(10.0)
+        );
+
+        assert_eq!(Percentage::from_reflect(&10.0).unwrap(), Percentage(10.0));
+
+        assert_eq!(
+            Percentage::from_reflect(&1337.0).unwrap(),
+            Percentage(100.0)
+        );
+    }
+
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate), opt_out(FromReflect))]
+    struct B {
+        n: f32,
+    }
+
+    impl FromReflect for B {
+        fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+            None
+        }
+    }
+
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate), opt_out(FromReflect))]
+    enum C {
+        A(f32),
+    }
+
+    impl FromReflect for C {
+        fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+            None
+        }
+    }
+}
