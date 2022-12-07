@@ -23,6 +23,7 @@ impl fmt::Debug for dyn Array {
     }
 }
 
+#[derive(Debug)]
 pub struct Iter<'a> {
     index: usize,
     reflect: &'a dyn Array,

@@ -336,6 +336,7 @@ impl FromReflect for EnumValue {
     }
 }
 
+#[derive(Debug)]
 pub struct VariantFieldIter<'a> {
     enum_: &'a dyn Enum,
     index: usize,
@@ -368,11 +369,13 @@ impl<'a> Iterator for VariantFieldIter<'a> {
     }
 }
 
+#[derive(Debug)]
 pub enum VariantField<'a> {
     Struct(&'a str, &'a dyn Reflect),
     Tuple(&'a dyn Reflect),
 }
 
+#[derive(Debug)]
 pub struct VariantFieldIterMut<'a>(VariantFieldIterInnerMut<'a>);
 
 impl<'a> VariantFieldIterMut<'a> {
@@ -401,6 +404,17 @@ enum VariantFieldIterInnerMut<'a> {
     Empty,
 }
 
+impl core::fmt::Debug for VariantFieldIterInnerMut<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Struct(_) => f.debug_tuple("Struct").finish(),
+            Self::Tuple(_) => f.debug_tuple("Tuple").finish(),
+            Self::Empty => write!(f, "Empty"),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum VariantFieldMut<'a> {
     Struct(&'a str, &'a mut dyn Reflect),
     Tuple(&'a mut dyn Reflect),

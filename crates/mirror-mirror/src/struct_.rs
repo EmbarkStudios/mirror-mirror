@@ -201,6 +201,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct Iter<'a> {
     struct_: &'a dyn Struct,
     index: usize,
