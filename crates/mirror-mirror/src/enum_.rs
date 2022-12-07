@@ -258,7 +258,7 @@ impl Enum for EnumValue {
                 VariantFieldIter(VariantFieldIterInner::Struct(inner.fields()))
             }
             EnumValueKind::Tuple(inner) => {
-                VariantFieldIter(VariantFieldIterInner::Tuple(inner.fields()))
+                VariantFieldIter(VariantFieldIterInner::Tuple(ValueIter::new(inner.fields())))
             }
             EnumValueKind::Unit => VariantFieldIter::empty(),
         }

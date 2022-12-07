@@ -131,7 +131,7 @@ impl TupleStruct for TupleStructValue {
     }
 
     fn fields(&self) -> ValueIter<'_> {
-        self.tuple.fields()
+        ValueIter::new(self.tuple.fields())
     }
 
     fn fields_mut(&mut self) -> ValueIterMut<'_> {
