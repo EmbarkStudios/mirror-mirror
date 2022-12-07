@@ -4,9 +4,6 @@ use alloc::string::String;
 use core::any::Any;
 use core::fmt;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::iter::PairIterMut;
 use crate::iter::ValueIterMut;
 use crate::struct_::StructValue;
@@ -61,15 +58,17 @@ pub enum VariantKind {
     Unit,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EnumValue {
     name: String,
     kind: EnumValueKind,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum EnumValueKind {
     Struct(StructValue),
     Tuple(TupleValue),

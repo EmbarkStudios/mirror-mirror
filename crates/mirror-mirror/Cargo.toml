@@ -11,15 +11,16 @@ description = "Reflection library for Rust"
 keywords = ["reflection"]
 
 [features]
-default = ["speedy", "std"]
+default = ["speedy", "serde", "std"]
 std = []
 speedy = ["std", "dep:speedy"]
+serde = ["std", "dep:serde"]
 
 [dependencies]
 ahash = { version = "0.8.2", default-features = false }
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.0" }
 ordered-float = { version = "3.4.0", default-features = false }
-serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"], optional = true }
 speedy = { version = "0.8", optional = true }
 
 [package.metadata.docs.rs]

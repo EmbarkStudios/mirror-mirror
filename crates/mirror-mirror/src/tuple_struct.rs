@@ -2,9 +2,6 @@ use alloc::boxed::Box;
 use core::any::Any;
 use core::fmt;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::iter::ValueIterMut;
 use crate::tuple::TupleValue;
 use crate::type_info::graph::Id;
@@ -37,8 +34,9 @@ impl fmt::Debug for dyn TupleStruct {
     }
 }
 
-#[derive(Default, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TupleStructValue {
     tuple: TupleValue,
 }
