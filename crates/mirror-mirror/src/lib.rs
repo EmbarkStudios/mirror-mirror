@@ -76,6 +76,9 @@ mod tests;
 #[doc(inline)]
 pub use mirror_mirror_macros::*;
 
+use crate::enum_::VariantField;
+use crate::enum_::VariantKind;
+
 #[doc(inline)]
 pub use self::array::Array;
 #[doc(inline)]
@@ -622,6 +625,98 @@ pub enum ScalarMut<'a> {
     f32(&'a mut f32),
     f64(&'a mut f64),
     String(&'a mut String),
+}
+
+pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn scalar_debug(
+        scalar: impl ::core::fmt::Debug,
+        f: &mut ::core::fmt::Formatter<'_>,
+    ) -> fmt::Result {
+        if f.alternate() {
+            write!(f, "{:#?}", scalar)
+        } else {
+            write!(f, "{:?}", scalar)
+        }
+    }
+
+    match value.reflect_ref() {
+        ReflectRef::Struct(inner) => {
+            let mut f = f.debug_struct(inner.type_name());
+            for (name, value) in inner.fields() {
+                f.field(name, &value as &dyn ::core::fmt::Debug);
+            }
+            f.finish()
+        }
+        ReflectRef::TupleStruct(inner) => {
+            let mut f = f.debug_tuple(inner.type_name());
+            for field in inner.fields() {
+                f.field(&field as &dyn ::core::fmt::Debug);
+            }
+            f.finish()
+        }
+        ReflectRef::Tuple(inner) => {
+            let mut f = f.debug_tuple("");
+            for field in inner.fields() {
+                f.field(&field as &dyn ::core::fmt::Debug);
+            }
+            f.finish()
+        }
+        ReflectRef::Enum(inner) => match inner.variant_kind() {
+            VariantKind::Struct => {
+                let mut f = f.debug_struct(inner.variant_name());
+                for field in inner.fields() {
+                    match field {
+                        VariantField::Struct(name, value) => {
+                            f.field(name, &value as &dyn ::core::fmt::Debug);
+                        }
+                        VariantField::Tuple { .. } => {
+                            unreachable!("unit variant yielded struct field")
+                        }
+                    }
+                }
+                f.finish()
+            }
+            VariantKind::Tuple => {
+                let mut f = f.debug_tuple(inner.variant_name());
+                for field in inner.fields() {
+                    match field {
+                        VariantField::Struct { .. } => {
+                            unreachable!("unit variant yielded struct field")
+                        }
+                        VariantField::Tuple(value) => {
+                            f.field(&value as &dyn ::core::fmt::Debug);
+                        }
+                    }
+                }
+                f.finish()
+            }
+            VariantKind::Unit => write!(f, "{}", inner.variant_name()),
+        },
+        ReflectRef::Array(inner) => f.debug_list().entries(inner.iter()).finish(),
+        ReflectRef::List(inner) => f.debug_list().entries(inner.iter()).finish(),
+        ReflectRef::Map(inner) => f.debug_map().entries(inner.iter()).finish(),
+        ReflectRef::Scalar(inner) => match inner {
+            ScalarRef::usize(inner) => scalar_debug(inner, f),
+            ScalarRef::u8(inner) => scalar_debug(inner, f),
+            ScalarRef::u16(inner) => scalar_debug(inner, f),
+            ScalarRef::u32(inner) => scalar_debug(inner, f),
+            ScalarRef::u64(inner) => scalar_debug(inner, f),
+            ScalarRef::u128(inner) => scalar_debug(inner, f),
+            ScalarRef::i8(inner) => scalar_debug(inner, f),
+            ScalarRef::i16(inner) => scalar_debug(inner, f),
+            ScalarRef::i32(inner) => scalar_debug(inner, f),
+            ScalarRef::i64(inner) => scalar_debug(inner, f),
+            ScalarRef::i128(inner) => scalar_debug(inner, f),
+            ScalarRef::bool(inner) => scalar_debug(inner, f),
+            ScalarRef::char(inner) => scalar_debug(inner, f),
+            ScalarRef::f32(inner) => scalar_debug(inner, f),
+            ScalarRef::f64(inner) => scalar_debug(inner, f),
+            ScalarRef::String(inner) => scalar_debug(inner, f),
+        },
+        ReflectRef::Opaque(_) => {
+            write!(f, "{}", value.type_name())
+        }
+    }
 }
 
 /// Private. Used by macros
