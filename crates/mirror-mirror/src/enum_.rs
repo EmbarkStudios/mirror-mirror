@@ -254,12 +254,8 @@ impl Enum for EnumValue {
 
     fn fields(&self) -> VariantFieldIter<'_> {
         match &self.kind {
-            EnumValueKind::Struct(inner) => {
-                VariantFieldIter(VariantFieldIterInner::Struct(inner.fields()))
-            }
-            EnumValueKind::Tuple(inner) => {
-                VariantFieldIter(VariantFieldIterInner::Tuple(ValueIter::new(inner.fields())))
-            }
+            EnumValueKind::Struct(inner) => VariantFieldIter::new_struct_variant(inner.fields()),
+            EnumValueKind::Tuple(inner) => VariantFieldIter::new_tuple_variant(inner.fields()),
             EnumValueKind::Unit => VariantFieldIter::empty(),
         }
     }

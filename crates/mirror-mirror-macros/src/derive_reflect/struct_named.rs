@@ -27,7 +27,7 @@ pub(super) fn expand(
 
     let reflect = expand_reflect(ident, &fields, &item_attrs, &field_attrs, generics);
     let from_reflect = expand_from_reflect(ident, &item_attrs, &fields, &field_attrs, generics);
-    let struct_ = expand_struct(ident, &fields, &field_attrs, generics);
+    let struct_ = expand_struct(ident, &fields, &item_attrs, &field_attrs, generics);
 
     Ok(quote! {
         #reflect
@@ -237,6 +237,7 @@ fn expand_from_reflect(
 fn expand_struct(
     ident: &Ident,
     fields: &Fields,
+    attrs: &ItemAttrs,
     field_attrs: &AttrsDatabase<Ident>,
     generics: &Generics<'_>,
 ) -> TokenStream {
@@ -284,22 +285,78 @@ fn expand_struct(
         }
     };
 
-    let fn_fields = {
+    let fn_field_at = {
         let code_for_fields = fields
             .iter()
             .filter(field_attrs.filter_out_skipped_named())
-            .map(|field| {
+            .enumerate()
+            .map(|(index, field)| {
                 let ident = &field.ident;
-                let field = stringify(ident);
                 quote! {
-                    (#field, self.#ident.as_reflect()),
+                    if index == #index {
+                        return Some(&self.#ident);
+                    }
                 }
             });
 
         quote! {
-            fn fields(&self) -> PairIter<'_> {
-                let iter = [#(#code_for_fields)*];
-                PairIter::new(iter)
+            fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
+                #(#code_for_fields)*
+                None
+            }
+        }
+    };
+
+    let fn_field_at_mut = {
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .enumerate()
+            .map(|(index, field)| {
+                let ident = &field.ident;
+                quote! {
+                    if index == #index {
+                        return Some(&mut self.#ident);
+                    }
+                }
+            });
+
+        quote! {
+            fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+                #(#code_for_fields)*
+                None
+            }
+        }
+    };
+
+    let fn_name_at = {
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .enumerate()
+            .map(|(index, field)| {
+                let ident = &field.ident;
+                quote! {
+                    if index == #index {
+                        return Some(::core::stringify!(#ident));
+                    }
+                }
+            });
+
+        quote! {
+            fn name_at(&self, index: usize) -> Option<&str> {
+                #(#code_for_fields)*
+                None
+            }
+        }
+    };
+
+    let fn_fields = {
+        let crate_name = &attrs.crate_name;
+
+        quote! {
+            fn fields(&self) -> #crate_name::struct_::Iter<'_> {
+                #crate_name::struct_::Iter::new(self)
             }
         }
     };
@@ -324,6 +381,19 @@ fn expand_struct(
         }
     };
 
+    let fn_fields_len = {
+        let len = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .count();
+
+        quote! {
+            fn fields_len(&self) -> usize {
+                #len
+            }
+        }
+    };
+
     let Generics {
         impl_generics,
         type_generics,
@@ -334,8 +404,12 @@ fn expand_struct(
         impl #impl_generics Struct for #ident #type_generics #where_clause {
             #fn_field
             #fn_field_mut
+            #fn_field_at
+            #fn_field_at_mut
+            #fn_name_at
             #fn_fields
             #fn_fields_mut
+            #fn_fields_len
         }
     }
 }
