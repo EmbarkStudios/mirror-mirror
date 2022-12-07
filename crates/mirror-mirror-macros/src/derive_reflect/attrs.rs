@@ -23,6 +23,7 @@ mod kw {
     syn::custom_keyword!(meta);
     syn::custom_keyword!(opt_out);
     syn::custom_keyword!(crate_name);
+    syn::custom_keyword!(from_reflect_with);
 }
 
 #[derive(Clone)]
@@ -264,12 +265,18 @@ where
         let docs = self.map.get(key).into_iter().flat_map(|attrs| &attrs.docs);
         quote! { &[#(#docs,)*] }
     }
+
+    #[allow(clippy::wrong_self_convention)]
+    pub(super) fn from_reflect_with(&self, key: &T) -> Option<&Ident> {
+        self.map.get(key)?.from_reflect_with.as_ref()
+    }
 }
 
 pub(super) struct InnerAttrs {
     pub(super) skip: bool,
     pub(super) meta: BTreeMap<Ident, Expr>,
     pub(super) docs: Vec<LitStr>,
+    pub(super) from_reflect_with: Option<Ident>,
 }
 
 impl InnerAttrs {
@@ -277,6 +284,7 @@ impl InnerAttrs {
         Self {
             skip: Default::default(),
             meta: Default::default(),
+            from_reflect_with: Default::default(),
             docs,
         }
     }
@@ -323,6 +331,12 @@ impl InnerAttrs {
 
                         let _ = content.parse::<Token![,]>();
                     }
+                } else if lh.peek(kw::from_reflect_with) {
+                    input.parse::<kw::from_reflect_with>()?;
+                    let content;
+                    syn::parenthesized!(content in input);
+                    field_attrs.from_reflect_with = Some(content.parse()?);
+                    let _ = content.parse::<Token![,]>();
                 } else {
                     return Err(lh.error());
                 }
