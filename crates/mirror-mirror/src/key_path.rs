@@ -3,9 +3,6 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
@@ -165,8 +162,9 @@ where
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KeyPath {
     pub(crate) path: Vec<Key>,
 }
@@ -217,8 +215,9 @@ mod private {
     impl Sealed for String {}
     impl Sealed for usize {}
 
-    #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[derive(Debug, Clone)]
     #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     pub enum Key {
         Field(String),
         Element(usize),

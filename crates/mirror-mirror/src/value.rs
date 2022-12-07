@@ -8,8 +8,6 @@ use core::cmp::Ordering;
 use core::fmt;
 
 use ordered_float::OrderedFloat;
-use serde::Deserialize;
-use serde::Serialize;
 
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;
@@ -28,8 +26,9 @@ use crate::TypeInfoRoot;
 use crate::Typed;
 
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Value {
     usize(usize),
     u8(u8),

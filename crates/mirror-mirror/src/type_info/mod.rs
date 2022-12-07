@@ -4,8 +4,6 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use graph::*;
-use serde::Deserialize;
-use serde::Serialize;
 
 use crate::enum_::EnumValue;
 use crate::key_path::Key;
@@ -32,8 +30,9 @@ pub trait GetTypedPath<'a> {
     fn at_typed(self, key_path: KeyPath) -> Option<TypeInfoAtPath<'a>>;
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeInfoRoot {
     root: Id,
     graph: TypeInfoGraph,
@@ -423,8 +422,9 @@ impl<'a> GetMeta<'a> for OpaqueInfo<'a> {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScalarInfo {
     usize,
     u8,

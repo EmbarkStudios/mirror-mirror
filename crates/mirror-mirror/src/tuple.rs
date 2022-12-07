@@ -4,9 +4,6 @@ use core::any::Any;
 use core::fmt;
 use core::fmt::Debug;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::Id;
 use crate::type_info::graph::OpaqueInfoNode;
@@ -39,8 +36,9 @@ impl fmt::Debug for dyn Tuple {
     }
 }
 
-#[derive(Default, Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TupleValue {
     fields: Vec<Value>,
 }

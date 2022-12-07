@@ -9,8 +9,9 @@ use core::any::TypeId;
 use super::*;
 use crate::Value;
 
-#[derive(Clone, Copy, Serialize, Deserialize, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Id(u64);
 
 impl Id {
@@ -27,8 +28,9 @@ impl Id {
     }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeInfoGraph {
     pub(super) map: BTreeMap<Id, Option<TypeInfoNode>>,
 }
@@ -63,8 +65,9 @@ impl TypeInfoGraph {
 
 type Metadata = BTreeMap<String, Value>;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TypeInfoNode {
     Struct(StructInfoNode),
     TupleStruct(TupleStructInfoNode),
@@ -97,8 +100,9 @@ impl_from! { Map(MapInfoNode) }
 impl_from! { Scalar(ScalarInfoNode) }
 impl_from! { Opaque(OpaqueInfoNode) }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<NamedFieldNode>,
@@ -124,8 +128,9 @@ fn map_docs(docs: &[&'static str]) -> Box<[String]> {
     docs.iter().map(|s| (*s).to_owned()).collect()
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TupleStructInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
@@ -147,8 +152,9 @@ impl TupleStructInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EnumInfoNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
@@ -170,16 +176,18 @@ impl EnumInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum VariantNode {
     Struct(StructVariantInfoNode),
     Tuple(TupleVariantInfoNode),
     Unit(UnitVariantInfoNode),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructVariantInfoNode {
     pub(super) name: String,
     pub(super) fields: Vec<NamedFieldNode>,
@@ -203,8 +211,9 @@ impl StructVariantInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TupleVariantInfoNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
@@ -228,8 +237,9 @@ impl TupleVariantInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitVariantInfoNode {
     pub(super) name: String,
     pub(super) metadata: Metadata,
@@ -246,8 +256,9 @@ impl UnitVariantInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TupleInfoNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
@@ -269,8 +280,9 @@ impl TupleInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: Id,
@@ -297,8 +309,9 @@ impl NamedFieldNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnnamedFieldNode {
     pub(super) id: Id,
     pub(super) metadata: Metadata,
@@ -318,8 +331,9 @@ impl UnnamedFieldNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ArrayInfoNode {
     pub(super) type_name: String,
     pub(super) field_type_id: Id,
@@ -340,8 +354,9 @@ impl ArrayInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ListInfoNode {
     pub(super) type_name: String,
     pub(super) field_type_id: Id,
@@ -360,8 +375,9 @@ impl ListInfoNode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MapInfoNode {
     pub(super) type_name: String,
     pub(super) key_type_id: Id,
@@ -385,8 +401,8 @@ impl MapInfoNode {
 
 #[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScalarInfoNode {
     usize,
     u8,
@@ -425,8 +441,9 @@ scalar_typed! {
     bool char String
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpaqueInfoNode {
     pub(super) type_name: String,
     pub(super) metadata: Metadata,
