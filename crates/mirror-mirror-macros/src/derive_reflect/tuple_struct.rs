@@ -26,7 +26,8 @@ pub(super) fn expand(
     let fields = fields.unnamed;
 
     let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
-    let from_reflect = expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics);
+    let from_reflect = (!attrs.from_reflect_opt_out)
+        .then(|| expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics));
     let tuple_struct = expand_tuple_struct(ident, &fields, &attrs, &field_attrs, generics);
 
     Ok(quote! {

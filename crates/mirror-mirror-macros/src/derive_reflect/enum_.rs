@@ -21,7 +21,8 @@ pub(super) fn expand(
     let variants = VariantData::try_from_enum(&enum_)?;
 
     let reflect = expand_reflect(ident, &variants, &attrs, generics)?;
-    let from_reflect = expand_from_reflect(ident, &variants, &attrs, generics);
+    let from_reflect = (!attrs.from_reflect_opt_out)
+        .then(|| expand_from_reflect(ident, &variants, &attrs, generics));
     let enum_ = expand_enum(ident, &variants, &attrs, generics);
 
     Ok(quote! {
