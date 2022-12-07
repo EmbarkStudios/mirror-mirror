@@ -266,6 +266,7 @@ where
         quote! { &[#(#docs,)*] }
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub(super) fn from_reflect_with(&self, key: &T) -> Option<&Ident> {
         self.map.get(key)?.from_reflect_with.as_ref()
     }
