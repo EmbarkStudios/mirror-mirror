@@ -363,6 +363,8 @@ where
 }
 
 mod private {
+    #![allow(missing_debug_implementations)]
+
     /// Types used to disambiguate otherwise overlapping trait impls
 
     pub struct Struct;

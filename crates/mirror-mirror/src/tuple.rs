@@ -338,6 +338,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct Iter<'a> {
     tuple: &'a dyn Tuple,
     index: usize,
