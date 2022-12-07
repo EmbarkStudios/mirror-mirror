@@ -7,9 +7,7 @@ use core::fmt;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::iter::PairIter;
 use crate::iter::PairIterMut;
-use crate::iter::ValueIter;
 use crate::iter::ValueIterMut;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
@@ -37,11 +35,17 @@ pub trait Enum: Reflect {
 
     fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
 
+    fn name_at(&self, index: usize) -> Option<&str>;
+
     fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn fields(&self) -> VariantFieldIter<'_>;
 
     fn fields_mut(&mut self) -> VariantFieldIterMut<'_>;
+
+    fn variants_len(&self) -> usize;
+
+    fn fields_len(&self) -> usize;
 }
 
 impl fmt::Debug for dyn Enum {
@@ -238,7 +242,7 @@ impl Enum for EnumValue {
 
     fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
         match &self.kind {
-            EnumValueKind::Struct(_) => None,
+            EnumValueKind::Struct(struct_) => struct_.field_at(index),
             EnumValueKind::Tuple(tuple) => tuple.field(index),
             EnumValueKind::Unit => None,
         }
@@ -246,18 +250,14 @@ impl Enum for EnumValue {
 
     fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
         match &mut self.kind {
-            EnumValueKind::Struct(_) => None,
+            EnumValueKind::Struct(struct_) => struct_.field_at_mut(index),
             EnumValueKind::Tuple(tuple) => tuple.field_mut(index),
             EnumValueKind::Unit => None,
         }
     }
 
     fn fields(&self) -> VariantFieldIter<'_> {
-        match &self.kind {
-            EnumValueKind::Struct(inner) => VariantFieldIter::new_struct_variant(inner.fields()),
-            EnumValueKind::Tuple(inner) => VariantFieldIter::new_tuple_variant(inner.fields()),
-            EnumValueKind::Unit => VariantFieldIter::empty(),
-        }
+        VariantFieldIter::new(self)
     }
 
     fn fields_mut(&mut self) -> VariantFieldIterMut<'_> {
@@ -269,6 +269,26 @@ impl Enum for EnumValue {
                 VariantFieldIterMut(VariantFieldIterInnerMut::Tuple(inner.fields_mut()))
             }
             EnumValueKind::Unit => VariantFieldIterMut::empty(),
+        }
+    }
+
+    fn variants_len(&self) -> usize {
+        1
+    }
+
+    fn fields_len(&self) -> usize {
+        match &self.kind {
+            EnumValueKind::Struct(inner) => inner.fields_len(),
+            EnumValueKind::Tuple(inner) => inner.fields_len(),
+            EnumValueKind::Unit => 0,
+        }
+    }
+
+    fn name_at(&self, index: usize) -> Option<&str> {
+        match &self.kind {
+            EnumValueKind::Struct(inner) => inner.name_at(index),
+            EnumValueKind::Tuple(_) => None,
+            EnumValueKind::Unit => None,
         }
     }
 }
@@ -316,51 +336,41 @@ impl FromReflect for EnumValue {
     }
 }
 
-pub struct VariantFieldIter<'a>(VariantFieldIterInner<'a>);
+pub struct VariantFieldIter<'a> {
+    enum_: &'a dyn Enum,
+    index: usize,
+}
 
 impl<'a> VariantFieldIter<'a> {
-    pub fn new_struct_variant<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (&'a str, &'a dyn Reflect)> + 'a,
-    {
-        Self(VariantFieldIterInner::Struct(PairIter::new(iter)))
+    pub fn new(enum_: &'a dyn Enum) -> Self {
+        Self { enum_, index: 0 }
     }
-
-    pub fn new_tuple_variant<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = &'a dyn Reflect> + 'a,
-    {
-        Self(VariantFieldIterInner::Tuple(ValueIter::new(iter)))
-    }
-
-    pub fn empty() -> Self {
-        Self(VariantFieldIterInner::Empty)
-    }
-}
-
-enum VariantFieldIterInner<'a> {
-    Struct(PairIter<'a>),
-    Tuple(ValueIter<'a>),
-    Empty,
-}
-
-pub enum VariantField<'a> {
-    Struct(&'a str, &'a dyn Reflect),
-    Tuple(&'a dyn Reflect),
 }
 
 impl<'a> Iterator for VariantFieldIter<'a> {
     type Item = VariantField<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match &mut self.0 {
-            VariantFieldIterInner::Struct(iter) => iter
-                .next()
-                .map(|(name, value)| VariantField::Struct(name, value)),
-            VariantFieldIterInner::Tuple(iter) => iter.next().map(VariantField::Tuple),
-            VariantFieldIterInner::Empty => None,
-        }
+        let item = match self.enum_.variant_kind() {
+            VariantKind::Struct => {
+                let name = self.enum_.name_at(self.index)?;
+                let value = self.enum_.field_at(self.index)?;
+                VariantField::Struct(name, value)
+            }
+            VariantKind::Tuple => {
+                let value = self.enum_.field_at(self.index)?;
+                VariantField::Tuple(value)
+            }
+            VariantKind::Unit => return None,
+        };
+        self.index += 1;
+        Some(item)
     }
+}
+
+pub enum VariantField<'a> {
+    Struct(&'a str, &'a dyn Reflect),
+    Tuple(&'a dyn Reflect),
 }
 
 pub struct VariantFieldIterMut<'a>(VariantFieldIterInnerMut<'a>);

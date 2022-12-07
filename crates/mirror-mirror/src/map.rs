@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 use core::fmt;
 
-use crate::iter::PairIter;
 use crate::iter::PairIterMut;
 use crate::Reflect;
 
@@ -18,7 +17,7 @@ pub trait Map: Reflect {
 
     fn is_empty(&self) -> bool;
 
-    fn iter(&self) -> PairIter<'_, dyn Reflect>;
+    fn iter(&self) -> Iter<'_>;
 
     fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect>;
 }
@@ -28,3 +27,5 @@ impl fmt::Debug for dyn Map {
         self.as_reflect().debug(f)
     }
 }
+
+pub type Iter<'a> = Box<dyn Iterator<Item = (&'a dyn Reflect, &'a dyn Reflect)> + 'a>;

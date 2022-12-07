@@ -319,6 +319,9 @@ fn option() {
 
     assert_eq!(Option::<i32>::from_reflect(&Some(1)).unwrap(), Some(1));
     assert_eq!(Option::<i32>::from_reflect(&None::<i32>).unwrap(), None);
+
+    assert_eq!(Some(1).fields_len(), 1);
+    assert_eq!(None::<i32>.fields_len(), 0);
 }
 
 #[test]
