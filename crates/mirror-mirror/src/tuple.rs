@@ -75,7 +75,7 @@ impl Tuple for TupleValue {
 
     fn fields_mut(&mut self) -> ValueIterMut<'_> {
         let iter = self.fields.iter_mut().map(|value| value.as_reflect_mut());
-        ValueIterMut::new(iter)
+        Box::new(iter)
     }
 
     fn fields_len(&self) -> usize {
@@ -277,7 +277,7 @@ macro_rules! impl_tuple {
 
             fn fields_mut(&mut self) -> ValueIterMut<'_> {
                 let ($($ident,)*) = self;
-                ValueIterMut::new([$($ident.as_reflect_mut(),)*])
+                Box::new([$($ident.as_reflect_mut(),)*].into_iter())
             }
 
             fn fields_len(&self) -> usize {

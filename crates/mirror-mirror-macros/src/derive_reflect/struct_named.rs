@@ -376,7 +376,7 @@ fn expand_struct(
         quote! {
             fn fields_mut(&mut self) -> PairIterMut<'_> {
                 let iter = [#(#code_for_fields)*];
-                PairIterMut::new(iter)
+                Box::new(iter.into_iter())
             }
         }
     };

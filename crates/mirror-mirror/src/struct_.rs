@@ -149,7 +149,7 @@ impl Struct for StructValue {
             .fields
             .iter_mut()
             .map(|(key, value)| (&**key, value.as_reflect_mut()));
-        PairIterMut::new(iter)
+        Box::new(iter)
     }
 
     fn fields_len(&self) -> usize {

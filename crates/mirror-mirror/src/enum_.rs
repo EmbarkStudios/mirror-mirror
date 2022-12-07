@@ -370,14 +370,14 @@ impl<'a> VariantFieldIterMut<'a> {
     where
         I: IntoIterator<Item = (&'a str, &'a mut dyn Reflect)> + 'a,
     {
-        Self(VariantFieldIterInnerMut::Struct(PairIterMut::new(iter)))
+        Self(VariantFieldIterInnerMut::Struct(Box::new(iter.into_iter())))
     }
 
     pub fn new_tuple_variant<I>(iter: I) -> Self
     where
         I: IntoIterator<Item = &'a mut dyn Reflect> + 'a,
     {
-        Self(VariantFieldIterInnerMut::Tuple(ValueIterMut::new(iter)))
+        Self(VariantFieldIterInnerMut::Tuple(Box::new(iter.into_iter())))
     }
 
     pub fn empty() -> Self {

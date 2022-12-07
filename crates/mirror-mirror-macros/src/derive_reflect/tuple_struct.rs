@@ -317,8 +317,8 @@ fn expand_tuple_struct(
 
         quote! {
             fn fields_mut(&mut self) -> ValueIterMut<'_> {
-                let iter = [#(#code_for_fields)*];
-                ValueIterMut::new(iter)
+                let iter = [#(#code_for_fields)*].into_iter();
+                Box::new(iter)
             }
         }
     };

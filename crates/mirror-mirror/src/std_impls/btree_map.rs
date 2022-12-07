@@ -66,7 +66,7 @@ where
         let iter = self
             .iter_mut()
             .map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
-        PairIterMut::new(iter)
+        Box::new(iter)
     }
 }
 

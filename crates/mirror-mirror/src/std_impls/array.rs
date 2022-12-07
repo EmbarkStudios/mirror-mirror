@@ -113,7 +113,7 @@ where
             .as_mut_slice()
             .iter_mut()
             .map(|value| value.as_reflect_mut());
-        ValueIterMut::new(iter)
+        Box::new(iter)
     }
 }
 
