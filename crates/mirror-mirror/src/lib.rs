@@ -68,6 +68,7 @@ pub mod value;
 
 mod std_impls;
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests;
 
