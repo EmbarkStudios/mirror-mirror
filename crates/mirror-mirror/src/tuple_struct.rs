@@ -17,6 +17,9 @@ use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
+/// A reflected tuple struct type.
+///
+/// Will be implemented by `#[derive(Reflect)]` on tuple structs.
 pub trait TupleStruct: Reflect {
     fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
 

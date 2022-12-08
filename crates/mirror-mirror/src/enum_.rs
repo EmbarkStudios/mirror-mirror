@@ -22,6 +22,9 @@ use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
+/// A reflected enum type.
+///
+/// Will be implemented by `#[derive(Reflect)]` on enums.
 pub trait Enum: Reflect {
     fn variant_name(&self) -> &str;
 

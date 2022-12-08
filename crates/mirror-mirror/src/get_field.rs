@@ -12,12 +12,14 @@ use crate::Tuple;
 use crate::TupleStruct;
 use crate::Value;
 
+/// Helper trait for accessing and downcasting fields on reflected values.
 pub trait GetField<'a, K, M> {
     fn get_field<T>(self, key: K) -> Option<&'a T>
     where
         T: Reflect;
 }
 
+/// Helper trait for mutably accessing and downcasting fields on reflected values.
 pub trait GetFieldMut<'a, K, M> {
     fn get_field_mut<T>(self, key: K) -> Option<&'a mut T>
     where

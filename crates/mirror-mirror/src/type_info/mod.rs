@@ -21,6 +21,9 @@ use crate::Value;
 
 pub mod graph;
 
+/// Trait for accessing type information.
+///
+/// Will be implemented by `#[derive(Reflect)]`.
 pub trait Typed: 'static {
     fn type_info() -> TypeRoot {
         let mut graph = TypeGraph::default();
@@ -31,6 +34,12 @@ pub trait Typed: 'static {
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
 
+/// The root of a type.
+///
+/// Accessed via the [`Typed`] trait.
+///
+/// `mirror-mirror` represents types as (possibly cyclic) graphs since types can contain
+/// themselves. For example `struct Foo(Vec<Foo>)`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -92,6 +101,16 @@ impl TypeRoot {
 impl<'a> GetTypePath<'a> for &'a TypeRoot {
     fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.get_type().type_at(key_path)
+    }
+}
+
+impl<'a> GetMeta<'a> for &'a TypeRoot {
+    fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
+        self.get_type().meta(key)
+    }
+
+    fn docs(self) -> &'a [String] {
+        self.get_type().docs()
     }
 }
 
@@ -390,6 +409,7 @@ mod private {
 
     pub trait Sealed {}
 
+    impl<'a> Sealed for &'a TypeRoot {}
     impl Sealed for Type<'_> {}
     impl Sealed for StructType<'_> {}
     impl Sealed for TupleStructType<'_> {}

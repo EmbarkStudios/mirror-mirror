@@ -4,6 +4,13 @@ use core::fmt;
 use crate::iter::PairIterMut;
 use crate::Reflect;
 
+/// A reflected map type.
+///
+/// Note this is only implemented for [`BTreeMap`] and _not_ [`HashMap`] due to technical
+/// limitations.
+///
+/// [`BTreeMap`]: alloc::collections::BTreeMap
+/// [`HashMap`]: std::collections::HashMap
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;
 

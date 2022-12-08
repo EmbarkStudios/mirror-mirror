@@ -27,6 +27,9 @@ use crate::ScalarRef;
 use crate::TypeRoot;
 use crate::Typed;
 
+/// A type erased value type.
+///
+/// Constructed with [`Reflect::to_value`].
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]

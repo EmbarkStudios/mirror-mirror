@@ -3,6 +3,7 @@ use core::fmt;
 use crate::iter::ValueIterMut;
 use crate::Reflect;
 
+/// A reflected array type.
 pub trait Array: Reflect {
     fn get(&self, index: usize) -> Option<&dyn Reflect>;
 
