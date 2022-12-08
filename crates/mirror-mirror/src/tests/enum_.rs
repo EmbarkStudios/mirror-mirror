@@ -309,6 +309,26 @@ fn option() {
     value.patch(&None::<i32>);
     assert_eq!(value, None);
 
+    let mut value = Some(1);
+    value.patch(&EnumValue::new_unit_variant("None"));
+    assert_eq!(value, None);
+
+    let mut value = Some(1);
+    value.patch(&None::<i32>.to_value());
+    assert_eq!(value, None);
+
+    let mut value = Some(1);
+    value.patch(&EnumValue::new_unit_variant("None").to_value());
+    assert_eq!(value, None);
+
+    let mut value = Some(1).to_value();
+    value.patch(&None::<i32>.to_value());
+    assert_eq!(Option::<i32>::from_reflect(&value).unwrap(), None);
+
+    let mut value = Some(1).to_value();
+    value.patch(&EnumValue::new_unit_variant("None").to_value());
+    assert_eq!(Option::<i32>::from_reflect(&value).unwrap(), None);
+
     let mut value = None::<i32>;
     value.patch(&Some(42));
     assert_eq!(value, Some(42));
