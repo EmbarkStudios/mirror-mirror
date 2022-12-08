@@ -10,12 +10,15 @@ use core::fmt;
 use ordered_float::OrderedFloat;
 
 use crate::enum_::EnumValue;
+use crate::key_path::GetTypePath;
+use crate::key_path::KeyPath;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::type_info::TypeAtPath;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -383,6 +386,12 @@ impl Reflect for TypedValue {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.value.debug(f)
+    }
+}
+
+impl<'a> GetTypePath<'a> for &'a TypedValue {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.type_root.at_type(key_path)
     }
 }
 
