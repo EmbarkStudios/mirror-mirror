@@ -14,7 +14,7 @@ keywords = ["reflection"]
 default = ["speedy", "serde", "std"]
 std = []
 speedy = ["std", "dep:speedy"]
-serde = ["std", "dep:serde"]
+serde = ["dep:serde"]
 
 [dependencies]
 ahash = { version = "0.8.2", default-features = false }
