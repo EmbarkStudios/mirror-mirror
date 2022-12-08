@@ -13,8 +13,8 @@ use crate::enum_::EnumValue;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
-use crate::type_info::graph::Id;
-use crate::type_info::graph::OpaqueInfoNode;
+use crate::type_info::graph::NodeId;
+use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Reflect;
@@ -139,9 +139,9 @@ impl Ord for Value {
 impl Reflect for Value {
     fn type_info(&self) -> TypeInfoRoot {
         impl Typed for Value {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
                 graph.get_or_build_with::<Self, _>(|graph| {
-                    OpaqueInfoNode::new::<Self>(Default::default(), graph)
+                    OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }
         }

@@ -19,9 +19,9 @@ macro_rules! impl_reflect_via_scalar {
             impl Reflect for $ty {
                 fn type_info(&self) -> TypeInfoRoot {
                     impl Typed for $ty {
-                        fn build(graph: &mut TypeInfoGraph) -> Id {
+                        fn build(graph: &mut TypeInfoGraph) -> NodeId {
                             graph.get_or_build_with::<Self, _>(|graph| {
-                                OpaqueInfoNode::new::<Self>(Default::default(), graph)
+                                OpaqueNode::new::<Self>(Default::default(), graph)
                             })
                         }
                     }

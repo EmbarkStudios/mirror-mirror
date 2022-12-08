@@ -4,8 +4,8 @@ use core::any::Any;
 use core::fmt;
 
 use crate::iter::PairIterMut;
-use crate::type_info::graph::Id;
-use crate::type_info::graph::MapInfoNode;
+use crate::type_info::graph::NodeId;
+use crate::type_info::graph::MapNode;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Map;
@@ -80,8 +80,8 @@ where
             K: Typed,
             V: Typed,
         {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
-                graph.get_or_build_with::<Self, _>(|graph| MapInfoNode::new::<Self, K, V>(graph))
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
+                graph.get_or_build_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
             }
         }
 

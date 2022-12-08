@@ -23,7 +23,7 @@ pub trait Typed: 'static {
         TypeInfoRoot { root: id, graph }
     }
 
-    fn build(graph: &mut TypeInfoGraph) -> Id;
+    fn build(graph: &mut TypeInfoGraph) -> NodeId;
 }
 
 pub trait GetTypedPath<'a> {
@@ -34,7 +34,7 @@ pub trait GetTypedPath<'a> {
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeInfoRoot {
-    root: Id,
+    root: NodeId,
     graph: TypeInfoGraph,
 }
 
@@ -108,58 +108,58 @@ pub enum TypeInfo<'a> {
 }
 
 impl<'a> TypeInfo<'a> {
-    fn new(id: Id, graph: &'a TypeInfoGraph) -> Self {
+    fn new(id: NodeId, graph: &'a TypeInfoGraph) -> Self {
         match graph.get(id) {
-            TypeInfoNode::Struct(node) => {
+            TypeNode::Struct(node) => {
                 let node = StructInfo { node, graph };
                 TypeInfo::Struct(node)
             }
-            TypeInfoNode::TupleStruct(node) => {
+            TypeNode::TupleStruct(node) => {
                 let node = TupleStructInfo { node, graph };
                 TypeInfo::TupleStruct(node)
             }
-            TypeInfoNode::Tuple(node) => {
+            TypeNode::Tuple(node) => {
                 let node = TupleInfo { node, graph };
                 TypeInfo::Tuple(node)
             }
-            TypeInfoNode::Enum(node) => {
+            TypeNode::Enum(node) => {
                 let node = EnumInfo { node, graph };
                 TypeInfo::Enum(node)
             }
-            TypeInfoNode::List(node) => {
+            TypeNode::List(node) => {
                 let node = ListInfo { node, graph };
                 TypeInfo::List(node)
             }
-            TypeInfoNode::Array(node) => {
+            TypeNode::Array(node) => {
                 let node = ArrayInfo { node, graph };
                 TypeInfo::Array(node)
             }
-            TypeInfoNode::Map(node) => {
+            TypeNode::Map(node) => {
                 let node = MapInfo { node, graph };
                 TypeInfo::Map(node)
             }
-            TypeInfoNode::Scalar(scalar) => {
+            TypeNode::Scalar(scalar) => {
                 let node = match scalar {
-                    ScalarInfoNode::usize => ScalarInfo::usize,
-                    ScalarInfoNode::u8 => ScalarInfo::u8,
-                    ScalarInfoNode::u16 => ScalarInfo::u16,
-                    ScalarInfoNode::u32 => ScalarInfo::u32,
-                    ScalarInfoNode::u64 => ScalarInfo::u64,
-                    ScalarInfoNode::u128 => ScalarInfo::u128,
-                    ScalarInfoNode::i8 => ScalarInfo::i8,
-                    ScalarInfoNode::i16 => ScalarInfo::i16,
-                    ScalarInfoNode::i32 => ScalarInfo::i32,
-                    ScalarInfoNode::i64 => ScalarInfo::i64,
-                    ScalarInfoNode::i128 => ScalarInfo::i128,
-                    ScalarInfoNode::bool => ScalarInfo::bool,
-                    ScalarInfoNode::char => ScalarInfo::char,
-                    ScalarInfoNode::f32 => ScalarInfo::f32,
-                    ScalarInfoNode::f64 => ScalarInfo::f64,
-                    ScalarInfoNode::String => ScalarInfo::String,
+                    ScalarNode::usize => ScalarInfo::usize,
+                    ScalarNode::u8 => ScalarInfo::u8,
+                    ScalarNode::u16 => ScalarInfo::u16,
+                    ScalarNode::u32 => ScalarInfo::u32,
+                    ScalarNode::u64 => ScalarInfo::u64,
+                    ScalarNode::u128 => ScalarInfo::u128,
+                    ScalarNode::i8 => ScalarInfo::i8,
+                    ScalarNode::i16 => ScalarInfo::i16,
+                    ScalarNode::i32 => ScalarInfo::i32,
+                    ScalarNode::i64 => ScalarInfo::i64,
+                    ScalarNode::i128 => ScalarInfo::i128,
+                    ScalarNode::bool => ScalarInfo::bool,
+                    ScalarNode::char => ScalarInfo::char,
+                    ScalarNode::f32 => ScalarInfo::f32,
+                    ScalarNode::f64 => ScalarInfo::f64,
+                    ScalarNode::String => ScalarInfo::String,
                 };
                 TypeInfo::Scalar(node)
             }
-            TypeInfoNode::Opaque(node) => {
+            TypeNode::Opaque(node) => {
                 let node = OpaqueInfo { node, graph };
                 TypeInfo::Opaque(node)
             }
@@ -517,7 +517,7 @@ impl ScalarInfo {
 
 #[derive(Copy, Clone, Debug)]
 pub struct StructInfo<'a> {
-    node: &'a StructInfoNode,
+    node: &'a StructNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -553,7 +553,7 @@ impl<'a> StructInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct TupleStructInfo<'a> {
-    node: &'a TupleStructInfoNode,
+    node: &'a TupleStructNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -584,7 +584,7 @@ impl<'a> TupleStructInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct TupleInfo<'a> {
-    node: &'a TupleInfoNode,
+    node: &'a TupleNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -615,7 +615,7 @@ impl<'a> TupleInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct EnumInfo<'a> {
-    node: &'a EnumInfoNode,
+    node: &'a EnumNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -760,8 +760,8 @@ impl<'a> GetMeta<'a> for VariantField<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct StructVariantInfo<'a> {
-    node: &'a StructVariantInfoNode,
-    enum_node: &'a EnumInfoNode,
+    node: &'a StructVariantNode,
+    enum_node: &'a EnumNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -800,8 +800,8 @@ impl<'a> StructVariantInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct TupleVariantInfo<'a> {
-    node: &'a TupleVariantInfoNode,
-    enum_node: &'a EnumInfoNode,
+    node: &'a TupleVariantNode,
+    enum_node: &'a EnumNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -835,8 +835,8 @@ impl<'a> TupleVariantInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct UnitVariantInfo<'a> {
-    node: &'a UnitVariantInfoNode,
-    enum_node: &'a EnumInfoNode,
+    node: &'a UnitVariantNode,
+    enum_node: &'a EnumNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -883,7 +883,7 @@ impl<'a> NamedField<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ArrayInfo<'a> {
-    node: &'a ArrayInfoNode,
+    node: &'a ArrayNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -911,7 +911,7 @@ impl<'a> ArrayInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ListInfo<'a> {
-    node: &'a ListInfoNode,
+    node: &'a ListNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -931,7 +931,7 @@ impl<'a> ListInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct MapInfo<'a> {
-    node: &'a MapInfoNode,
+    node: &'a MapNode,
     graph: &'a TypeInfoGraph,
 }
 
@@ -955,7 +955,7 @@ impl<'a> MapInfo<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct OpaqueInfo<'a> {
-    node: &'a OpaqueInfoNode,
+    node: &'a OpaqueNode,
     #[allow(dead_code)]
     graph: &'a TypeInfoGraph,
 }

@@ -5,8 +5,8 @@ use core::fmt;
 
 use crate::array::Array;
 use crate::iter::ValueIterMut;
-use crate::type_info::graph::ArrayInfoNode;
-use crate::type_info::graph::Id;
+use crate::type_info::graph::ArrayNode;
+use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Reflect;
@@ -25,8 +25,8 @@ where
         where
             T: Typed,
         {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
-                graph.get_or_build_with::<Self, _>(|graph| ArrayInfoNode::new::<Self, T, N>(graph))
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
+                graph.get_or_build_with::<Self, _>(|graph| ArrayNode::new::<Self, T, N>(graph))
             }
         }
 

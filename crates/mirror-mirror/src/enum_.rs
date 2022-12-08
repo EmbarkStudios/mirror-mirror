@@ -8,8 +8,8 @@ use crate::iter::PairIterMut;
 use crate::iter::ValueIterMut;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
-use crate::type_info::graph::Id;
-use crate::type_info::graph::OpaqueInfoNode;
+use crate::type_info::graph::NodeId;
+use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Reflect;
@@ -137,9 +137,9 @@ impl EnumValue {
 impl Reflect for EnumValue {
     fn type_info(&self) -> TypeInfoRoot {
         impl Typed for EnumValue {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
                 graph.get_or_build_with::<Self, _>(|graph| {
-                    OpaqueInfoNode::new::<Self>(Default::default(), graph)
+                    OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }
         }

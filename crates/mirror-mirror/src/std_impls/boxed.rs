@@ -3,7 +3,7 @@ use core::any::Any;
 use core::fmt;
 
 use crate::reflect_debug;
-use crate::type_info::graph::Id;
+use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::FromReflect;
 use crate::Reflect;
@@ -22,7 +22,7 @@ where
         where
             T: Typed,
         {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
                 T::build(graph)
             }
         }

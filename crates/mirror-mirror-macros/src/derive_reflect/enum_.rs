@@ -215,7 +215,7 @@ fn expand_reflect(
 
                     quote! {
                         VariantNode::Struct(
-                            StructVariantInfoNode::new(
+                            StructVariantNode::new(
                                 #variant_ident_string,
                                 &[#(#fields),*],
                                 #meta,
@@ -236,7 +236,7 @@ fn expand_reflect(
 
                     quote! {
                         VariantNode::Tuple(
-                            TupleVariantInfoNode::new(
+                            TupleVariantNode::new(
                                 #variant_ident_string,
                                 &[#(#fields),*],
                                 #meta,
@@ -246,7 +246,7 @@ fn expand_reflect(
                     }
                 }
                 FieldsData::Unit => quote! {
-                    VariantNode::Unit(UnitVariantInfoNode::new(
+                    VariantNode::Unit(UnitVariantNode::new(
                         #variant_ident_string,
                         #meta,
                         #docs,
@@ -267,10 +267,10 @@ fn expand_reflect(
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
                 impl #impl_generics Typed for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeInfoGraph) -> Id {
+                    fn build(graph: &mut TypeInfoGraph) -> NodeId {
                         let variants = &[#(#code_for_variants),*];
                         graph.get_or_build_with::<Self, _>(|graph| {
-                            EnumInfoNode::new::<Self>(variants, #meta, #docs)
+                            EnumNode::new::<Self>(variants, #meta, #docs)
                         })
                     }
                 }

@@ -113,10 +113,10 @@ fn expand_reflect(
         quote! {
             fn type_info(&self) -> TypeInfoRoot {
                 impl #impl_generics Typed for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeInfoGraph) -> Id {
+                    fn build(graph: &mut TypeInfoGraph) -> NodeId {
                         graph.get_or_build_with::<Self, _>(|graph| {
                             let fields = &[#(#code_for_fields),*];
-                            StructInfoNode::new::<Self>(fields, #meta, #docs)
+                            StructNode::new::<Self>(fields, #meta, #docs)
                         })
                     }
                 }

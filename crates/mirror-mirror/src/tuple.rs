@@ -5,9 +5,9 @@ use core::fmt;
 use core::fmt::Debug;
 
 use crate::iter::ValueIterMut;
-use crate::type_info::graph::Id;
-use crate::type_info::graph::OpaqueInfoNode;
-use crate::type_info::graph::TupleInfoNode;
+use crate::type_info::graph::NodeId;
+use crate::type_info::graph::OpaqueNode;
+use crate::type_info::graph::TupleNode;
 use crate::type_info::graph::TypeInfoGraph;
 use crate::type_info::graph::UnnamedFieldNode;
 use crate::FromReflect;
@@ -84,9 +84,9 @@ impl Tuple for TupleValue {
 impl Reflect for TupleValue {
     fn type_info(&self) -> TypeInfoRoot {
         impl Typed for TupleValue {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
                 graph.get_or_build_with::<Self, _>(|graph| {
-                    OpaqueInfoNode::new::<Self>(Default::default(), graph)
+                    OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }
         }
@@ -163,14 +163,14 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
+            fn build(graph: &mut TypeInfoGraph) -> NodeId {
                 graph.get_or_build_with::<Self, _>(|graph| {
                     let fields = &[
                         $(
                             UnnamedFieldNode::new::<$ident>(Default::default(), Default::default(), graph),
                         )*
                     ];
-                    TupleInfoNode::new::<Self>(fields, Default::default(), Default::default())
+                    TupleNode::new::<Self>(fields, Default::default(), Default::default())
                 })
             }
         }
