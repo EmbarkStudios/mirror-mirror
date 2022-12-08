@@ -267,116 +267,28 @@ impl Reflect for Value {
 
     fn patch(&mut self, value: &dyn Reflect) {
         match self {
-            Value::usize(inner) => {
-                if let Some(value) = value.downcast_ref::<usize>() {
-                    *inner = *value;
-                }
-            }
-            Value::u8(inner) => {
-                if let Some(value) = value.downcast_ref::<u8>() {
-                    *inner = *value;
-                }
-            }
-            Value::u16(inner) => {
-                if let Some(value) = value.downcast_ref::<u16>() {
-                    *inner = *value;
-                }
-            }
-            Value::u32(inner) => {
-                if let Some(value) = value.downcast_ref::<u32>() {
-                    *inner = *value;
-                }
-            }
-            Value::u64(inner) => {
-                if let Some(value) = value.downcast_ref::<u64>() {
-                    *inner = *value;
-                }
-            }
-            Value::u128(inner) => {
-                if let Some(value) = value.downcast_ref::<u128>() {
-                    *inner = *value;
-                }
-            }
-            Value::i8(inner) => {
-                if let Some(value) = value.downcast_ref::<i8>() {
-                    *inner = *value;
-                }
-            }
-            Value::i16(inner) => {
-                if let Some(value) = value.downcast_ref::<i16>() {
-                    *inner = *value;
-                }
-            }
-            Value::i32(inner) => {
-                if let Some(value) = value.downcast_ref::<i32>() {
-                    *inner = *value;
-                }
-            }
-            Value::i64(inner) => {
-                if let Some(value) = value.downcast_ref::<i64>() {
-                    *inner = *value;
-                }
-            }
-            Value::i128(inner) => {
-                if let Some(value) = value.downcast_ref::<i128>() {
-                    *inner = *value;
-                }
-            }
-            Value::bool(inner) => {
-                if let Some(value) = value.downcast_ref::<bool>() {
-                    *inner = *value;
-                }
-            }
-            Value::char(inner) => {
-                if let Some(value) = value.downcast_ref::<char>() {
-                    *inner = *value;
-                }
-            }
-            Value::f32(inner) => {
-                if let Some(value) = value.downcast_ref::<f32>() {
-                    *inner = *value;
-                }
-            }
-            Value::f64(inner) => {
-                if let Some(value) = value.downcast_ref::<f64>() {
-                    *inner = *value;
-                }
-            }
-            Value::String(inner) => {
-                if let Some(value) = value.downcast_ref::<String>() {
-                    *inner = value.clone();
-                }
-            }
-            Value::StructValue(inner) => {
-                if let Some(value) = value.downcast_ref::<StructValue>() {
-                    *inner = Box::new(value.clone());
-                }
-            }
-            Value::TupleStructValue(inner) => {
-                if let Some(value) = value.downcast_ref::<TupleStructValue>() {
-                    *inner = value.clone();
-                }
-            }
-            Value::EnumValue(inner) => {
-                if let Some(value) = value.downcast_ref::<EnumValue>() {
-                    *inner = Box::new(value.clone());
-                }
-            }
-            Value::TupleValue(inner) => {
-                if let Some(value) = value.downcast_ref::<TupleValue>() {
-                    *inner = value.clone();
-                }
-            }
-            Value::List(inner) => {
-                if let Some(value) = value.downcast_ref::<Vec<Value>>() {
-                    *inner = value.clone();
-                }
-            }
-            Value::Map(inner) => {
-                if let Some(value) = value.downcast_ref::<BTreeMap<Value, Value>>() {
-                    *inner = value.clone();
-                }
-            }
+            Value::usize(inner) => inner.patch(value),
+            Value::u8(inner) => inner.patch(value),
+            Value::u16(inner) => inner.patch(value),
+            Value::u32(inner) => inner.patch(value),
+            Value::u64(inner) => inner.patch(value),
+            Value::u128(inner) => inner.patch(value),
+            Value::i8(inner) => inner.patch(value),
+            Value::i16(inner) => inner.patch(value),
+            Value::i32(inner) => inner.patch(value),
+            Value::i64(inner) => inner.patch(value),
+            Value::i128(inner) => inner.patch(value),
+            Value::bool(inner) => inner.patch(value),
+            Value::char(inner) => inner.patch(value),
+            Value::f32(inner) => inner.patch(value),
+            Value::f64(inner) => inner.patch(value),
+            Value::String(inner) => inner.patch(value),
+            Value::StructValue(inner) => inner.patch(value),
+            Value::TupleStructValue(inner) => inner.patch(value),
+            Value::EnumValue(inner) => inner.patch(value),
+            Value::TupleValue(inner) => inner.patch(value),
+            Value::List(inner) => inner.patch(value),
+            Value::Map(inner) => inner.patch(value),
         }
     }
 
