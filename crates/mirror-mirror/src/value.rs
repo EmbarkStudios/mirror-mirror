@@ -136,6 +136,35 @@ impl Ord for Value {
     }
 }
 
+macro_rules! for_each_variant {
+    ($self:ident, $inner:ident => $expr:expr) => {
+        match $self {
+            Value::usize($inner) => $expr,
+            Value::u8($inner) => $expr,
+            Value::u16($inner) => $expr,
+            Value::u32($inner) => $expr,
+            Value::u64($inner) => $expr,
+            Value::u128($inner) => $expr,
+            Value::i8($inner) => $expr,
+            Value::i16($inner) => $expr,
+            Value::i32($inner) => $expr,
+            Value::i64($inner) => $expr,
+            Value::i128($inner) => $expr,
+            Value::bool($inner) => $expr,
+            Value::char($inner) => $expr,
+            Value::f32($inner) => $expr,
+            Value::f64($inner) => $expr,
+            Value::String($inner) => $expr,
+            Value::StructValue($inner) => $expr,
+            Value::TupleStructValue($inner) => $expr,
+            Value::EnumValue($inner) => $expr,
+            Value::TupleValue($inner) => $expr,
+            Value::List($inner) => $expr,
+            Value::Map($inner) => $expr,
+        }
+    };
+}
+
 impl Reflect for Value {
     fn type_info(&self) -> TypeRoot {
         impl Typed for Value {
@@ -150,65 +179,19 @@ impl Reflect for Value {
     }
 
     fn as_any(&self) -> &dyn Any {
-        match self {
-            Value::usize(inner) => inner,
-            Value::u8(inner) => inner,
-            Value::u16(inner) => inner,
-            Value::u32(inner) => inner,
-            Value::u64(inner) => inner,
-            Value::u128(inner) => inner,
-            Value::i8(inner) => inner,
-            Value::i16(inner) => inner,
-            Value::i32(inner) => inner,
-            Value::i64(inner) => inner,
-            Value::i128(inner) => inner,
-            Value::bool(inner) => inner,
-            Value::char(inner) => inner,
-            Value::f32(inner) => inner,
-            Value::f64(inner) => inner,
-            Value::String(inner) => inner,
-            Value::StructValue(inner) => inner,
-            Value::TupleStructValue(inner) => inner,
-            Value::EnumValue(inner) => inner,
-            Value::TupleValue(inner) => inner,
-            Value::List(inner) => inner,
-            Value::Map(inner) => inner,
-        }
+        for_each_variant!(self, inner => inner)
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
-        match self {
-            Value::usize(inner) => inner,
-            Value::u8(inner) => inner,
-            Value::u16(inner) => inner,
-            Value::u32(inner) => inner,
-            Value::u64(inner) => inner,
-            Value::u128(inner) => inner,
-            Value::i8(inner) => inner,
-            Value::i16(inner) => inner,
-            Value::i32(inner) => inner,
-            Value::i64(inner) => inner,
-            Value::i128(inner) => inner,
-            Value::bool(inner) => inner,
-            Value::char(inner) => inner,
-            Value::f32(inner) => inner,
-            Value::f64(inner) => inner,
-            Value::String(inner) => inner,
-            Value::StructValue(inner) => inner,
-            Value::TupleStructValue(inner) => inner,
-            Value::EnumValue(inner) => inner,
-            Value::TupleValue(inner) => inner,
-            Value::List(inner) => inner,
-            Value::Map(inner) => inner,
-        }
+        for_each_variant!(self, inner => inner)
     }
 
     fn as_reflect(&self) -> &dyn Reflect {
-        self
+        for_each_variant!(self, inner => inner)
     }
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self
+        for_each_variant!(self, inner => inner)
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {
@@ -266,30 +249,7 @@ impl Reflect for Value {
     }
 
     fn patch(&mut self, value: &dyn Reflect) {
-        match self {
-            Value::usize(inner) => inner.patch(value),
-            Value::u8(inner) => inner.patch(value),
-            Value::u16(inner) => inner.patch(value),
-            Value::u32(inner) => inner.patch(value),
-            Value::u64(inner) => inner.patch(value),
-            Value::u128(inner) => inner.patch(value),
-            Value::i8(inner) => inner.patch(value),
-            Value::i16(inner) => inner.patch(value),
-            Value::i32(inner) => inner.patch(value),
-            Value::i64(inner) => inner.patch(value),
-            Value::i128(inner) => inner.patch(value),
-            Value::bool(inner) => inner.patch(value),
-            Value::char(inner) => inner.patch(value),
-            Value::f32(inner) => inner.patch(value),
-            Value::f64(inner) => inner.patch(value),
-            Value::String(inner) => inner.patch(value),
-            Value::StructValue(inner) => inner.patch(value),
-            Value::TupleStructValue(inner) => inner.patch(value),
-            Value::EnumValue(inner) => inner.patch(value),
-            Value::TupleValue(inner) => inner.patch(value),
-            Value::List(inner) => inner.patch(value),
-            Value::Map(inner) => inner.patch(value),
-        }
+        for_each_variant!(self, inner => inner.patch(value))
     }
 
     fn to_value(&self) -> Value {
