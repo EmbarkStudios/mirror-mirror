@@ -223,7 +223,7 @@ fn accessing_docs_in_type_info() {
         .unwrap()
         .as_variant()
         .unwrap();
-    let field = variant_info.fields().next().unwrap();
+    let field = variant_info.field_types().next().unwrap();
     assert_eq!(field.name().unwrap(), "field");
     assert_eq!(field.docs(), &[" Bingo!"]);
 }
