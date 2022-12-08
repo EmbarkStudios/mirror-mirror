@@ -42,6 +42,50 @@ impl TypeInfoRoot {
     pub fn type_(&self) -> TypeInfo<'_> {
         TypeInfo::new(self.root, &self.graph)
     }
+
+    pub fn type_name(&self) -> &str {
+        self.type_().type_name()
+    }
+
+    pub fn default_value(&self) -> Option<Value> {
+        self.type_().default_value()
+    }
+
+    pub fn as_struct(&self) -> Option<StructInfo<'_>> {
+        self.type_().as_struct()
+    }
+
+    pub fn as_tuple_struct(&self) -> Option<TupleStructInfo<'_>> {
+        self.type_().as_tuple_struct()
+    }
+
+    pub fn as_tuple(&self) -> Option<TupleInfo<'_>> {
+        self.type_().as_tuple()
+    }
+
+    pub fn as_enum(&self) -> Option<EnumInfo<'_>> {
+        self.type_().as_enum()
+    }
+
+    pub fn as_array(&self) -> Option<ArrayInfo<'_>> {
+        self.type_().as_array()
+    }
+
+    pub fn as_list(&self) -> Option<ListInfo<'_>> {
+        self.type_().as_list()
+    }
+
+    pub fn as_map(&self) -> Option<MapInfo<'_>> {
+        self.type_().as_map()
+    }
+
+    pub fn as_scalar(&self) -> Option<ScalarInfo> {
+        self.type_().as_scalar()
+    }
+
+    pub fn as_opaque(&self) -> Option<OpaqueInfo<'_>> {
+        self.type_().as_opaque()
+    }
 }
 
 impl<'a> GetTypedPath<'a> for &'a TypeInfoRoot {
