@@ -86,7 +86,7 @@ impl TypeRoot {
 }
 
 impl<'a> GetTypePath<'a> for &'a TypeRoot {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.get_type().at_type(key_path)
     }
 }
@@ -328,55 +328,55 @@ impl<'a> Type<'a> {
 }
 
 impl<'a> GetTypePath<'a> for Type<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for StructType<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for TupleStructType<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for TupleType<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for EnumType<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for ListType<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for MapType<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl GetTypePath<'static> for ScalarType {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'static>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'static>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for Variant<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.into_type_info_at_path().at_type(key_path)
     }
 }
@@ -1104,8 +1104,8 @@ impl<'a> TypeAtPath<'a> {
 }
 
 impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>> {
-        fn go(type_info: TypeAtPath<'_>, mut stack: Vec<Key>) -> Option<TypeAtPath<'_>> {
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        fn go<'a>(type_info: TypeAtPath<'a>, mut stack: Vec<&Key>) -> Option<TypeAtPath<'a>> {
             let head = stack.pop()?;
 
             let value_at_key: TypeAtPath<'_> = match head {
@@ -1159,19 +1159,19 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeAtPath::TupleStruct(tuple_struct) => tuple_struct
                         .field_types()
-                        .nth(index)?
+                        .nth(*index)?
                         .get_type()
                         .into_type_info_at_path(),
                     TypeAtPath::Tuple(tuple) => tuple
                         .field_types()
-                        .nth(index)?
+                        .nth(*index)?
                         .get_type()
                         .into_type_info_at_path(),
 
                     TypeAtPath::Variant(variant) => match variant {
                         Variant::Tuple(tuple_variant) => tuple_variant
                             .field_types()
-                            .nth(index)?
+                            .nth(*index)?
                             .get_type()
                             .into_type_info_at_path(),
                         Variant::Struct(_) | Variant::Unit(_) => return None,
@@ -1216,7 +1216,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
             return Some(self);
         }
 
-        let mut path = key_path.path;
+        let mut path = key_path.path.iter().collect::<Vec<_>>();
         path.reverse();
         go(self, path)
     }

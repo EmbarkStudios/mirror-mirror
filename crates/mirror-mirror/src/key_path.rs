@@ -29,7 +29,7 @@ pub trait GetPath {
 }
 
 pub trait GetTypePath<'a> {
-    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>>;
+    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>>;
 }
 
 impl<R> GetPath for R
