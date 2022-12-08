@@ -54,6 +54,10 @@ use core::any::Any;
 use core::any::TypeId;
 use core::fmt;
 
+use crate::enum_::VariantField;
+use crate::enum_::VariantKind;
+use crate::value::TypedValue;
+
 pub mod array;
 pub mod enum_;
 pub mod get_field;
@@ -100,8 +104,6 @@ pub use self::type_info::TypeRoot;
 pub use self::type_info::Typed;
 #[doc(inline)]
 pub use self::value::Value;
-use crate::enum_::VariantField;
-use crate::enum_::VariantKind;
 
 pub trait Reflect: Any + Send + 'static {
     fn type_info(&self) -> TypeRoot;
@@ -196,6 +198,10 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_scalar_mut(&mut self) -> Option<ScalarMut<'_>> {
         self.reflect_mut().as_scalar_mut()
+    }
+
+    fn to_typed_value(&self) -> TypedValue {
+        TypedValue::new(self)
     }
 }
 

@@ -659,6 +659,10 @@ impl<'a> EnumType<'a> {
         })
     }
 
+    pub fn variant(self, name: &str) -> Option<Variant<'a>> {
+        self.variants().find(|variant| variant.name() == name)
+    }
+
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Enum(self)
     }
