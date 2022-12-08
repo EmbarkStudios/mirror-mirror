@@ -76,9 +76,6 @@ mod tests;
 #[doc(inline)]
 pub use mirror_mirror_macros::*;
 
-use crate::enum_::VariantField;
-use crate::enum_::VariantKind;
-
 #[doc(inline)]
 pub use self::array::Array;
 #[doc(inline)]
@@ -103,6 +100,8 @@ pub use self::type_info::TypeInfoRoot;
 pub use self::type_info::Typed;
 #[doc(inline)]
 pub use self::value::Value;
+use crate::enum_::VariantField;
+use crate::enum_::VariantKind;
 
 pub trait Reflect: Any + Send + 'static {
     fn type_info(&self) -> TypeInfoRoot;
@@ -219,52 +218,6 @@ impl dyn Reflect {
 impl fmt::Debug for dyn Reflect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.debug(f)
-    }
-}
-
-impl<T> Reflect for Box<T> where T: Reflect + Typed {
-    fn type_info(&self) -> TypeInfoRoot {
-        <T as Typed>::type_info()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_reflect(&self) -> &dyn Reflect {
-        self
-    }
-
-    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self
-    }
-
-    fn reflect_ref(&self) -> ReflectRef<'_> {
-        todo!()
-    }
-
-    fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        todo!()
-    }
-
-    fn patch(&mut self, value: &dyn Reflect) {
-        todo!()
-    }
-
-    fn to_value(&self) -> Value {
-        todo!()
-    }
-
-    fn clone_reflect(&self) -> Box<dyn Reflect> {
-        todo!()
-    }
-
-    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        reflect_debug(self, f)
     }
 }
 
