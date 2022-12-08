@@ -4,9 +4,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::key_path;
+use crate::key_path::GetTypePath;
 use crate::struct_::StructValue;
 use crate::type_info::GetMeta;
-use crate::type_info::GetTypedPath;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
@@ -213,13 +213,13 @@ fn accessing_docs_in_type_info() {
     let type_info = <Foo as Typed>::type_info();
 
     assert_eq!(
-        type_info.type_().docs(),
+        type_info.get_type().docs(),
         &[" Here are the docs.", "", " Foo bar."]
     );
 
     let variant_info = type_info
-        .type_()
-        .at_typed(key_path!(.inner[0].map_key[0]{Some}[0]{Variant}))
+        .get_type()
+        .at_type(key_path!(.inner[0].map_key[0]{Some}[0]{Variant}))
         .unwrap()
         .as_variant()
         .unwrap();

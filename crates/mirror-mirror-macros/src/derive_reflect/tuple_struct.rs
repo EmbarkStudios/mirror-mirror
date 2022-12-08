@@ -113,12 +113,12 @@ fn expand_reflect(
         } = generics;
 
         quote! {
-            fn type_info(&self) -> TypeInfoRoot {
+            fn type_info(&self) -> TypeRoot {
                 impl #impl_generics Typed for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeInfoGraph) -> Id {
+                    fn build(graph: &mut TypeGraph) -> NodeId {
                         let fields = &[#(#code_for_fields),*];
-                        graph.get_or_build_with::<Self, _>(|graph| {
-                            TupleStructInfoNode::new::<Self>(fields, #meta, #docs)
+                        graph.get_or_build_node_with::<Self, _>(|graph| {
+                            TupleStructNode::new::<Self>(fields, #meta, #docs)
                         })
                     }
                 }

@@ -3,13 +3,13 @@ use core::any::Any;
 use core::fmt;
 
 use crate::reflect_debug;
-use crate::type_info::graph::Id;
-use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::NodeId;
+use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfoRoot;
+use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
@@ -17,12 +17,12 @@ impl<T> Reflect for Box<T>
 where
     T: Reflect + Typed,
 {
-    fn type_info(&self) -> TypeInfoRoot {
+    fn type_info(&self) -> TypeRoot {
         impl<T> Typed for Box<T>
         where
             T: Typed,
         {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
+            fn build(graph: &mut TypeGraph) -> NodeId {
                 T::build(graph)
             }
         }

@@ -3,6 +3,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
 
+use crate::type_info::TypeAtPath;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
@@ -25,6 +26,10 @@ pub trait GetPath {
     {
         self.at_mut(key_path)?.downcast_mut()
     }
+}
+
+pub trait GetTypePath<'a> {
+    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>>;
 }
 
 impl<R> GetPath for R

@@ -4,15 +4,15 @@ use core::any::Any;
 use core::fmt;
 
 use crate::iter::PairIterMut;
-use crate::type_info::graph::Id;
-use crate::type_info::graph::MapInfoNode;
-use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::MapNode;
+use crate::type_info::graph::NodeId;
+use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Map;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfoRoot;
+use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
@@ -74,14 +74,14 @@ where
     K: FromReflect + Typed + Ord,
     V: FromReflect + Typed,
 {
-    fn type_info(&self) -> TypeInfoRoot {
+    fn type_info(&self) -> TypeRoot {
         impl<K, V> Typed for BTreeMap<K, V>
         where
             K: Typed,
             V: Typed,
         {
-            fn build(graph: &mut TypeInfoGraph) -> Id {
-                graph.get_or_build_with::<Self, _>(|graph| MapInfoNode::new::<Self, K, V>(graph))
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
             }
         }
 
