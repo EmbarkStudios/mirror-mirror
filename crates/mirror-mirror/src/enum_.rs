@@ -76,17 +76,21 @@ enum EnumValueKind {
 }
 
 impl EnumValue {
-    pub fn new_struct_variant(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            kind: EnumValueKind::Struct(Default::default()),
+    pub fn new_struct_variant(name: impl Into<String>) -> StructVariantBuilder {
+        StructVariantBuilder {
+            inner: Self {
+                name: name.into(),
+                kind: EnumValueKind::Struct(Default::default()),
+            },
         }
     }
 
-    pub fn new_tuple_variant(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            kind: EnumValueKind::Tuple(Default::default()),
+    pub fn new_tuple_variant(name: impl Into<String>) -> TupleVariantBuilder {
+        TupleVariantBuilder {
+            inner: Self {
+                name: name.into(),
+                kind: EnumValueKind::Tuple(Default::default()),
+            },
         }
     }
 
@@ -131,6 +135,46 @@ impl EnumValue {
             }
             EnumValueKind::Unit => panic!("Cannot set fields on unit variants"),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct StructVariantBuilder {
+    inner: EnumValue,
+}
+
+impl StructVariantBuilder {
+    pub fn with_struct_field(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
+        self.set_struct_field(name, value);
+        self
+    }
+
+    pub fn set_struct_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
+        self.inner.set_struct_field(name, value);
+    }
+
+    pub fn finish(self) -> EnumValue {
+        self.inner
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TupleVariantBuilder {
+    inner: EnumValue,
+}
+
+impl TupleVariantBuilder {
+    pub fn with_tuple_field(mut self, value: impl Into<Value>) -> Self {
+        self.push_tuple_field(value);
+        self
+    }
+
+    pub fn push_tuple_field(&mut self, value: impl Into<Value>) {
+        self.inner.push_tuple_field(value);
+    }
+
+    pub fn finish(self) -> EnumValue {
+        self.inner
     }
 }
 

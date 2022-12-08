@@ -223,14 +223,14 @@ impl<'a> Type<'a> {
                         for field in variant.field_types() {
                             value.set_struct_field(field.name(), field.get_type().default_value()?);
                         }
-                        value.to_value()
+                        value.finish().to_value()
                     }
                     Variant::Tuple(variant) => {
                         let mut value = EnumValue::new_tuple_variant(variant.name());
                         for field in variant.field_types() {
                             value.push_tuple_field(field.get_type().default_value()?);
                         }
-                        value.to_value()
+                        value.finish().to_value()
                     }
                     Variant::Unit(variant) => {
                         EnumValue::new_unit_variant(variant.name()).to_value()
