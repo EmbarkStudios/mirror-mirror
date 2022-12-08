@@ -150,7 +150,7 @@ fn expand_reflect(
                         Self::#variant_ident { #(#field_names,)* } => {
                             let mut value = EnumValue::new_struct_variant(#variant_ident_string);
                             #(#set_fields)*
-                            value.into()
+                            value.finish().into()
                         }
                     }
                 }
@@ -168,7 +168,7 @@ fn expand_reflect(
                             #(
                                 value.push_tuple_field(#included_fields.to_value());
                             )*
-                            value.into()
+                            value.finish().into()
                         }
                     }
                 }
