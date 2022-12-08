@@ -265,11 +265,11 @@ fn expand_reflect(
         } = generics;
 
         quote! {
-            fn type_info(&self) -> TypeInfoRoot {
+            fn type_info(&self) -> TypeRoot {
                 impl #impl_generics Typed for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeInfoGraph) -> NodeId {
+                    fn build(graph: &mut TypeGraph) -> NodeId {
                         let variants = &[#(#code_for_variants),*];
-                        graph.get_or_build_with::<Self, _>(|graph| {
+                        graph.get_or_build_node_with::<Self, _>(|graph| {
                             EnumNode::new::<Self>(variants, #meta, #docs)
                         })
                     }

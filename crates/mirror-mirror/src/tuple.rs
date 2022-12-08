@@ -8,13 +8,13 @@ use crate::iter::ValueIterMut;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TupleNode;
-use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeGraph;
 use crate::type_info::graph::UnnamedFieldNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfoRoot;
+use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
@@ -82,10 +82,10 @@ impl Tuple for TupleValue {
 }
 
 impl Reflect for TupleValue {
-    fn type_info(&self) -> TypeInfoRoot {
+    fn type_info(&self) -> TypeRoot {
         impl Typed for TupleValue {
-            fn build(graph: &mut TypeInfoGraph) -> NodeId {
-                graph.get_or_build_with::<Self, _>(|graph| {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }
@@ -163,8 +163,8 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn build(graph: &mut TypeInfoGraph) -> NodeId {
-                graph.get_or_build_with::<Self, _>(|graph| {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                graph.get_or_build_node_with::<Self, _>(|graph| {
                     let fields = &[
                         $(
                             UnnamedFieldNode::new::<$ident>(Default::default(), Default::default(), graph),
@@ -180,7 +180,7 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn type_info(&self) -> TypeInfoRoot {
+            fn type_info(&self) -> TypeRoot {
                 <Self as Typed>::type_info()
             }
 

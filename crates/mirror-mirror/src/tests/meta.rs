@@ -9,7 +9,7 @@ fn works() {
     struct Foo;
 
     let type_info = <Foo as Typed>::type_info();
-    let type_info = type_info.type_().as_struct().unwrap();
+    let type_info = type_info.get_type().as_struct().unwrap();
 
     assert_eq!(
         type_info

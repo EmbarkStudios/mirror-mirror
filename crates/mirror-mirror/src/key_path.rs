@@ -6,6 +6,7 @@ use core::fmt;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::type_info::TypeAtPath;
 
 pub trait GetPath {
     fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect>;
@@ -25,6 +26,10 @@ pub trait GetPath {
     {
         self.at_mut(key_path)?.downcast_mut()
     }
+}
+
+pub trait GetTypePath<'a> {
+    fn at_type(self, key_path: KeyPath) -> Option<TypeAtPath<'a>>;
 }
 
 impl<R> GetPath for R

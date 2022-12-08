@@ -17,10 +17,10 @@ macro_rules! impl_reflect_via_scalar {
             use $crate::__private::*;
 
             impl Reflect for $ty {
-                fn type_info(&self) -> TypeInfoRoot {
+                fn type_info(&self) -> TypeRoot {
                     impl Typed for $ty {
-                        fn build(graph: &mut TypeInfoGraph) -> NodeId {
-                            graph.get_or_build_with::<Self, _>(|graph| {
+                        fn build(graph: &mut TypeGraph) -> NodeId {
+                            graph.get_or_build_node_with::<Self, _>(|graph| {
                                 OpaqueNode::new::<Self>(Default::default(), graph)
                             })
                         }
@@ -133,12 +133,12 @@ mod tests {
     #[test]
     fn keeps_type_name() {
         assert_eq!(
-            <NonZeroI8 as Typed>::type_info().type_().type_name(),
+            <NonZeroI8 as Typed>::type_info().get_type().type_name(),
             "core::num::nonzero::NonZeroI8"
         );
 
         assert_eq!(
-            <Duration as Typed>::type_info().type_().type_name(),
+            <Duration as Typed>::type_info().get_type().type_name(),
             "core::time::Duration"
         );
     }

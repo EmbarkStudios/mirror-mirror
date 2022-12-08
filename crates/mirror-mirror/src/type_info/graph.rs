@@ -31,17 +31,17 @@ impl NodeId {
 #[derive(Default, Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TypeInfoGraph {
+pub struct TypeGraph {
     pub(super) map: BTreeMap<NodeId, Option<TypeNode>>,
 }
 
-impl TypeInfoGraph {
+impl TypeGraph {
     pub(super) fn get(&self, id: NodeId) -> &TypeNode {
         const ERROR: &str = "no node found in graph. This is a bug. Please open an issue.";
         self.map.get(&id).expect(ERROR).as_ref().expect(ERROR)
     }
 
-    pub fn get_or_build_with<T, I>(&mut self, f: impl FnOnce(&mut Self) -> I) -> NodeId
+    pub fn get_or_build_node_with<T, I>(&mut self, f: impl FnOnce(&mut Self) -> I) -> NodeId
     where
         I: Into<TypeNode>,
         T: Typed,
@@ -305,7 +305,7 @@ impl NamedFieldNode {
         name: &'static str,
         metadata: Metadata,
         docs: &[&'static str],
-        graph: &mut TypeInfoGraph,
+        graph: &mut TypeGraph,
     ) -> Self
     where
         T: Typed,
@@ -329,7 +329,7 @@ pub struct UnnamedFieldNode {
 }
 
 impl UnnamedFieldNode {
-    pub fn new<T>(metadata: Metadata, docs: &[&'static str], graph: &mut TypeInfoGraph) -> Self
+    pub fn new<T>(metadata: Metadata, docs: &[&'static str], graph: &mut TypeGraph) -> Self
     where
         T: Typed,
     {
@@ -351,7 +351,7 @@ pub struct ArrayNode {
 }
 
 impl ArrayNode {
-    pub(crate) fn new<L, T, const N: usize>(graph: &mut TypeInfoGraph) -> Self
+    pub(crate) fn new<L, T, const N: usize>(graph: &mut TypeGraph) -> Self
     where
         L: Typed,
         T: Typed,
@@ -373,7 +373,7 @@ pub struct ListNode {
 }
 
 impl ListNode {
-    pub(crate) fn new<L, T>(graph: &mut TypeInfoGraph) -> Self
+    pub(crate) fn new<L, T>(graph: &mut TypeGraph) -> Self
     where
         L: Typed,
         T: Typed,
@@ -395,7 +395,7 @@ pub struct MapNode {
 }
 
 impl MapNode {
-    pub(crate) fn new<M, K, V>(graph: &mut TypeInfoGraph) -> Self
+    pub(crate) fn new<M, K, V>(graph: &mut TypeGraph) -> Self
     where
         M: Typed,
         K: Typed,
@@ -436,8 +436,8 @@ macro_rules! scalar_typed {
     ($($ty:ident)*) => {
         $(
             impl Typed for $ty {
-                fn build(graph: &mut TypeInfoGraph) -> NodeId {
-                    graph.get_or_build_with::<Self, _>(|_graph| ScalarNode::$ty)
+                fn build(graph: &mut TypeGraph) -> NodeId {
+                    graph.get_or_build_node_with::<Self, _>(|_graph| ScalarNode::$ty)
                 }
             }
         )*
@@ -460,7 +460,7 @@ pub struct OpaqueNode {
 }
 
 impl OpaqueNode {
-    pub fn new<T>(metadata: Metadata, _graph: &mut TypeInfoGraph) -> Self
+    pub fn new<T>(metadata: Metadata, _graph: &mut TypeGraph) -> Self
     where
         T: Typed,
     {

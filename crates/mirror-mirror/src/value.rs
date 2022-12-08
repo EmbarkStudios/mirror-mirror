@@ -15,14 +15,14 @@ use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
-use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
 use crate::ScalarMut;
 use crate::ScalarRef;
-use crate::TypeInfoRoot;
+use crate::TypeRoot;
 use crate::Typed;
 
 #[allow(non_camel_case_types)]
@@ -137,10 +137,10 @@ impl Ord for Value {
 }
 
 impl Reflect for Value {
-    fn type_info(&self) -> TypeInfoRoot {
+    fn type_info(&self) -> TypeRoot {
         impl Typed for Value {
-            fn build(graph: &mut TypeInfoGraph) -> NodeId {
-                graph.get_or_build_with::<Self, _>(|graph| {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }

@@ -7,12 +7,12 @@ use crate::array::Array;
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::ArrayNode;
 use crate::type_info::graph::NodeId;
-use crate::type_info::graph::TypeInfoGraph;
+use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::TypeInfoRoot;
+use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
@@ -20,13 +20,13 @@ impl<T, const N: usize> Reflect for [T; N]
 where
     T: FromReflect + Typed,
 {
-    fn type_info(&self) -> TypeInfoRoot {
+    fn type_info(&self) -> TypeRoot {
         impl<T, const N: usize> Typed for [T; N]
         where
             T: Typed,
         {
-            fn build(graph: &mut TypeInfoGraph) -> NodeId {
-                graph.get_or_build_with::<Self, _>(|graph| ArrayNode::new::<Self, T, N>(graph))
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                graph.get_or_build_node_with::<Self, _>(|graph| ArrayNode::new::<Self, T, N>(graph))
             }
         }
 

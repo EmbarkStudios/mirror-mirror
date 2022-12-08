@@ -95,7 +95,7 @@ pub use self::tuple::Tuple;
 #[doc(inline)]
 pub use self::tuple_struct::TupleStruct;
 #[doc(inline)]
-pub use self::type_info::TypeInfoRoot;
+pub use self::type_info::TypeRoot;
 #[doc(inline)]
 pub use self::type_info::Typed;
 #[doc(inline)]
@@ -104,7 +104,7 @@ use crate::enum_::VariantField;
 use crate::enum_::VariantKind;
 
 pub trait Reflect: Any + Send + 'static {
-    fn type_info(&self) -> TypeInfoRoot;
+    fn type_info(&self) -> TypeRoot;
 
     fn as_any(&self) -> &dyn Any;
 
@@ -225,7 +225,7 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
-                fn type_info(&self) -> TypeInfoRoot {
+                fn type_info(&self) -> TypeRoot {
                     <Self as Typed>::type_info()
                 }
 
@@ -305,7 +305,7 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
-    fn type_info(&self) -> TypeInfoRoot {
+    fn type_info(&self) -> TypeRoot {
         <Self as Typed>::type_info()
     }
 
