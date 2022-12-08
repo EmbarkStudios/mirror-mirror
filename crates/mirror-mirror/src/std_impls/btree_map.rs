@@ -4,8 +4,8 @@ use core::any::Any;
 use core::fmt;
 
 use crate::iter::PairIterMut;
-use crate::type_info::graph::NodeId;
 use crate::type_info::graph::MapNode;
+use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Map;

@@ -63,8 +63,6 @@ impl TypeGraph {
     }
 }
 
-type Metadata = BTreeMap<String, Value>;
-
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -107,12 +105,16 @@ pub struct StructNode {
     pub(super) type_name: String,
     pub(super) fields: BTreeMap<String, NamedFieldNode>,
     pub(super) field_names: Box<[String]>,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl StructNode {
-    pub fn new<T>(fields: &[NamedFieldNode], metadata: Metadata, docs: &[&'static str]) -> Self
+    pub fn new<T>(
+        fields: &[NamedFieldNode],
+        metadata: BTreeMap<&'static str, Value>,
+        docs: &[&'static str],
+    ) -> Self
     where
         T: Typed,
     {
@@ -123,10 +125,17 @@ impl StructNode {
                 .map(|field| (field.name.clone(), field.clone()))
                 .collect(),
             field_names: fields.iter().map(|field| field.name.clone()).collect(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
+}
+
+fn map_metadata(metadata: BTreeMap<&'static str, Value>) -> BTreeMap<String, Value> {
+    metadata
+        .into_iter()
+        .map(|(key, value)| (key.to_owned(), value))
+        .collect()
 }
 
 fn map_docs(docs: &[&'static str]) -> Box<[String]> {
@@ -139,19 +148,23 @@ fn map_docs(docs: &[&'static str]) -> Box<[String]> {
 pub struct TupleStructNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl TupleStructNode {
-    pub fn new<T>(fields: &[UnnamedFieldNode], metadata: Metadata, docs: &[&'static str]) -> Self
+    pub fn new<T>(
+        fields: &[UnnamedFieldNode],
+        metadata: BTreeMap<&'static str, Value>,
+        docs: &[&'static str],
+    ) -> Self
     where
         T: Typed,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -163,19 +176,23 @@ impl TupleStructNode {
 pub struct EnumNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl EnumNode {
-    pub fn new<T>(variants: &[VariantNode], metadata: Metadata, docs: &[&'static str]) -> Self
+    pub fn new<T>(
+        variants: &[VariantNode],
+        metadata: BTreeMap<&'static str, Value>,
+        docs: &[&'static str],
+    ) -> Self
     where
         T: Typed,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             variants: variants.to_vec(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -197,7 +214,7 @@ pub struct StructVariantNode {
     pub(super) name: String,
     pub(super) fields: BTreeMap<String, NamedFieldNode>,
     pub(super) field_names: Box<[String]>,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -205,7 +222,7 @@ impl StructVariantNode {
     pub fn new(
         name: &'static str,
         fields: &[NamedFieldNode],
-        metadata: Metadata,
+        metadata: BTreeMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -215,7 +232,7 @@ impl StructVariantNode {
                 .map(|field| (field.name.clone(), field.clone()))
                 .collect(),
             field_names: fields.iter().map(|field| field.name.clone()).collect(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -227,7 +244,7 @@ impl StructVariantNode {
 pub struct TupleVariantNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -235,13 +252,13 @@ impl TupleVariantNode {
     pub fn new(
         name: &'static str,
         fields: &[UnnamedFieldNode],
-        metadata: Metadata,
+        metadata: BTreeMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
             name: name.to_owned(),
             fields: fields.to_vec(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -252,15 +269,19 @@ impl TupleVariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitVariantNode {
     pub(super) name: String,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl UnitVariantNode {
-    pub fn new(name: &'static str, metadata: Metadata, docs: &[&'static str]) -> Self {
+    pub fn new(
+        name: &'static str,
+        metadata: BTreeMap<&'static str, Value>,
+        docs: &[&'static str],
+    ) -> Self {
         Self {
             name: name.to_owned(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -272,19 +293,23 @@ impl UnitVariantNode {
 pub struct TupleNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl TupleNode {
-    pub fn new<T>(fields: &[UnnamedFieldNode], metadata: Metadata, docs: &[&'static str]) -> Self
+    pub fn new<T>(
+        fields: &[UnnamedFieldNode],
+        metadata: BTreeMap<&'static str, Value>,
+        docs: &[&'static str],
+    ) -> Self
     where
         T: Typed,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -296,14 +321,14 @@ impl TupleNode {
 pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: NodeId,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl NamedFieldNode {
     pub fn new<T>(
         name: &'static str,
-        metadata: Metadata,
+        metadata: BTreeMap<&'static str, Value>,
         docs: &[&'static str],
         graph: &mut TypeGraph,
     ) -> Self
@@ -313,7 +338,7 @@ impl NamedFieldNode {
         Self {
             name: name.to_owned(),
             id: T::build(graph),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -324,18 +349,22 @@ impl NamedFieldNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnnamedFieldNode {
     pub(super) id: NodeId,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl UnnamedFieldNode {
-    pub fn new<T>(metadata: Metadata, docs: &[&'static str], graph: &mut TypeGraph) -> Self
+    pub fn new<T>(
+        metadata: BTreeMap<&'static str, Value>,
+        docs: &[&'static str],
+        graph: &mut TypeGraph,
+    ) -> Self
     where
         T: Typed,
     {
         Self {
             id: T::build(graph),
-            metadata,
+            metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
@@ -456,17 +485,17 @@ scalar_typed! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpaqueNode {
     pub(super) type_name: String,
-    pub(super) metadata: Metadata,
+    pub(super) metadata: BTreeMap<String, Value>,
 }
 
 impl OpaqueNode {
-    pub fn new<T>(metadata: Metadata, _graph: &mut TypeGraph) -> Self
+    pub fn new<T>(metadata: BTreeMap<&'static str, Value>, _graph: &mut TypeGraph) -> Self
     where
         T: Typed,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
-            metadata,
+            metadata: map_metadata(metadata),
         }
     }
 }

@@ -422,11 +422,9 @@ impl<'a> GetMeta<'a> for Type<'a> {
             Type::TupleStruct(inner) => inner.meta(key),
             Type::Enum(inner) => inner.meta(key),
             Type::Opaque(inner) => inner.meta(key),
-            Type::Tuple(_)
-            | Type::List(_)
-            | Type::Array(_)
-            | Type::Map(_)
-            | Type::Scalar(_) => None,
+            Type::Tuple(_) | Type::List(_) | Type::Array(_) | Type::Map(_) | Type::Scalar(_) => {
+                None
+            }
         }
     }
 

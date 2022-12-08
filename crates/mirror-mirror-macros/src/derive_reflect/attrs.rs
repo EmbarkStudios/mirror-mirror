@@ -188,7 +188,7 @@ fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
 fn tokenize_meta(meta: &BTreeMap<Ident, Expr>) -> TokenStream {
     let pairs = meta.iter().map(|(ident, expr)| {
         quote! {
-            (stringify!(#ident).to_owned(), IntoValue::into_value(#expr)),
+            (stringify!(#ident), IntoValue::into_value(#expr)),
         }
     });
     quote! {

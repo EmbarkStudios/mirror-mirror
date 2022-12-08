@@ -4,8 +4,8 @@ use core::any::Any;
 
 use crate::array::Array;
 use crate::iter::ValueIterMut;
-use crate::type_info::graph::NodeId;
 use crate::type_info::graph::ListNode;
+use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::List;

@@ -3,10 +3,10 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
 
+use crate::type_info::TypeAtPath;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
-use crate::type_info::TypeAtPath;
 
 pub trait GetPath {
     fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect>;
