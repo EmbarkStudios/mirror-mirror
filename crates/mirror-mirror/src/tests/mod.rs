@@ -14,13 +14,10 @@ mod tuple_struct;
 #[allow(dead_code)]
 struct DebugOptOut;
 
-#[allow(warnings)]
-fn box_t_is_reflectable<T>(t: Box<T>)
-where
-    T: Reflect,
-{
-    let _ = t.as_reflect();
-}
+#[derive(Reflect)]
+#[reflect(crate_name(crate), opt_out(Debug, Clone))]
+#[allow(dead_code)]
+struct ContainsBoxed(Box<f32>);
 
 mod complex_types {
     #![allow(dead_code)]
@@ -181,9 +178,8 @@ mod derive_foreign {
 mod from_reflect_opt_out {
     #![allow(warnings)]
 
-    use crate::FromReflect;
-
     use super::*;
+    use crate::FromReflect;
 
     #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
     #[reflect(crate_name(crate), opt_out(FromReflect))]
@@ -246,9 +242,8 @@ mod from_reflect_opt_out {
 mod from_reflect_with {
     #![allow(warnings)]
 
-    use crate::FromReflect;
-
     use super::*;
+    use crate::FromReflect;
 
     #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
     #[reflect(crate_name(crate))]

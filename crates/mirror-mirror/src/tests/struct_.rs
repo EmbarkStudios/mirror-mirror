@@ -128,7 +128,7 @@ fn box_dyn_reflect_as_reflect() {
         &42,
     );
 
-    let foo = Foo::from_reflect(&box_dyn_reflect).unwrap();
+    let foo = Foo::from_reflect(box_dyn_reflect.as_reflect()).unwrap();
     assert_eq!(foo, Foo { field: 42 });
 }
 
