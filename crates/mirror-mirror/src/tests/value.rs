@@ -35,7 +35,6 @@ fn typed_value() {
 
     assert!(matches!(
         value
-            .type_info()
             .at_type(&key_path!({ A }.x[0]))
             .unwrap()
             .as_scalar()
