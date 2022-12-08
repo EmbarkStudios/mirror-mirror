@@ -42,6 +42,50 @@ impl TypeInfoRoot {
     pub fn type_(&self) -> TypeInfo<'_> {
         TypeInfo::new(self.root, &self.graph)
     }
+
+    pub fn type_name(&self) -> &str {
+        self.type_().type_name()
+    }
+
+    pub fn default_value(&self) -> Option<Value> {
+        self.type_().default_value()
+    }
+
+    pub fn as_struct(&self) -> Option<StructInfo<'_>> {
+        self.type_().as_struct()
+    }
+
+    pub fn as_tuple_struct(&self) -> Option<TupleStructInfo<'_>> {
+        self.type_().as_tuple_struct()
+    }
+
+    pub fn as_tuple(&self) -> Option<TupleInfo<'_>> {
+        self.type_().as_tuple()
+    }
+
+    pub fn as_enum(&self) -> Option<EnumInfo<'_>> {
+        self.type_().as_enum()
+    }
+
+    pub fn as_array(&self) -> Option<ArrayInfo<'_>> {
+        self.type_().as_array()
+    }
+
+    pub fn as_list(&self) -> Option<ListInfo<'_>> {
+        self.type_().as_list()
+    }
+
+    pub fn as_map(&self) -> Option<MapInfo<'_>> {
+        self.type_().as_map()
+    }
+
+    pub fn as_scalar(&self) -> Option<ScalarInfo> {
+        self.type_().as_scalar()
+    }
+
+    pub fn as_opaque(&self) -> Option<OpaqueInfo<'_>> {
+        self.type_().as_opaque()
+    }
 }
 
 impl<'a> GetTypedPath<'a> for &'a TypeInfoRoot {
@@ -154,21 +198,21 @@ impl<'a> TypeInfo<'a> {
         let value = match self {
             TypeInfo::Struct(struct_) => {
                 let mut value = StructValue::new();
-                for field in struct_.fields() {
+                for field in struct_.field_types() {
                     value.set_field(field.name(), field.type_().default_value()?);
                 }
                 value.to_value()
             }
             TypeInfo::TupleStruct(tuple_struct) => {
                 let mut value = TupleStructValue::new();
-                for field in tuple_struct.fields() {
+                for field in tuple_struct.field_types() {
                     value.push_field(field.type_().default_value()?);
                 }
                 value.to_value()
             }
             TypeInfo::Tuple(tuple) => {
                 let mut value = TupleValue::new();
-                for field in tuple.fields() {
+                for field in tuple.field_types() {
                     value.push_field(field.type_().default_value()?);
                 }
                 value.to_value()
@@ -179,14 +223,14 @@ impl<'a> TypeInfo<'a> {
                 match variant {
                     VariantInfo::Struct(variant) => {
                         let mut value = EnumValue::new_struct_variant(variant.name());
-                        for field in variant.fields() {
+                        for field in variant.field_types() {
                             value.set_struct_field(field.name(), field.type_().default_value()?);
                         }
                         value.to_value()
                     }
                     VariantInfo::Tuple(variant) => {
                         let mut value = EnumValue::new_tuple_variant(variant.name());
-                        for field in variant.fields() {
+                        for field in variant.field_types() {
                             value.push_tuple_field(field.type_().default_value()?);
                         }
                         value.to_value()
@@ -482,11 +526,24 @@ impl<'a> StructInfo<'a> {
         &self.node.type_name
     }
 
-    pub fn fields(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.iter().map(|node| NamedField {
+    pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
+        self.node.fields.values().map(|node| NamedField {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
+        let node = self.node.fields.get(name)?;
+        Some(NamedField {
+            node,
+            graph: self.graph,
+        })
+    }
+
+    pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
+        let name = self.node.field_names.get(index)?;
+        self.field_type(name)
     }
 
     fn into_type_info_at_path(self) -> TypeInfoAtPath<'a> {
@@ -505,8 +562,16 @@ impl<'a> TupleStructInfo<'a> {
         &self.node.type_name
     }
 
-    pub fn fields(self) -> impl Iterator<Item = UnnamedField<'a>> {
+    pub fn field_types(self) -> impl Iterator<Item = UnnamedField<'a>> {
         self.node.fields.iter().map(|node| UnnamedField {
+            node,
+            graph: self.graph,
+        })
+    }
+
+    pub fn field_type(self, index: usize) -> Option<UnnamedField<'a>> {
+        let node = self.node.fields.get(index)?;
+        Some(UnnamedField {
             node,
             graph: self.graph,
         })
@@ -528,8 +593,16 @@ impl<'a> TupleInfo<'a> {
         &self.node.type_name
     }
 
-    pub fn fields(self) -> impl Iterator<Item = UnnamedField<'a>> {
+    pub fn field_types(self) -> impl Iterator<Item = UnnamedField<'a>> {
         self.node.fields.iter().map(|node| UnnamedField {
+            node,
+            graph: self.graph,
+        })
+    }
+
+    pub fn field_type(self, index: usize) -> Option<UnnamedField<'a>> {
+        let node = self.node.fields.get(index)?;
+        Some(UnnamedField {
             node,
             graph: self.graph,
         })
@@ -592,12 +665,27 @@ impl<'a> VariantInfo<'a> {
         }
     }
 
-    pub fn fields(self) -> impl Iterator<Item = VariantField<'a>> {
+    pub fn field_types(self) -> impl Iterator<Item = VariantField<'a>> {
         match self {
-            VariantInfo::Struct(inner) => Box::new(inner.fields().map(VariantField::Named))
+            VariantInfo::Struct(inner) => Box::new(inner.field_types().map(VariantField::Named))
                 as Box<dyn Iterator<Item = VariantField<'a>>>,
-            VariantInfo::Tuple(inner) => Box::new(inner.fields().map(VariantField::Unnamed)),
+            VariantInfo::Tuple(inner) => Box::new(inner.field_types().map(VariantField::Unnamed)),
             VariantInfo::Unit(_) => Box::new(core::iter::empty()),
+        }
+    }
+
+    pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
+        match self {
+            VariantInfo::Struct(inner) => inner.field_type(name),
+            VariantInfo::Tuple(_) | VariantInfo::Unit(_) => None,
+        }
+    }
+
+    pub fn field_type_at(self, index: usize) -> Option<VariantField<'a>> {
+        match self {
+            VariantInfo::Struct(inner) => inner.field_type_at(index).map(VariantField::Named),
+            VariantInfo::Tuple(inner) => inner.field_type(index).map(VariantField::Unnamed),
+            VariantInfo::Unit(_) => None,
         }
     }
 
@@ -682,11 +770,24 @@ impl<'a> StructVariantInfo<'a> {
         &self.node.name
     }
 
-    pub fn fields(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.iter().map(|node| NamedField {
+    pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
+        self.node.fields.values().map(|node| NamedField {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
+        let node = self.node.fields.get(name)?;
+        Some(NamedField {
+            node,
+            graph: self.graph,
+        })
+    }
+
+    pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
+        let name = self.node.field_names.get(index)?;
+        self.field_type(name)
     }
 
     pub fn enum_type(self) -> EnumInfo<'a> {
@@ -709,8 +810,16 @@ impl<'a> TupleVariantInfo<'a> {
         &self.node.name
     }
 
-    pub fn fields(self) -> impl Iterator<Item = UnnamedField<'a>> {
+    pub fn field_types(self) -> impl Iterator<Item = UnnamedField<'a>> {
         self.node.fields.iter().map(|node| UnnamedField {
+            node,
+            graph: self.graph,
+        })
+    }
+
+    pub fn field_type(self, index: usize) -> Option<UnnamedField<'a>> {
+        let node = self.node.fields.get(index)?;
+        Some(UnnamedField {
             node,
             graph: self.graph,
         })
@@ -987,14 +1096,14 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
             let value_at_key: TypeInfoAtPath<'_> = match head {
                 Key::Field(key) => match type_info {
                     TypeInfoAtPath::Struct(struct_) => struct_
-                        .fields()
+                        .field_types()
                         .find(|field| field.name() == key)?
                         .type_()
                         .into_type_info_at_path(),
                     TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeInfoAtPath::Variant(variant) => match variant {
                         VariantInfo::Struct(struct_variant) => struct_variant
-                            .fields()
+                            .field_types()
                             .find(|field| field.name() == key)?
                             .type_()
                             .into_type_info_at_path(),
@@ -1005,7 +1114,7 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                         let first = variants.next()?;
                         if variants.next().is_none() {
                             first
-                                .fields()
+                                .field_types()
                                 .find_map(|field| match field {
                                     VariantField::Named(field) => {
                                         if field.name() == key {
@@ -1034,17 +1143,19 @@ impl<'a> GetTypedPath<'a> for TypeInfoAtPath<'a> {
                     TypeInfoAtPath::Array(array) => array.field_type().into_type_info_at_path(),
                     TypeInfoAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeInfoAtPath::TupleStruct(tuple_struct) => tuple_struct
-                        .fields()
+                        .field_types()
                         .nth(index)?
                         .type_()
                         .into_type_info_at_path(),
-                    TypeInfoAtPath::Tuple(tuple) => {
-                        tuple.fields().nth(index)?.type_().into_type_info_at_path()
-                    }
+                    TypeInfoAtPath::Tuple(tuple) => tuple
+                        .field_types()
+                        .nth(index)?
+                        .type_()
+                        .into_type_info_at_path(),
 
                     TypeInfoAtPath::Variant(variant) => match variant {
                         VariantInfo::Tuple(tuple_variant) => tuple_variant
-                            .fields()
+                            .field_types()
                             .nth(index)?
                             .type_()
                             .into_type_info_at_path(),
@@ -1124,7 +1235,7 @@ mod tests {
             "mirror_mirror::type_info::tests::struct_::Foo"
         );
 
-        for field in struct_.fields() {
+        for field in struct_.field_types() {
             match field.name() {
                 "foos" => {
                     assert_eq!(

@@ -105,7 +105,8 @@ impl_from! { Opaque(OpaqueInfoNode) }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructInfoNode {
     pub(super) type_name: String,
-    pub(super) fields: Vec<NamedFieldNode>,
+    pub(super) fields: BTreeMap<String, NamedFieldNode>,
+    pub(super) field_names: Box<[String]>,
     pub(super) metadata: Metadata,
     pub(super) docs: Box<[String]>,
 }
@@ -117,7 +118,11 @@ impl StructInfoNode {
     {
         Self {
             type_name: type_name::<T>().to_owned(),
-            fields: fields.to_vec(),
+            fields: fields
+                .iter()
+                .map(|field| (field.name.clone(), field.clone()))
+                .collect(),
+            field_names: fields.iter().map(|field| field.name.clone()).collect(),
             metadata,
             docs: map_docs(docs),
         }
@@ -190,7 +195,8 @@ pub enum VariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructVariantInfoNode {
     pub(super) name: String,
-    pub(super) fields: Vec<NamedFieldNode>,
+    pub(super) fields: BTreeMap<String, NamedFieldNode>,
+    pub(super) field_names: Box<[String]>,
     pub(super) metadata: Metadata,
     pub(super) docs: Box<[String]>,
 }
@@ -204,7 +210,11 @@ impl StructVariantInfoNode {
     ) -> Self {
         Self {
             name: name.to_owned(),
-            fields: fields.to_vec(),
+            fields: fields
+                .iter()
+                .map(|field| (field.name.clone(), field.clone()))
+                .collect(),
+            field_names: fields.iter().map(|field| field.name.clone()).collect(),
             metadata,
             docs: map_docs(docs),
         }
