@@ -309,19 +309,6 @@ from_impls! {
     TupleValue TupleStructValue
 }
 
-#[cfg(test)]
-mod tests {
-    #[allow(unused_imports)]
-    use super::*;
-
-    #[test]
-    fn has_small_stack_size() {
-        // if we can get the value to be smaller than 32 then that'd be cool
-        // but 32 is probably also fine
-        assert_eq!(core::mem::size_of::<Value>(), 32);
-    }
-}
-
 /// A [`Value`] and the original value's type information bundled together.
 ///
 /// Normally `Value` will not maintain type information. So `<Value as Typed>::type_info()` will
@@ -396,5 +383,18 @@ impl Reflect for TypedValue {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.value.debug(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[allow(unused_imports)]
+    use super::*;
+
+    #[test]
+    fn has_small_stack_size() {
+        // if we can get the value to be smaller than 32 then that'd be cool
+        // but 32 is probably also fine
+        assert_eq!(core::mem::size_of::<Value>(), 32);
     }
 }
