@@ -222,49 +222,49 @@ impl fmt::Debug for dyn Reflect {
     }
 }
 
-impl Reflect for Box<dyn Reflect> {
+impl<T> Reflect for Box<T> where T: Reflect + Typed {
     fn type_info(&self) -> TypeInfoRoot {
-        <dyn Reflect as Reflect>::type_info(&**self)
+        <T as Typed>::type_info()
     }
 
     fn as_any(&self) -> &dyn Any {
-        <dyn Reflect as Reflect>::as_any(&**self)
+        self
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
-        <dyn Reflect as Reflect>::as_any_mut(&mut **self)
+        self
     }
 
     fn as_reflect(&self) -> &dyn Reflect {
-        <dyn Reflect as Reflect>::as_reflect(&**self)
+        self
     }
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        <dyn Reflect as Reflect>::as_reflect_mut(&mut **self)
+        self
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {
-        <dyn Reflect as Reflect>::reflect_ref(&**self)
+        todo!()
     }
 
     fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        <dyn Reflect as Reflect>::reflect_mut(&mut **self)
+        todo!()
     }
 
     fn patch(&mut self, value: &dyn Reflect) {
-        <dyn Reflect as Reflect>::patch(&mut **self, value)
+        todo!()
     }
 
     fn to_value(&self) -> Value {
-        <dyn Reflect as Reflect>::to_value(&**self)
+        todo!()
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
-        <dyn Reflect as Reflect>::clone_reflect(&**self)
+        todo!()
     }
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        <dyn Reflect as Reflect>::debug(&**self, f)
+        reflect_debug(self, f)
     }
 }
 
