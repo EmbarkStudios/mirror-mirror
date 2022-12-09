@@ -51,8 +51,8 @@ fn expand_reflect(
             .filter(field_attrs.filter_out_skipped_unnamed())
             .map(|(idx, _)| {
                 quote! {
-                    if let Some(new_value) = tuple_struct.field(#idx) {
-                        self.field_mut(#idx).unwrap().patch(new_value);
+                    if let Some(new_value) = tuple_struct.field_at(#idx) {
+                        self.field_at_mut(#idx).unwrap().patch(new_value);
                     }
                 }
             });
@@ -193,21 +193,21 @@ fn expand_from_reflect(
             } else if let Some(from_reflect_with) = field_attrs.from_reflect_with(&idx) {
                 quote_spanned! {span=>
                     #field_index: {
-                        let value = tuple_struct.field(#field_index)?;
+                        let value = tuple_struct.field_at(#field_index)?;
                         #from_reflect_with(value)?
                     }
                 }
             } else if attrs.clone_opt_out {
                 quote_spanned! {span=>
                     #field_index: {
-                        let value = tuple_struct.field(#field_index)?;
+                        let value = tuple_struct.field_at(#field_index)?;
                         <#ty as FromReflect>::from_reflect(value)?
                     },
                 }
             } else {
                 quote_spanned! {span=>
                     #field_index: {
-                        let value = tuple_struct.field(#field_index)?;
+                        let value = tuple_struct.field_at(#field_index)?;
                         if let Some(value) = value.downcast_ref::<#ty>() {
                             value.to_owned()
                         } else {
@@ -264,7 +264,7 @@ fn expand_tuple_struct(
             });
 
         quote! {
-            fn field(&self, index: usize) -> Option<&dyn Reflect> {
+            fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
                 match index {
                     #(#match_arms)*
                     _ => None,
@@ -289,7 +289,7 @@ fn expand_tuple_struct(
             });
 
         quote! {
-            fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+            fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 match index {
                     #(#match_arms)*
                     _ => None,

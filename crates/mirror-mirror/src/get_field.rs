@@ -199,7 +199,7 @@ where
     where
         T: Reflect,
     {
-        self.field(key)?.downcast_ref()
+        self.field_at(key)?.downcast_ref()
     }
 }
 
@@ -211,7 +211,7 @@ where
     where
         T: Reflect,
     {
-        self.field_mut(key)?.downcast_mut()
+        self.field_at_mut(key)?.downcast_mut()
     }
 }
 
@@ -271,7 +271,7 @@ where
     where
         T: Reflect,
     {
-        self.field(key)?.downcast_ref()
+        self.field_at(key)?.downcast_ref()
     }
 }
 
@@ -283,7 +283,7 @@ where
     where
         T: Reflect,
     {
-        self.field_mut(key)?.downcast_mut()
+        self.field_at_mut(key)?.downcast_mut()
     }
 }
 

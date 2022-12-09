@@ -19,9 +19,9 @@ use crate::Typed;
 use crate::Value;
 
 pub trait Tuple: Reflect {
-    fn field(&self, index: usize) -> Option<&dyn Reflect>;
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
 
-    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn fields(&self) -> Iter<'_>;
 
@@ -59,11 +59,11 @@ impl TupleValue {
 }
 
 impl Tuple for TupleValue {
-    fn field(&self, index: usize) -> Option<&dyn Reflect> {
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
         Some(self.fields.get(index)?.as_reflect())
     }
 
-    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
         Some(self.fields.get_mut(index)?.as_reflect_mut())
     }
 
@@ -112,7 +112,7 @@ impl Reflect for TupleValue {
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(tuple) = value.reflect_ref().as_tuple() {
             for (index, value) in self.fields_mut().enumerate() {
-                if let Some(new_value) = tuple.field(index) {
+                if let Some(new_value) = tuple.field_at(index) {
                     value.patch(new_value);
                 }
             }
@@ -206,7 +206,7 @@ macro_rules! impl_tuple {
                     let ($($ident,)*) = self;
                     let mut i = 0;
                     $(
-                        if let Some(field) = tuple.field(i) {
+                        if let Some(field) = tuple.field_at(i) {
                             $ident.patch(field);
                         }
                         i += 1;
@@ -245,7 +245,7 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn field(&self, index: usize) -> Option<&dyn Reflect> {
+            fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
                 let mut i = 0;
                 let ($($ident,)*) = self;
                 $(
@@ -257,7 +257,7 @@ macro_rules! impl_tuple {
                 None
             }
 
-            fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+            fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
                 let mut i = 0;
                 let ($($ident,)*) = self;
                 $(
@@ -352,7 +352,7 @@ impl<'a> Iterator for Iter<'a> {
     type Item = &'a dyn Reflect;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let value = self.tuple.field(self.index)?;
+        let value = self.tuple.field_at(self.index)?;
         self.index += 1;
         Some(value)
     }

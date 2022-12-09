@@ -286,7 +286,7 @@ impl Enum for EnumValue {
     fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
         match &self.kind {
             EnumValueKind::Struct(struct_) => struct_.field_at(index),
-            EnumValueKind::Tuple(tuple) => tuple.field(index),
+            EnumValueKind::Tuple(tuple) => tuple.field_at(index),
             EnumValueKind::Unit => None,
         }
     }
@@ -294,7 +294,7 @@ impl Enum for EnumValue {
     fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
         match &mut self.kind {
             EnumValueKind::Struct(struct_) => struct_.field_at_mut(index),
-            EnumValueKind::Tuple(tuple) => tuple.field_mut(index),
+            EnumValueKind::Tuple(tuple) => tuple.field_at_mut(index),
             EnumValueKind::Unit => None,
         }
     }

@@ -17,9 +17,9 @@ use crate::Typed;
 use crate::Value;
 
 pub trait TupleStruct: Reflect {
-    fn field(&self, index: usize) -> Option<&dyn Reflect>;
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
 
-    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect>;
 
     fn fields(&self) -> Iter<'_>;
 
@@ -88,7 +88,7 @@ impl Reflect for TupleStructValue {
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(tuple) = value.reflect_ref().as_tuple_struct() {
             for (index, value) in self.fields_mut().enumerate() {
-                if let Some(new_value) = tuple.field(index) {
+                if let Some(new_value) = tuple.field_at(index) {
                     value.patch(new_value);
                 }
             }
@@ -121,12 +121,12 @@ impl Reflect for TupleStructValue {
 }
 
 impl TupleStruct for TupleStructValue {
-    fn field(&self, index: usize) -> Option<&dyn Reflect> {
-        self.tuple.field(index)
+    fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
+        self.tuple.field_at(index)
     }
 
-    fn field_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
-        self.tuple.field_mut(index)
+    fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
+        self.tuple.field_at_mut(index)
     }
 
     fn fields(&self) -> Iter<'_> {
@@ -189,7 +189,7 @@ impl<'a> Iterator for Iter<'a> {
     type Item = &'a dyn Reflect;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let value = self.tuple_struct.field(self.index)?;
+        let value = self.tuple_struct.field_at(self.index)?;
         self.index += 1;
         Some(value)
     }
