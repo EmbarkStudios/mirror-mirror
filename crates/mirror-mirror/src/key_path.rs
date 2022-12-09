@@ -2,6 +2,7 @@ use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
+use core::iter::Peekable;
 
 use crate::enum_::VariantKind;
 use crate::type_info::TypeAtPath;
@@ -38,11 +39,14 @@ where
     R: Reflect + ?Sized,
 {
     fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect> {
-        fn go<'a, R>(value: &'a R, mut stack: Vec<&Key>) -> Option<&'a dyn Reflect>
+        fn go<'a, 'b, R>(
+            value: &'a R,
+            mut stack: Peekable<impl Iterator<Item = &'b Key>>,
+        ) -> Option<&'a dyn Reflect>
         where
             R: Reflect + ?Sized,
         {
-            let head = stack.pop()?;
+            let head = stack.next()?;
 
             let value_at_key = match head {
                 // .foo
@@ -119,7 +123,7 @@ where
                 },
             };
 
-            if stack.is_empty() {
+            if stack.peek().is_none() {
                 Some(value_at_key)
             } else {
                 go(value_at_key, stack)
@@ -130,17 +134,18 @@ where
             return Some(self.as_reflect());
         }
 
-        let mut path = key_path.path.iter().collect::<Vec<_>>();
-        path.reverse();
-        go(self, path)
+        go(self, key_path.path.iter().peekable())
     }
 
     fn at_mut(&mut self, key_path: &KeyPath) -> Option<&mut dyn Reflect> {
-        fn go<'a, R>(value: &'a mut R, mut stack: Vec<&Key>) -> Option<&'a mut dyn Reflect>
+        fn go<'a, 'b, R>(
+            value: &'a mut R,
+            mut stack: Peekable<impl Iterator<Item = &'b Key>>,
+        ) -> Option<&'a mut dyn Reflect>
         where
             R: Reflect + ?Sized,
         {
-            let head = stack.pop()?;
+            let head = stack.next()?;
 
             let value_at_key = match head {
                 // .foo
@@ -217,7 +222,7 @@ where
                 },
             };
 
-            if stack.is_empty() {
+            if stack.peek().is_none() {
                 Some(value_at_key)
             } else {
                 go(value_at_key, stack)
@@ -228,9 +233,7 @@ where
             return Some(self.as_reflect_mut());
         }
 
-        let mut path = key_path.path.iter().collect::<Vec<_>>();
-        path.reverse();
-        go(self, path)
+        go(self, key_path.path.iter().peekable())
     }
 }
 
@@ -362,79 +365,79 @@ macro_rules! key_path {
         @go:
         $path:expr,
         [],
-    ) => {{
+    ) => {
         $path
-    }};
+    };
 
     // recursive case (field)
     (
         @go:
         $path:expr,
         [ . $field:ident $($tt:tt)*],
-    ) => {{
+    ) => {
         $crate::key_path!(
             @go:
             $path.field(stringify!($field)),
             [$($tt)*],
         )
-    }};
+    };
 
     // recursive case (field)
     (
         @go:
         $path:expr,
         [ . $field:literal $($tt:tt)*],
-    ) => {{
+    ) => {
         $crate::key_path!(
             @go:
             $path.field($field),
             [$($tt)*],
         )
-    }};
+    };
 
     // recursive case (field)
     (
         @go:
         $path:expr,
         [ [$field:expr] $($tt:tt)*],
-    ) => {{
+    ) => {
         $crate::key_path!(
             @go:
             $path.get($field),
             [$($tt)*],
         )
-    }};
+    };
 
     // recursive case (variant)
     (
         @go:
         $path:expr,
         [ :: $variant:ident $($tt:tt)*],
-    ) => {{
+    ) => {
         $crate::key_path!(
             @go:
             $path.variant(stringify!($variant)),
             [$($tt)*],
         )
-    }};
+    };
 
     // on invalid syntax
     (
         @go:
         $path:expr,
         [$($tt:tt)*],
-    ) => {{
+    ) => {
         compile_error!(concat!("Unexpected tokens ", stringify!($($tt)*)))
-    }};
+    };
 
     // entry point
-    ( $($tt:tt)* ) => {{
+    ( $($tt:tt)* ) => {
         $crate::key_path!(
             @go:
             $crate::key_path::KeyPath::default(),
             [$($tt)*],
         )
-    }};
+    };
 }
 
 impl fmt::Display for KeyPath {
@@ -448,7 +451,6 @@ impl fmt::Display for KeyPath {
                 Key::Variant(variant) => write!(f, "::{variant}")?,
             }
         }
-
         Ok(())
     }
 }

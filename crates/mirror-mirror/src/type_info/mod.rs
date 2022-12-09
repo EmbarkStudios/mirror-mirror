@@ -1,3 +1,5 @@
+use core::iter::Peekable;
+
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
@@ -1118,8 +1120,11 @@ impl<'a> TypeAtPath<'a> {
 
 impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
     fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        fn go<'a>(type_info: TypeAtPath<'a>, mut stack: Vec<&Key>) -> Option<TypeAtPath<'a>> {
-            let head = stack.pop()?;
+        fn go<'a, 'b>(
+            type_info: TypeAtPath<'a>,
+            mut stack: Peekable<impl Iterator<Item = &'b Key>>,
+        ) -> Option<TypeAtPath<'a>> {
+            let head = stack.next()?;
 
             let value_at_key: TypeAtPath<'_> = match head {
                 // .foo
@@ -1214,7 +1219,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                 },
             };
 
-            if stack.is_empty() {
+            if stack.peek().is_none() {
                 Some(value_at_key)
             } else {
                 go(value_at_key, stack)
@@ -1225,9 +1230,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
             return Some(self);
         }
 
-        let mut path = key_path.path.iter().collect::<Vec<_>>();
-        path.reverse();
-        go(self, path)
+        go(self, key_path.path.iter().peekable())
     }
 }
 
