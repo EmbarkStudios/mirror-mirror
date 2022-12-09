@@ -137,7 +137,7 @@ impl Ord for Value {
 }
 
 macro_rules! for_each_variant {
-    ($self:ident, $inner:ident => $expr:expr) => {
+    ($self:expr, $inner:ident => $expr:expr) => {
         match $self {
             Value::usize($inner) => $expr,
             Value::u8($inner) => $expr,
@@ -176,6 +176,10 @@ impl Reflect for Value {
         }
 
         <Self as Typed>::type_info()
+    }
+
+    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+        for_each_variant!(*self, inner => Box::new(inner))
     }
 
     fn as_any(&self) -> &dyn Any {

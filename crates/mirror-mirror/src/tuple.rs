@@ -93,6 +93,10 @@ impl Reflect for TupleValue {
         <Self as Typed>::type_info()
     }
 
+    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+        self
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -182,6 +186,10 @@ macro_rules! impl_tuple {
         {
             fn type_info(&self) -> TypeRoot {
                 <Self as Typed>::type_info()
+            }
+
+            fn into_any(self: Box<Self>) -> Box<dyn Any> {
+                self
             }
 
             fn as_any(&self) -> &dyn Any {

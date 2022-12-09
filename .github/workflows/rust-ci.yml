@@ -57,7 +57,10 @@ jobs:
     name: Test
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        # no need to test on all platforms since we don't use platform specific APIs
+        # and mac and window are generally the slowest on github actions
+        # os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3

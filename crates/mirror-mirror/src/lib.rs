@@ -107,6 +107,8 @@ pub use self::value::Value;
 pub trait Reflect: Any + Send + 'static {
     fn type_info(&self) -> TypeRoot;
 
+    fn into_any(self: Box<Self>) -> Box<dyn Any>;
+
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -230,6 +232,10 @@ macro_rules! impl_for_core_types {
                     <Self as Typed>::type_info()
                 }
 
+                fn into_any(self: Box<Self>) -> Box<dyn Any> {
+                    self
+                }
+
                 fn as_any(&self) -> &dyn Any {
                     self
                 }
@@ -308,6 +314,10 @@ impl_for_core_types! {
 impl Reflect for String {
     fn type_info(&self) -> TypeRoot {
         <Self as Typed>::type_info()
+    }
+
+    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+        self
     }
 
     fn as_any(&self) -> &dyn Any {
