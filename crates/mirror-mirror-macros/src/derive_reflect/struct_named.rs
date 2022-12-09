@@ -163,6 +163,10 @@ fn expand_reflect(
             #fn_clone_reflect
             #fn_debug
 
+            fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+                ReflectOwned::Struct(self)
+            }
+
             fn reflect_ref(&self) -> ReflectRef<'_> {
                 ReflectRef::Struct(self)
             }

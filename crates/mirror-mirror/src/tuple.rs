@@ -13,6 +13,7 @@ use crate::type_info::graph::UnnamedFieldNode;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeRoot;
 use crate::Typed;
@@ -139,6 +140,10 @@ impl Reflect for TupleValue {
         }
     }
 
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::Tuple(self)
+    }
+
     fn reflect_ref(&self) -> ReflectRef<'_> {
         ReflectRef::Tuple(self)
     }
@@ -237,6 +242,10 @@ macro_rules! impl_tuple {
 
             fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 write!(f, "{}", core::any::type_name::<Self>())
+            }
+
+            fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+                ReflectOwned::Tuple(self)
             }
 
             fn reflect_ref(&self) -> ReflectRef<'_> {

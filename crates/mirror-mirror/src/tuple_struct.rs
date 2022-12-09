@@ -10,6 +10,7 @@ use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Tuple;
 use crate::TypeRoot;
@@ -113,6 +114,10 @@ impl Reflect for TupleStructValue {
         } else {
             write!(f, "{:?}", self)
         }
+    }
+
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::TupleStruct(self)
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {

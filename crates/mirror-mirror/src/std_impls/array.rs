@@ -11,6 +11,7 @@ use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeRoot;
 use crate::Typed;
@@ -51,6 +52,10 @@ where
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         self
+    }
+
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::Array(self)
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {
