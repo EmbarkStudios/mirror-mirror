@@ -240,8 +240,7 @@ impl KeyPath {
         self.path.push(Key::FieldAt(field.into()))
     }
 
-    pub fn variant(mut self, variant: impl Into<String>) -> Self
-    {
+    pub fn variant(mut self, variant: impl Into<String>) -> Self {
         self.push_variant(variant);
         self
     }
