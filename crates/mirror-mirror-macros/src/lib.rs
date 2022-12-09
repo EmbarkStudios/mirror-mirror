@@ -52,7 +52,7 @@ mod derive_reflect;
 ///
 /// # Structs
 ///
-/// On tuple structs `#[derive(Reflect)]` will also derive `Struct` and `FromReflect`.
+/// On structs `#[derive(Reflect)]` will also derive `Struct` and `FromReflect`.
 ///
 /// ```
 /// use mirror_mirror::Reflect;
@@ -80,7 +80,7 @@ mod derive_reflect;
 ///
 /// # Enums
 ///
-/// On tuple structs `#[derive(Reflect)]` will also derive `Enum` and `FromReflect`.
+/// On enums `#[derive(Reflect)]` will also derive `Enum` and `FromReflect`.
 ///
 /// ```
 /// use mirror_mirror::Reflect;
