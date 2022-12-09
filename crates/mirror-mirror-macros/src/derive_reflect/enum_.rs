@@ -303,6 +303,10 @@ fn expand_reflect(
                 self
             }
 
+            fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
+                self
+            }
+
             fn as_reflect(&self) -> &dyn Reflect {
                 self
             }

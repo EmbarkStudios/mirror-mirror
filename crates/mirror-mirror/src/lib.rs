@@ -71,6 +71,10 @@ macro_rules! trivial_reflect_methods {
             self
         }
 
+        fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
+            self
+        }
+
         fn as_reflect(&self) -> &dyn Reflect {
             self
         }
@@ -136,6 +140,8 @@ pub trait Reflect: Any + Send + 'static {
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    fn into_reflect(self: Box<Self>) -> Box<dyn Reflect>;
 
     fn as_reflect(&self) -> &dyn Reflect;
 
