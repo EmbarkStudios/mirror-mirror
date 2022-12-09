@@ -57,6 +57,30 @@ use core::fmt;
 use crate::enum_::VariantField;
 use crate::enum_::VariantKind;
 
+macro_rules! trivial_reflect_methods {
+    () => {
+        fn into_any(self: Box<Self>) -> Box<dyn Any> {
+            self
+        }
+
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+
+        fn as_reflect(&self) -> &dyn Reflect {
+            self
+        }
+
+        fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+            self
+        }
+    };
+}
+
 pub mod array;
 pub mod enum_;
 pub mod get_field;
@@ -266,25 +290,7 @@ macro_rules! impl_for_core_types {
                     <Self as Typed>::type_info()
                 }
 
-                fn into_any(self: Box<Self>) -> Box<dyn Any> {
-                    self
-                }
-
-                fn as_any(&self) -> &dyn Any {
-                    self
-                }
-
-                fn as_any_mut(&mut self) -> &mut dyn Any {
-                    self
-                }
-
-                fn as_reflect(&self) -> &dyn Reflect {
-                    self
-                }
-
-                fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-                    self
-                }
+                trivial_reflect_methods!();
 
                 fn patch(&mut self, value: &dyn Reflect) {
                     if let Some(value) = value.as_any().downcast_ref::<Self>() {
@@ -360,25 +366,7 @@ impl Reflect for String {
         <Self as Typed>::type_info()
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        self
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_reflect(&self) -> &dyn Reflect {
-        self
-    }
-
-    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self
-    }
+    trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(value) = value.as_any().downcast_ref::<Self>() {
