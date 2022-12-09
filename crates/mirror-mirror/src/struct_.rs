@@ -80,25 +80,7 @@ impl Reflect for StructValue {
         <Self as Typed>::type_info()
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        self
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_reflect(&self) -> &dyn Reflect {
-        self
-    }
-
-    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self
-    }
+    trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(struct_) = value.reflect_ref().as_struct() {
