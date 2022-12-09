@@ -149,7 +149,7 @@ fn expand_reflect(
             fn as_any_mut(&mut self) -> &mut dyn Any {
                 self
             }
-            
+
             fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
                 self
             }
