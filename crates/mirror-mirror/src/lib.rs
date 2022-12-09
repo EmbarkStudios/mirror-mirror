@@ -139,12 +139,20 @@ pub trait Reflect: Any + Send + 'static {
         core::any::type_name::<Self>()
     }
 
+    fn into_tuple(self: Box<Self>) -> Option<Box<dyn Tuple>> {
+        self.reflect_owned().into_tuple()
+    }
+
     fn as_tuple(&self) -> Option<&dyn Tuple> {
         self.reflect_ref().as_tuple()
     }
 
     fn as_tuple_mut(&mut self) -> Option<&mut dyn Tuple> {
         self.reflect_mut().as_tuple_mut()
+    }
+
+    fn into_struct(self: Box<Self>) -> Option<Box<dyn Struct>> {
+        self.reflect_owned().into_struct()
     }
 
     fn as_struct(&self) -> Option<&dyn Struct> {
@@ -155,12 +163,20 @@ pub trait Reflect: Any + Send + 'static {
         self.reflect_mut().as_struct_mut()
     }
 
+    fn into_tuple_struct(self: Box<Self>) -> Option<Box<dyn TupleStruct>> {
+        self.reflect_owned().into_tuple_struct()
+    }
+
     fn as_tuple_struct(&self) -> Option<&dyn TupleStruct> {
         self.reflect_ref().as_tuple_struct()
     }
 
     fn as_tuple_struct_mut(&mut self) -> Option<&mut dyn TupleStruct> {
         self.reflect_mut().as_tuple_struct_mut()
+    }
+
+    fn into_enum(self: Box<Self>) -> Option<Box<dyn Enum>> {
+        self.reflect_owned().into_enum()
     }
 
     fn as_enum(&self) -> Option<&dyn Enum> {
@@ -171,12 +187,20 @@ pub trait Reflect: Any + Send + 'static {
         self.reflect_mut().as_enum_mut()
     }
 
+    fn into_list(self: Box<Self>) -> Option<Box<dyn List>> {
+        self.reflect_owned().into_list()
+    }
+
     fn as_list(&self) -> Option<&dyn List> {
         self.reflect_ref().as_list()
     }
 
     fn as_list_mut(&mut self) -> Option<&mut dyn List> {
         self.reflect_mut().as_list_mut()
+    }
+
+    fn into_array(self: Box<Self>) -> Option<Box<dyn Array>> {
+        self.reflect_owned().into_array()
     }
 
     fn as_array(&self) -> Option<&dyn Array> {
@@ -187,12 +211,20 @@ pub trait Reflect: Any + Send + 'static {
         self.reflect_mut().as_array_mut()
     }
 
+    fn into_map(self: Box<Self>) -> Option<Box<dyn Map>> {
+        self.reflect_owned().into_map()
+    }
+
     fn as_map(&self) -> Option<&dyn Map> {
         self.reflect_ref().as_map()
     }
 
     fn as_map_mut(&mut self) -> Option<&mut dyn Map> {
         self.reflect_mut().as_map_mut()
+    }
+
+    fn into_scalar(self: Box<Self>) -> Option<ScalarOwned> {
+        self.reflect_owned().into_scalar()
     }
 
     fn as_scalar(&self) -> Option<ScalarRef<'_>> {
