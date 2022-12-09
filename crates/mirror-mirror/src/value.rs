@@ -10,15 +10,12 @@ use core::fmt;
 use ordered_float::OrderedFloat;
 
 use crate::enum_::EnumValue;
-use crate::key_path::GetTypePath;
-use crate::key_path::KeyPath;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
-use crate::type_info::TypeAtPath;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -310,100 +307,4 @@ from_impls! {
     f32 f64
     bool char String
     TupleValue TupleStructValue
-}
-
-/// A [`Value`] and the original value's type information bundled together.
-///
-/// Normally `Value` will not maintain type information. So `<Value as Typed>::type_info()` will
-/// always return an [`OpaqueType`].
-///
-/// However a `TypedValue` will maintain the type information so `typed_value.type_info()` returns
-/// the `TypeRoot` of the original value that the `TypedValue` was created from.
-///
-/// Created with [`Reflect::to_typed_value`].
-///
-/// [`OpaqueType`]: crate::type_info::OpaqueType
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TypedValue {
-    value: Value,
-    type_root: TypeRoot,
-}
-
-impl TypedValue {
-    pub(super) fn new<T>(reflect: &T) -> Self
-    where
-        T: Reflect + ?Sized,
-    {
-        Self {
-            value: reflect.to_value(),
-            type_root: reflect.type_info(),
-        }
-    }
-}
-
-impl Reflect for TypedValue {
-    fn type_info(&self) -> TypeRoot {
-        self.type_root.clone()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self.value.as_any()
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self.value.as_any_mut()
-    }
-
-    fn as_reflect(&self) -> &dyn Reflect {
-        self.value.as_reflect()
-    }
-
-    fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-        self.value.as_reflect_mut()
-    }
-
-    fn reflect_ref(&self) -> ReflectRef<'_> {
-        self.value.reflect_ref()
-    }
-
-    fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        self.value.reflect_mut()
-    }
-
-    fn patch(&mut self, value: &dyn Reflect) {
-        self.value.patch(value)
-    }
-
-    fn to_value(&self) -> Value {
-        self.value.clone()
-    }
-
-    fn clone_reflect(&self) -> Box<dyn Reflect> {
-        self.value.clone_reflect()
-    }
-
-    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.value.debug(f)
-    }
-}
-
-impl<'a> GetTypePath<'a> for &'a TypedValue {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.type_root.at_type(key_path)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[allow(unused_imports)]
-    use super::*;
-
-    #[test]
-    fn has_small_stack_size() {
-        // if we can get the value to be smaller than 32 then that'd be cool
-        // but 32 is probably also fine
-        assert_eq!(core::mem::size_of::<Value>(), 32);
-    }
 }

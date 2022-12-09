@@ -56,7 +56,6 @@ use core::fmt;
 
 use crate::enum_::VariantField;
 use crate::enum_::VariantKind;
-use crate::value::TypedValue;
 
 pub mod array;
 pub mod enum_;
@@ -198,10 +197,6 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_scalar_mut(&mut self) -> Option<ScalarMut<'_>> {
         self.reflect_mut().as_scalar_mut()
-    }
-
-    fn to_typed_value(&self) -> TypedValue {
-        TypedValue::new(self)
     }
 }
 

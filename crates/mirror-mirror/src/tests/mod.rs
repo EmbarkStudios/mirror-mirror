@@ -8,7 +8,6 @@ mod meta;
 mod struct_;
 mod tuple;
 mod tuple_struct;
-mod value;
 
 #[derive(Reflect)]
 #[reflect(crate_name(crate), opt_out(Debug, Clone))]
