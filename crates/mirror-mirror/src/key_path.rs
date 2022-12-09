@@ -2,11 +2,14 @@ use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
+use core::iter::Peekable;
 
+use crate::enum_::VariantKind;
 use crate::type_info::TypeAtPath;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::Value;
 
 pub trait GetPath {
     fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect>;
@@ -37,35 +40,59 @@ where
     R: Reflect + ?Sized,
 {
     fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect> {
-        fn go<'a, R>(value: &'a R, mut stack: Vec<&Key>) -> Option<&'a dyn Reflect>
+        fn go<'a, 'b, R>(
+            value: &'a R,
+            mut stack: Peekable<impl Iterator<Item = &'b Key>>,
+        ) -> Option<&'a dyn Reflect>
         where
             R: Reflect + ?Sized,
         {
-            let head = stack.pop()?;
+            let head = stack.next()?;
 
             let value_at_key = match head {
-                Key::Field(key) => match value.reflect_ref() {
+                // .foo
+                Key::Field(private::KeyOrIndex::Key(key)) => match value.reflect_ref() {
                     ReflectRef::Struct(inner) => inner.field(key)?,
-                    ReflectRef::Map(inner) => inner.get(&key.to_owned())?,
-                    ReflectRef::Enum(inner) => inner.field(key)?,
+                    ReflectRef::Enum(inner) => match inner.variant_kind() {
+                        VariantKind::Struct => inner.field(key)?,
+                        VariantKind::Tuple | VariantKind::Unit => return None,
+                    },
                     ReflectRef::TupleStruct(_)
                     | ReflectRef::Tuple(_)
-                    | ReflectRef::List(_)
                     | ReflectRef::Array(_)
-                    | ReflectRef::Opaque(_)
-                    | ReflectRef::Scalar(_) => return None,
+                    | ReflectRef::List(_)
+                    | ReflectRef::Map(_)
+                    | ReflectRef::Scalar(_)
+                    | ReflectRef::Opaque(_) => return None,
                 },
-                Key::Element(index) => match value.reflect_ref() {
+                // .0
+                Key::Field(private::KeyOrIndex::Index(index)) => match value.reflect_ref() {
                     ReflectRef::TupleStruct(inner) => inner.field_at(*index)?,
                     ReflectRef::Tuple(inner) => inner.field_at(*index)?,
-                    ReflectRef::Enum(inner) => inner.field_at(*index)?,
-                    ReflectRef::List(inner) => inner.get(*index)?,
-                    ReflectRef::Array(inner) => inner.get(*index)?,
-                    ReflectRef::Map(inner) => inner.get(index)?,
-                    ReflectRef::Struct(_) | ReflectRef::Scalar(_) | ReflectRef::Opaque(_) => {
-                        return None
-                    }
+                    ReflectRef::Enum(inner) => match inner.variant_kind() {
+                        VariantKind::Tuple => inner.field_at(*index)?,
+                        VariantKind::Struct | VariantKind::Unit => return None,
+                    },
+                    ReflectRef::Map(_)
+                    | ReflectRef::Struct(_)
+                    | ReflectRef::Array(_)
+                    | ReflectRef::List(_)
+                    | ReflectRef::Scalar(_)
+                    | ReflectRef::Opaque(_) => return None,
                 },
+                // ["foo"] or [0]
+                Key::FieldAt(key) => match value.reflect_ref() {
+                    ReflectRef::Map(inner) => inner.get(key)?,
+                    ReflectRef::Array(inner) => inner.get(value_to_usize(key)?)?,
+                    ReflectRef::List(inner) => inner.get(value_to_usize(key)?)?,
+                    ReflectRef::Struct(_)
+                    | ReflectRef::TupleStruct(_)
+                    | ReflectRef::Tuple(_)
+                    | ReflectRef::Enum(_)
+                    | ReflectRef::Scalar(_)
+                    | ReflectRef::Opaque(_) => return None,
+                },
+                // ::Some
                 Key::Variant(variant) => match value.reflect_ref() {
                     ReflectRef::Enum(enum_) => {
                         if enum_.variant_name() == variant {
@@ -85,7 +112,7 @@ where
                 },
             };
 
-            if stack.is_empty() {
+            if stack.peek().is_none() {
                 Some(value_at_key)
             } else {
                 go(value_at_key, stack)
@@ -96,41 +123,63 @@ where
             return Some(self.as_reflect());
         }
 
-        let mut path = key_path.path.iter().collect::<Vec<_>>();
-        path.reverse();
-        go(self, path)
+        go(self, key_path.path.iter().peekable())
     }
 
     fn at_mut(&mut self, key_path: &KeyPath) -> Option<&mut dyn Reflect> {
-        fn go<'a, R>(value: &'a mut R, mut stack: Vec<&Key>) -> Option<&'a mut dyn Reflect>
+        fn go<'a, 'b, R>(
+            value: &'a mut R,
+            mut stack: Peekable<impl Iterator<Item = &'b Key>>,
+        ) -> Option<&'a mut dyn Reflect>
         where
             R: Reflect + ?Sized,
         {
-            let head = stack.pop()?;
+            let head = stack.next()?;
 
             let value_at_key = match head {
-                Key::Field(key) => match value.reflect_mut() {
+                // .foo
+                Key::Field(private::KeyOrIndex::Key(key)) => match value.reflect_mut() {
                     ReflectMut::Struct(inner) => inner.field_mut(key)?,
-                    ReflectMut::Map(inner) => inner.get_mut(key)?,
-                    ReflectMut::Enum(inner) => inner.field_mut(key)?,
+                    ReflectMut::Enum(inner) => match inner.variant_kind() {
+                        VariantKind::Struct => inner.field_mut(key)?,
+                        VariantKind::Tuple | VariantKind::Unit => return None,
+                    },
                     ReflectMut::TupleStruct(_)
                     | ReflectMut::Tuple(_)
-                    | ReflectMut::List(_)
                     | ReflectMut::Array(_)
-                    | ReflectMut::Opaque(_)
-                    | ReflectMut::Scalar(_) => return None,
+                    | ReflectMut::List(_)
+                    | ReflectMut::Map(_)
+                    | ReflectMut::Scalar(_)
+                    | ReflectMut::Opaque(_) => return None,
                 },
-                Key::Element(index) => match value.reflect_mut() {
+                // .0
+                Key::Field(private::KeyOrIndex::Index(index)) => match value.reflect_mut() {
                     ReflectMut::TupleStruct(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Tuple(inner) => inner.field_at_mut(*index)?,
-                    ReflectMut::Enum(inner) => inner.field_at_mut(*index)?,
-                    ReflectMut::List(inner) => inner.get_mut(*index)?,
-                    ReflectMut::Array(inner) => inner.get_mut(*index)?,
-                    ReflectMut::Map(inner) => inner.get_mut(index)?,
-                    ReflectMut::Struct(_) | ReflectMut::Scalar(_) | ReflectMut::Opaque(_) => {
-                        return None
-                    }
+                    ReflectMut::Enum(inner) => match inner.variant_kind() {
+                        VariantKind::Tuple => inner.field_at_mut(*index)?,
+                        VariantKind::Struct | VariantKind::Unit => return None,
+                    },
+                    ReflectMut::Map(_)
+                    | ReflectMut::Struct(_)
+                    | ReflectMut::Array(_)
+                    | ReflectMut::List(_)
+                    | ReflectMut::Scalar(_)
+                    | ReflectMut::Opaque(_) => return None,
                 },
+                // ["foo"] or [0]
+                Key::FieldAt(key) => match value.reflect_mut() {
+                    ReflectMut::Array(inner) => inner.get_mut(value_to_usize(key)?)?,
+                    ReflectMut::List(inner) => inner.get_mut(value_to_usize(key)?)?,
+                    ReflectMut::Map(inner) => inner.get_mut(key)?,
+                    ReflectMut::Struct(_)
+                    | ReflectMut::TupleStruct(_)
+                    | ReflectMut::Tuple(_)
+                    | ReflectMut::Enum(_)
+                    | ReflectMut::Scalar(_)
+                    | ReflectMut::Opaque(_) => return None,
+                },
+                // ::Some
                 Key::Variant(variant) => match value.reflect_mut() {
                     ReflectMut::Enum(enum_) => {
                         if enum_.variant_name() == variant {
@@ -150,7 +199,7 @@ where
                 },
             };
 
-            if stack.is_empty() {
+            if stack.peek().is_none() {
                 Some(value_at_key)
             } else {
                 go(value_at_key, stack)
@@ -161,9 +210,7 @@ where
             return Some(self.as_reflect_mut());
         }
 
-        let mut path = key_path.path.iter().collect::<Vec<_>>();
-        path.reverse();
-        go(self, path)
+        go(self, key_path.path.iter().peekable())
     }
 }
 
@@ -175,13 +222,22 @@ pub struct KeyPath {
 }
 
 impl KeyPath {
-    pub fn field(mut self, field: impl IntoKey) -> Self {
+    pub fn field(mut self, field: impl IntoKeyOrIndex) -> Self {
         self.push_field(field);
         self
     }
 
-    pub fn push_field(&mut self, field: impl IntoKey) {
-        self.path.push(field.into_key());
+    pub fn push_field(&mut self, field: impl IntoKeyOrIndex) {
+        self.path.push(Key::Field(field.into_key_or_index()));
+    }
+
+    pub fn get(mut self, field: impl Into<Value>) -> Self {
+        self.push_get(field);
+        self
+    }
+
+    pub fn push_get(&mut self, field: impl Into<Value>) {
+        self.path.push(Key::FieldAt(field.into()))
     }
 
     pub fn variant<S>(mut self, variant: S) -> Self
@@ -223,39 +279,53 @@ mod private {
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[allow(unreachable_pub)]
     pub enum Key {
-        Field(String),
-        Element(usize),
+        Field(KeyOrIndex),
+        FieldAt(Value),
         Variant(String),
+    }
+
+    #[derive(Debug, Clone)]
+    #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub enum KeyOrIndex {
+        Key(String),
+        Index(usize),
     }
 }
 
 pub(crate) use private::Key;
+pub(crate) use private::KeyOrIndex;
 
-pub trait IntoKey: private::Sealed {
-    fn into_key(self) -> Key;
+pub trait IntoKeyOrIndex: private::Sealed {
+    fn into_key_or_index(self) -> private::KeyOrIndex;
 }
 
-impl IntoKey for &str {
-    fn into_key(self) -> Key {
-        Key::Field(self.to_owned())
+impl IntoKeyOrIndex for &str {
+    fn into_key_or_index(self) -> private::KeyOrIndex {
+        private::KeyOrIndex::Key(self.to_owned())
     }
 }
 
-impl IntoKey for String {
-    fn into_key(self) -> Key {
-        Key::Field(self)
+impl IntoKeyOrIndex for String {
+    fn into_key_or_index(self) -> private::KeyOrIndex {
+        private::KeyOrIndex::Key(self)
     }
 }
 
-impl IntoKey for usize {
-    fn into_key(self) -> Key {
-        Key::Element(self)
+impl IntoKeyOrIndex for usize {
+    fn into_key_or_index(self) -> private::KeyOrIndex {
+        private::KeyOrIndex::Index(self)
     }
 }
 
-pub fn field(field: impl IntoKey) -> KeyPath {
+pub fn field(field: impl IntoKeyOrIndex) -> KeyPath {
     KeyPath::default().field(field)
+}
+
+pub fn get(field: impl Into<Value>) -> KeyPath {
+    KeyPath::default().get(field)
 }
 
 pub fn variant<S>(variant: S) -> KeyPath
@@ -272,78 +342,118 @@ macro_rules! key_path {
         @go:
         $path:expr,
         [],
-    ) => {{
+    ) => {
         $path
-    }};
+    };
 
     // recursive case (field)
     (
         @go:
         $path:expr,
         [ . $field:ident $($tt:tt)*],
-    ) => {{
+    ) => {
         $crate::key_path!(
             @go:
             $path.field(stringify!($field)),
             [$($tt)*],
         )
-    }};
+    };
+
+    // recursive case (field)
+    (
+        @go:
+        $path:expr,
+        [ . $field:literal $($tt:tt)*],
+    ) => {
+        $crate::key_path!(
+            @go:
+            $path.field($field),
+            [$($tt)*],
+        )
+    };
 
     // recursive case (field)
     (
         @go:
         $path:expr,
         [ [$field:expr] $($tt:tt)*],
-    ) => {{
+    ) => {
         $crate::key_path!(
             @go:
-            $path.field($field),
+            $path.get($field),
             [$($tt)*],
         )
-    }};
+    };
 
     // recursive case (variant)
     (
         @go:
         $path:expr,
-        [ {$variant:ident} $($tt:tt)*],
-    ) => {{
+        [ :: $variant:ident $($tt:tt)*],
+    ) => {
         $crate::key_path!(
             @go:
             $path.variant(stringify!($variant)),
             [$($tt)*],
         )
-    }};
+    };
 
     // on invalid syntax
     (
         @go:
         $path:expr,
         [$($tt:tt)*],
-    ) => {{
+    ) => {
         compile_error!(concat!("Unexpected tokens ", stringify!($($tt)*)))
-    }};
+    };
 
     // entry point
-    ( $($tt:tt)* ) => {{
+    ( $($tt:tt)* ) => {
         $crate::key_path!(
             @go:
             $crate::key_path::KeyPath::default(),
             [$($tt)*],
         )
-    }};
+    };
 }
 
 impl fmt::Display for KeyPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for key in &self.path {
             match key {
-                Key::Field(field) => write!(f, ".{field}")?,
-                Key::Element(field) => write!(f, "[{field}]")?,
-                Key::Variant(variant) => write!(f, "{{{variant}}}")?,
+                Key::Field(private::KeyOrIndex::Key(key)) => write!(f, ".{key}")?,
+                Key::Field(private::KeyOrIndex::Index(index)) => write!(f, ".{index}")?,
+                Key::FieldAt(value) => write!(f, "[{:?}]", value.as_reflect())?,
+                Key::Variant(variant) => write!(f, "::{variant}")?,
             }
         }
-
         Ok(())
+    }
+}
+
+pub(crate) fn value_to_usize(value: &Value) -> Option<usize> {
+    match value {
+        Value::usize(n) => Some(*n),
+        Value::u8(n) => Some(*n as usize),
+        Value::u16(n) => Some(*n as usize),
+        Value::u32(n) => Some(*n as usize),
+        Value::u64(n) => Some(*n as usize),
+        Value::u128(n) => Some(*n as usize),
+        Value::i8(n) => Some(*n as usize),
+        Value::i16(n) => Some(*n as usize),
+        Value::i32(n) => Some(*n as usize),
+        Value::i64(n) => Some(*n as usize),
+        Value::i128(n) => Some(*n as usize),
+        Value::bool(_)
+        | Value::char(_)
+        | Value::f32(_)
+        | Value::f64(_)
+        | Value::String(_)
+        | Value::StructValue(_)
+        | Value::EnumValue(_)
+        | Value::TupleStructValue(_)
+        | Value::TupleValue(_)
+        | Value::List(_)
+        | Value::Map(_) => None,
     }
 }

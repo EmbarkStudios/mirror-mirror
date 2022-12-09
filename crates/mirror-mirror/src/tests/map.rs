@@ -1,7 +1,10 @@
 use alloc::collections::BTreeMap;
 
+use crate::key_path;
+use crate::key_path::GetPath;
 use crate::GetField;
 use crate::GetFieldMut;
+use crate::Map;
 use crate::Reflect;
 
 #[test]
@@ -23,4 +26,22 @@ fn works() {
         &1
     );
     assert_eq!(map.get_field::<i32>("foo").unwrap(), &1);
+}
+
+#[test]
+fn exotic_key_type() {
+    #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Reflect)]
+    #[reflect(crate_name(crate))]
+    struct Foo(i32);
+
+    let map = BTreeMap::from([(Foo(1), 1), (Foo(2), 2)]);
+    let map: &dyn Map = map.as_map().unwrap();
+
+    assert_eq!(map.get(&Foo(1)).unwrap().downcast_ref::<i32>().unwrap(), &1);
+    assert_eq!(map.get(&Foo(2)).unwrap().downcast_ref::<i32>().unwrap(), &2);
+    assert!(map.get(&Foo(3)).is_none());
+
+    assert_eq!(map.get_at::<i32>(&key_path!([Foo(1)])).unwrap(), &1);
+    assert_eq!(map.get_at::<i32>(&key_path!([Foo(2)])).unwrap(), &2);
+    assert!(map.get_at::<i32>(&key_path!([Foo(3)])).is_none());
 }

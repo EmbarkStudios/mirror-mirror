@@ -45,9 +45,9 @@ fn works() {
     assert!(a.get_at::<A>(&key_path!()).is_some());
     assert_eq!(a.get_at::<i32>(&key_path!(.a)).unwrap(), &42);
     assert_eq!(a.get_at::<bool>(&key_path!(.b.c)).unwrap(), &true);
-    assert_eq!(a.get_at::<String>(&key_path!(.c{C}.d)).unwrap(), &"foo");
-    assert!(a.at(&key_path!(.c{DoesntExist})).is_none());
-    assert_eq!(a.get_at::<u32>(&key_path!(.d.fourtytwo)).unwrap(), &42);
+    assert_eq!(a.get_at::<String>(&key_path!(.c::C.d)).unwrap(), &"foo");
+    assert!(a.at(&key_path!(.c::DoesntExist)).is_none());
+    assert_eq!(a.get_at::<u32>(&key_path!(.d["fourtytwo"])).unwrap(), &42);
 
     assert_eq!(a.get_at::<f32>(&key_path!(.e[0])).unwrap(), &1.0);
     assert_eq!(a.get_at::<f32>(&key_path!(.e[1])).unwrap(), &2.0);
@@ -62,8 +62,8 @@ fn works() {
 #[test]
 fn display() {
     assert_eq!(
-        key_path!(.a.b.c[1][2]{D}.e[3]).to_string(),
-        ".a.b.c[1][2]{D}.e[3]"
+        key_path!(.a.0.b.c[1]["foo"]::D.e[3]).to_string(),
+        ".a.0.b.c[1][\"foo\"]::D.e[3]"
     );
 }
 
@@ -119,24 +119,36 @@ fn query_type_info_enum() {
 
     assert!(matches!(
         dbg!(<Foo as Typed>::type_info()
-            .at_type(&key_path!({ A }.a))
+            .at_type(&key_path!(::A.a))
             .unwrap()),
         TypeAtPath::Scalar(ScalarType::String)
     ));
 
     assert!(matches!(
         dbg!(<Foo as Typed>::type_info()
-            .at_type(&key_path!({ B }[0]))
+            .at_type(&key_path!(::B.0))
             .unwrap()),
         TypeAtPath::Scalar(ScalarType::i32)
     ));
 
+    assert!(<Foo as Typed>::type_info()
+        .at_type(&key_path!(::B[0]))
+        .is_none());
+
     let info = <Foo as Typed>::type_info();
-    let variant = info
-        .at_type(&key_path!({ C }))
-        .unwrap()
-        .as_variant()
-        .unwrap();
+    let variant = info.at_type(&key_path!(::C)).unwrap().as_variant().unwrap();
 
     assert_eq!(variant.name(), "C");
+}
+
+#[test]
+fn select_tuple_field() {
+    #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
+    struct Foo(i32, bool);
+
+    let foo = Foo(42, true);
+
+    assert_eq!(foo.get_at::<i32>(&key_path!(.0)).unwrap(), &42);
+    assert_eq!(foo.get_at::<bool>(&key_path!(.1)).unwrap(), &true);
 }
