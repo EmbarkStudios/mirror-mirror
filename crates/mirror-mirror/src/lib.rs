@@ -758,8 +758,8 @@ pub enum ScalarMut<'a> {
 
 pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     fn scalar_debug(
-        scalar: impl ::core::fmt::Debug,
-        f: &mut ::core::fmt::Formatter<'_>,
+        scalar: &dyn core::fmt::Debug,
+        f: &mut core::fmt::Formatter<'_>,
     ) -> fmt::Result {
         if f.alternate() {
             write!(f, "{:#?}", scalar)
@@ -825,22 +825,22 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
         ReflectRef::List(inner) => f.debug_list().entries(inner.iter()).finish(),
         ReflectRef::Map(inner) => f.debug_map().entries(inner.iter()).finish(),
         ReflectRef::Scalar(inner) => match inner {
-            ScalarRef::usize(inner) => scalar_debug(inner, f),
-            ScalarRef::u8(inner) => scalar_debug(inner, f),
-            ScalarRef::u16(inner) => scalar_debug(inner, f),
-            ScalarRef::u32(inner) => scalar_debug(inner, f),
-            ScalarRef::u64(inner) => scalar_debug(inner, f),
-            ScalarRef::u128(inner) => scalar_debug(inner, f),
-            ScalarRef::i8(inner) => scalar_debug(inner, f),
-            ScalarRef::i16(inner) => scalar_debug(inner, f),
-            ScalarRef::i32(inner) => scalar_debug(inner, f),
-            ScalarRef::i64(inner) => scalar_debug(inner, f),
-            ScalarRef::i128(inner) => scalar_debug(inner, f),
-            ScalarRef::bool(inner) => scalar_debug(inner, f),
-            ScalarRef::char(inner) => scalar_debug(inner, f),
-            ScalarRef::f32(inner) => scalar_debug(inner, f),
-            ScalarRef::f64(inner) => scalar_debug(inner, f),
-            ScalarRef::String(inner) => scalar_debug(inner, f),
+            ScalarRef::usize(inner) => scalar_debug(&inner, f),
+            ScalarRef::u8(inner) => scalar_debug(&inner, f),
+            ScalarRef::u16(inner) => scalar_debug(&inner, f),
+            ScalarRef::u32(inner) => scalar_debug(&inner, f),
+            ScalarRef::u64(inner) => scalar_debug(&inner, f),
+            ScalarRef::u128(inner) => scalar_debug(&inner, f),
+            ScalarRef::i8(inner) => scalar_debug(&inner, f),
+            ScalarRef::i16(inner) => scalar_debug(&inner, f),
+            ScalarRef::i32(inner) => scalar_debug(&inner, f),
+            ScalarRef::i64(inner) => scalar_debug(&inner, f),
+            ScalarRef::i128(inner) => scalar_debug(&inner, f),
+            ScalarRef::bool(inner) => scalar_debug(&inner, f),
+            ScalarRef::char(inner) => scalar_debug(&inner, f),
+            ScalarRef::f32(inner) => scalar_debug(&inner, f),
+            ScalarRef::f64(inner) => scalar_debug(&inner, f),
+            ScalarRef::String(inner) => scalar_debug(&inner, f),
         },
         ReflectRef::Opaque(_) => {
             write!(f, "{}", value.type_name())
