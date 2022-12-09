@@ -9,6 +9,7 @@ use crate::type_info::TypeAtPath;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectRef;
+use crate::Value;
 
 pub trait GetPath {
     fn at(&self, key_path: &KeyPath) -> Option<&dyn Reflect>;
@@ -79,23 +80,11 @@ where
                     | ReflectRef::Scalar(_)
                     | ReflectRef::Opaque(_) => return None,
                 },
-                // ["foo"]
-                Key::FieldAt(private::KeyOrIndex::Key(key)) => match value.reflect_ref() {
+                // ["foo"] or [0]
+                Key::FieldAt(key) => match value.reflect_ref() {
                     ReflectRef::Map(inner) => inner.get(key)?,
-                    ReflectRef::Struct(_)
-                    | ReflectRef::TupleStruct(_)
-                    | ReflectRef::Tuple(_)
-                    | ReflectRef::Enum(_)
-                    | ReflectRef::Array(_)
-                    | ReflectRef::List(_)
-                    | ReflectRef::Scalar(_)
-                    | ReflectRef::Opaque(_) => return None,
-                },
-                // [0]
-                Key::FieldAt(private::KeyOrIndex::Index(index)) => match value.reflect_ref() {
-                    ReflectRef::Array(inner) => inner.get(*index)?,
-                    ReflectRef::List(inner) => inner.get(*index)?,
-                    ReflectRef::Map(inner) => inner.get(index)?,
+                    ReflectRef::Array(inner) => inner.get(value_to_usize(key)?)?,
+                    ReflectRef::List(inner) => inner.get(value_to_usize(key)?)?,
                     ReflectRef::Struct(_)
                     | ReflectRef::TupleStruct(_)
                     | ReflectRef::Tuple(_)
@@ -178,23 +167,11 @@ where
                     | ReflectMut::Scalar(_)
                     | ReflectMut::Opaque(_) => return None,
                 },
-                // ["foo"]
-                Key::FieldAt(private::KeyOrIndex::Key(key)) => match value.reflect_mut() {
+                // ["foo"] or [0]
+                Key::FieldAt(key) => match value.reflect_mut() {
+                    ReflectMut::Array(inner) => inner.get_mut(value_to_usize(key)?)?,
+                    ReflectMut::List(inner) => inner.get_mut(value_to_usize(key)?)?,
                     ReflectMut::Map(inner) => inner.get_mut(key)?,
-                    ReflectMut::Struct(_)
-                    | ReflectMut::TupleStruct(_)
-                    | ReflectMut::Tuple(_)
-                    | ReflectMut::Enum(_)
-                    | ReflectMut::Array(_)
-                    | ReflectMut::List(_)
-                    | ReflectMut::Scalar(_)
-                    | ReflectMut::Opaque(_) => return None,
-                },
-                // [0]
-                Key::FieldAt(private::KeyOrIndex::Index(index)) => match value.reflect_mut() {
-                    ReflectMut::Array(inner) => inner.get_mut(*index)?,
-                    ReflectMut::List(inner) => inner.get_mut(*index)?,
-                    ReflectMut::Map(inner) => inner.get_mut(index)?,
                     ReflectMut::Struct(_)
                     | ReflectMut::TupleStruct(_)
                     | ReflectMut::Tuple(_)
@@ -254,13 +231,13 @@ impl KeyPath {
         self.path.push(Key::Field(field.into_key_or_index()));
     }
 
-    pub fn get(mut self, field: impl IntoKeyOrIndex) -> Self {
+    pub fn get(mut self, field: impl Into<Value>) -> Self {
         self.push_get(field);
         self
     }
 
-    pub fn push_get(&mut self, field: impl IntoKeyOrIndex) {
-        self.path.push(Key::FieldAt(field.into_key_or_index()))
+    pub fn push_get(&mut self, field: impl Into<Value>) {
+        self.path.push(Key::FieldAt(field.into()))
     }
 
     pub fn variant<S>(mut self, variant: S) -> Self
@@ -305,7 +282,7 @@ mod private {
     #[allow(unreachable_pub)]
     pub enum Key {
         Field(KeyOrIndex),
-        FieldAt(KeyOrIndex),
+        FieldAt(Value),
         Variant(String),
     }
 
@@ -347,7 +324,7 @@ pub fn field(field: impl IntoKeyOrIndex) -> KeyPath {
     KeyPath::default().field(field)
 }
 
-pub fn get(field: impl IntoKeyOrIndex) -> KeyPath {
+pub fn get(field: impl Into<Value>) -> KeyPath {
     KeyPath::default().get(field)
 }
 
@@ -446,11 +423,37 @@ impl fmt::Display for KeyPath {
             match key {
                 Key::Field(private::KeyOrIndex::Key(key)) => write!(f, ".{key}")?,
                 Key::Field(private::KeyOrIndex::Index(index)) => write!(f, ".{index}")?,
-                Key::FieldAt(private::KeyOrIndex::Key(key)) => write!(f, "[{key:?}]")?,
-                Key::FieldAt(private::KeyOrIndex::Index(index)) => write!(f, "[{index}]")?,
+                Key::FieldAt(value) => write!(f, "[{:?}]", value.as_reflect())?,
                 Key::Variant(variant) => write!(f, "::{variant}")?,
             }
         }
         Ok(())
+    }
+}
+
+pub(crate) fn value_to_usize(value: &Value) -> Option<usize> {
+    match value {
+        Value::usize(n) => Some(*n),
+        Value::u8(n) => Some(*n as usize),
+        Value::u16(n) => Some(*n as usize),
+        Value::u32(n) => Some(*n as usize),
+        Value::u64(n) => Some(*n as usize),
+        Value::u128(n) => Some(*n as usize),
+        Value::i8(n) => Some(*n as usize),
+        Value::i16(n) => Some(*n as usize),
+        Value::i32(n) => Some(*n as usize),
+        Value::i64(n) => Some(*n as usize),
+        Value::i128(n) => Some(*n as usize),
+        Value::bool(_)
+        | Value::char(_)
+        | Value::f32(_)
+        | Value::f64(_)
+        | Value::String(_)
+        | Value::StructValue(_)
+        | Value::EnumValue(_)
+        | Value::TupleStructValue(_)
+        | Value::TupleValue(_)
+        | Value::List(_)
+        | Value::Map(_) => None,
     }
 }

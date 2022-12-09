@@ -23,14 +23,14 @@ where
     V: FromReflect + Typed,
 {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
-        let key = key.downcast_ref::<K>()?;
-        let value = self.get(key)?;
+        let key = K::from_reflect(key)?;
+        let value = self.get(&key)?;
         Some(value.as_reflect())
     }
 
     fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect> {
-        let key = key.downcast_ref::<K>()?;
-        let value = self.get_mut(key)?;
+        let key = K::from_reflect(key)?;
+        let value = self.get_mut(&key)?;
         Some(value.as_reflect_mut())
     }
 

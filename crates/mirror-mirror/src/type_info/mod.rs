@@ -8,6 +8,7 @@ use alloc::vec::Vec;
 use graph::*;
 
 use crate::enum_::EnumValue;
+use crate::key_path::value_to_usize;
 use crate::key_path::GetTypePath;
 use crate::key_path::Key;
 use crate::key_path::KeyOrIndex;
@@ -1169,29 +1170,28 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
-                // ["foo"]
-                Key::FieldAt(KeyOrIndex::Key(_key)) => match type_info {
+                // ["foo"] or [0]
+                Key::FieldAt(key) => match type_info {
                     TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
+                    TypeAtPath::List(list) => {
+                        if value_to_usize(key).is_some() {
+                            list.element_type().into_type_info_at_path()
+                        } else {
+                            return None;
+                        }
+                    }
+                    TypeAtPath::Array(array) => {
+                        if value_to_usize(key).is_some() {
+                            array.element_type().into_type_info_at_path()
+                        } else {
+                            return None;
+                        }
+                    }
                     TypeAtPath::Struct(_)
                     | TypeAtPath::TupleStruct(_)
                     | TypeAtPath::Tuple(_)
                     | TypeAtPath::Enum(_)
                     | TypeAtPath::Variant(_)
-                    | TypeAtPath::List(_)
-                    | TypeAtPath::Array(_)
-                    | TypeAtPath::Scalar(_)
-                    | TypeAtPath::Opaque(_) => return None,
-                },
-                // [0]
-                Key::FieldAt(KeyOrIndex::Index(_index)) => match type_info {
-                    TypeAtPath::List(list) => list.element_type().into_type_info_at_path(),
-                    TypeAtPath::Array(array) => array.element_type().into_type_info_at_path(),
-                    TypeAtPath::Struct(_)
-                    | TypeAtPath::TupleStruct(_)
-                    | TypeAtPath::Tuple(_)
-                    | TypeAtPath::Enum(_)
-                    | TypeAtPath::Variant(_)
-                    | TypeAtPath::Map(_)
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
