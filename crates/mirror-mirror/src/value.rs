@@ -192,6 +192,11 @@ impl Reflect for Value {
         for_each_variant!(self, inner => inner)
     }
 
+    
+    fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
+        for_each_variant!(*self, inner => Box::new(inner))
+    }
+
     fn as_reflect(&self) -> &dyn Reflect {
         for_each_variant!(self, inner => inner)
     }
