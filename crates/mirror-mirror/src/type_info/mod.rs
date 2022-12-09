@@ -8,6 +8,7 @@ use graph::*;
 use crate::enum_::EnumValue;
 use crate::key_path::GetTypePath;
 use crate::key_path::Key;
+use crate::key_path::KeyOrIndex;
 use crate::key_path::KeyPath;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
@@ -882,6 +883,10 @@ impl<'a> UnnamedField<'a> {
     pub fn get_type(self) -> Type<'a> {
         Type::new(self.node.id, self.graph)
     }
+
+    fn into_type_info_at_path(self) -> TypeAtPath<'a> {
+        self.get_type().into_type_info_at_path()
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -898,6 +903,10 @@ impl<'a> NamedField<'a> {
     pub fn get_type(self) -> Type<'a> {
         Type::new(self.node.id, self.graph)
     }
+
+    fn into_type_info_at_path(self) -> TypeAtPath<'a> {
+        self.get_type().into_type_info_at_path()
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -911,7 +920,7 @@ impl<'a> ArrayType<'a> {
         &self.node.type_name
     }
 
-    pub fn field_type(self) -> Type<'a> {
+    pub fn element_type(self) -> Type<'a> {
         Type::new(self.node.field_type_id, self.graph)
     }
 
@@ -939,7 +948,7 @@ impl<'a> ListType<'a> {
         &self.node.type_name
     }
 
-    pub fn field_type(self) -> Type<'a> {
+    pub fn element_type(self) -> Type<'a> {
         Type::new(self.node.field_type_id, self.graph)
     }
 
@@ -1113,90 +1122,86 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
             let head = stack.pop()?;
 
             let value_at_key: TypeAtPath<'_> = match head {
-                Key::Field(key) => match type_info {
-                    TypeAtPath::Struct(struct_) => struct_
-                        .field_types()
-                        .find(|field| field.name() == key)?
-                        .get_type()
-                        .into_type_info_at_path(),
-                    TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
+                // .foo
+                Key::Field(KeyOrIndex::Key(key)) => match type_info {
+                    TypeAtPath::Struct(struct_) => {
+                        struct_.field_type(key)?.into_type_info_at_path()
+                    }
                     TypeAtPath::Variant(variant) => match variant {
-                        Variant::Struct(struct_variant) => struct_variant
-                            .field_types()
-                            .find(|field| field.name() == key)?
-                            .get_type()
-                            .into_type_info_at_path(),
+                        Variant::Struct(struct_variant) => {
+                            struct_variant.field_type(key)?.into_type_info_at_path()
+                        }
                         Variant::Tuple(_) | Variant::Unit(_) => return None,
                     },
-                    TypeAtPath::Enum(enum_) => {
-                        let mut variants = enum_.variants();
-                        let first = variants.next()?;
-                        if variants.next().is_none() {
-                            first
-                                .field_types()
-                                .find_map(|field| match field {
-                                    VariantField::Named(field) => {
-                                        if field.name() == key {
-                                            Some(field)
-                                        } else {
-                                            None
-                                        }
-                                    }
-                                    VariantField::Unnamed(_) => None,
-                                })?
-                                .get_type()
-                                .into_type_info_at_path()
-                        } else {
-                            return None;
-                        }
-                    }
-                    TypeAtPath::TupleStruct(_)
+                    TypeAtPath::Enum(_)
+                    | TypeAtPath::TupleStruct(_)
                     | TypeAtPath::Tuple(_)
+                    | TypeAtPath::List(_)
+                    | TypeAtPath::Array(_)
+                    | TypeAtPath::Map(_)
+                    | TypeAtPath::Scalar(_)
+                    | TypeAtPath::Opaque(_) => return None,
+                },
+                // .0
+                Key::Field(KeyOrIndex::Index(index)) => match type_info {
+                    TypeAtPath::TupleStruct(tuple_struct) => {
+                        tuple_struct.field_type_at(*index)?.into_type_info_at_path()
+                    }
+                    TypeAtPath::Tuple(tuple) => {
+                        tuple.field_type_at(*index)?.into_type_info_at_path()
+                    }
+                    TypeAtPath::Variant(variant) => match variant {
+                        Variant::Tuple(tuple) => {
+                            tuple.field_type_at(*index)?.into_type_info_at_path()
+                        }
+                        Variant::Struct(_) | Variant::Unit(_) => return None,
+                    },
+                    TypeAtPath::Struct(_)
+                    | TypeAtPath::Enum(_)
+                    | TypeAtPath::List(_)
+                    | TypeAtPath::Array(_)
+                    | TypeAtPath::Map(_)
+                    | TypeAtPath::Scalar(_)
+                    | TypeAtPath::Opaque(_) => return None,
+                },
+                // ["foo"]
+                Key::FieldAt(KeyOrIndex::Key(_key)) => match type_info {
+                    TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
+                    TypeAtPath::Struct(_)
+                    | TypeAtPath::TupleStruct(_)
+                    | TypeAtPath::Tuple(_)
+                    | TypeAtPath::Enum(_)
+                    | TypeAtPath::Variant(_)
                     | TypeAtPath::List(_)
                     | TypeAtPath::Array(_)
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
-                Key::Element(index) => match type_info {
-                    TypeAtPath::List(list) => list.field_type().into_type_info_at_path(),
-                    TypeAtPath::Array(array) => array.field_type().into_type_info_at_path(),
-                    TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
-                    TypeAtPath::TupleStruct(tuple_struct) => tuple_struct
-                        .field_types()
-                        .nth(*index)?
-                        .get_type()
-                        .into_type_info_at_path(),
-                    TypeAtPath::Tuple(tuple) => tuple
-                        .field_types()
-                        .nth(*index)?
-                        .get_type()
-                        .into_type_info_at_path(),
-
-                    TypeAtPath::Variant(variant) => match variant {
-                        Variant::Tuple(tuple_variant) => tuple_variant
-                            .field_types()
-                            .nth(*index)?
-                            .get_type()
-                            .into_type_info_at_path(),
-                        Variant::Struct(_) | Variant::Unit(_) => return None,
-                    },
-
-                    TypeAtPath::Enum(_)
+                // [0]
+                Key::FieldAt(KeyOrIndex::Index(_index)) => match type_info {
+                    TypeAtPath::List(list) => list.element_type().into_type_info_at_path(),
+                    TypeAtPath::Array(array) => array.element_type().into_type_info_at_path(),
+                    TypeAtPath::Struct(_)
+                    | TypeAtPath::TupleStruct(_)
+                    | TypeAtPath::Tuple(_)
+                    | TypeAtPath::Enum(_)
+                    | TypeAtPath::Variant(_)
+                    | TypeAtPath::Map(_)
                     | TypeAtPath::Scalar(_)
-                    | TypeAtPath::Struct(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
+                // ::Some
                 Key::Variant(variant) => match type_info {
+                    TypeAtPath::Enum(enum_) => enum_
+                        .variants()
+                        .find(|v| v.name() == variant)?
+                        .into_type_info_at_path(),
                     TypeAtPath::Variant(v) => {
                         if v.name() == variant {
-                            TypeAtPath::Variant(v)
+                            v.into_type_info_at_path()
                         } else {
                             return None;
                         }
-                    }
-                    TypeAtPath::Enum(enum_) => {
-                        let variant_info = enum_.variants().find(|v| v.name() == variant)?;
-                        TypeAtPath::Variant(variant_info)
                     }
                     TypeAtPath::Struct(_)
                     | TypeAtPath::TupleStruct(_)
@@ -1270,7 +1275,7 @@ mod tests {
                     );
 
                     assert_eq!(
-                        list.field_type().type_name(),
+                        list.element_type().type_name(),
                         "mirror_mirror::type_info::tests::struct_::Foo"
                     );
                 }
