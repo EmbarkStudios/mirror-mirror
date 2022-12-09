@@ -493,18 +493,17 @@ impl ReflectOwned {
 
 impl Clone for ReflectOwned {
     fn clone(&self) -> Self {
-        todo!()
-        // match self {
-        //     Self::Struct(inner) => Self::Struct(inner.clone()),
-        //     Self::TupleStruct(inner) => Self::TupleStruct(inner.clone()),
-        //     Self::Tuple(inner) => Self::Tuple(inner.clone()),
-        //     Self::Enum(inner) => Self::Enum(inner.clone()),
-        //     Self::Array(inner) => Self::Array(inner.clone()),
-        //     Self::List(inner) => Self::List(inner.clone()),
-        //     Self::Map(inner) => Self::Map(inner.clone()),
-        //     Self::Scalar(inner) => Self::Scalar(inner.clone()),
-        //     Self::Opaque(inner) => Self::Opaque(inner.clone()),
-        // }
+        match self {
+            Self::Struct(inner) => inner.clone_reflect().reflect_owned(),
+            Self::TupleStruct(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Tuple(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Enum(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Array(inner) => inner.clone_reflect().reflect_owned(),
+            Self::List(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Map(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Opaque(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Scalar(inner) => Self::Scalar(inner.clone()),
+        }
     }
 }
 
