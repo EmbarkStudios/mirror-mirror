@@ -48,7 +48,7 @@ use syn::parse::Parse;
 
 mod derive_reflect;
 
-/// Derive an implementation `Reflect` and other appropriate traits.
+/// Derive an implementation of `Reflect` and other appropriate traits.
 ///
 /// # Structs
 ///
