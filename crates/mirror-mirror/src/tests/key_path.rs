@@ -102,7 +102,7 @@ fn query_type_info_struct() {
     let type_info = <User as Typed>::type_info();
 
     assert!(matches!(
-        dbg!(type_info.at_type(&key_path).unwrap()),
+        dbg!(type_info.type_at(&key_path).unwrap()),
         TypeAtPath::Scalar(ScalarType::String)
     ));
 }
@@ -119,24 +119,24 @@ fn query_type_info_enum() {
 
     assert!(matches!(
         dbg!(<Foo as Typed>::type_info()
-            .at_type(&key_path!(::A.a))
+            .type_at(&key_path!(::A.a))
             .unwrap()),
         TypeAtPath::Scalar(ScalarType::String)
     ));
 
     assert!(matches!(
         dbg!(<Foo as Typed>::type_info()
-            .at_type(&key_path!(::B.0))
+            .type_at(&key_path!(::B.0))
             .unwrap()),
         TypeAtPath::Scalar(ScalarType::i32)
     ));
 
     assert!(<Foo as Typed>::type_info()
-        .at_type(&key_path!(::B[0]))
+        .type_at(&key_path!(::B[0]))
         .is_none());
 
     let info = <Foo as Typed>::type_info();
-    let variant = info.at_type(&key_path!(::C)).unwrap().as_variant().unwrap();
+    let variant = info.type_at(&key_path!(::C)).unwrap().as_variant().unwrap();
 
     assert_eq!(variant.name(), "C");
 }

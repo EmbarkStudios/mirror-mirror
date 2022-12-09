@@ -219,7 +219,7 @@ fn accessing_docs_in_type_info() {
 
     let variant_info = type_info
         .get_type()
-        .at_type(&key_path!(.inner[0]["map_key"][0]::Some.0::Variant))
+        .type_at(&key_path!(.inner[0]["map_key"][0]::Some.0::Variant))
         .unwrap()
         .as_variant()
         .unwrap();

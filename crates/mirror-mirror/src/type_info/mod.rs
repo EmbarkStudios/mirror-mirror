@@ -90,8 +90,8 @@ impl TypeRoot {
 }
 
 impl<'a> GetTypePath<'a> for &'a TypeRoot {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.get_type().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.get_type().type_at(key_path)
     }
 }
 
@@ -332,56 +332,56 @@ impl<'a> Type<'a> {
 }
 
 impl<'a> GetTypePath<'a> for Type<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for StructType<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for TupleStructType<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for TupleType<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for EnumType<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for ListType<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for MapType<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl GetTypePath<'static> for ScalarType {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'static>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'static>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
 impl<'a> GetTypePath<'a> for Variant<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
-        self.into_type_info_at_path().at_type(key_path)
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+        self.into_type_info_at_path().type_at(key_path)
     }
 }
 
@@ -1120,7 +1120,7 @@ impl<'a> TypeAtPath<'a> {
 }
 
 impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
-    fn at_type(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
+    fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         fn go<'a, 'b>(
             type_info: TypeAtPath<'a>,
             mut stack: Peekable<impl Iterator<Item = &'b Key>>,
