@@ -291,6 +291,10 @@ fn expand_reflect(
 
     Ok(quote! {
         impl #impl_generics Reflect for #ident #type_generics #where_clause {
+            fn into_any(self: Box<Self>) -> Box<dyn Any> {
+                self
+            }
+
             fn as_any(&self) -> &dyn Any {
                 self
             }

@@ -28,6 +28,10 @@ macro_rules! impl_reflect_via_scalar {
                     <Self as Typed>::type_info()
                 }
 
+                fn into_any(self: Box<Self>) -> Box<dyn Any> {
+                    self
+                }
+
                 fn as_any(&self) -> &dyn Any {
                     self
                 }
