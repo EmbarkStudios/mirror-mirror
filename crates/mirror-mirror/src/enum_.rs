@@ -14,6 +14,7 @@ use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Struct;
 use crate::Tuple;
@@ -247,6 +248,10 @@ impl Reflect for EnumValue {
         } else {
             write!(f, "{:?}", self)
         }
+    }
+
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::Enum(self)
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {

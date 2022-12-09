@@ -11,6 +11,7 @@ use crate::FromReflect;
 use crate::List;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeRoot;
 use crate::Typed;
@@ -135,6 +136,10 @@ where
 
     fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list().entries(self.iter()).finish()
+    }
+
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::List(self)
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {

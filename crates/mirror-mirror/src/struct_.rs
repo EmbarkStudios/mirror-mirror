@@ -12,6 +12,7 @@ use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeRoot;
 use crate::Typed;
@@ -123,6 +124,10 @@ impl Reflect for StructValue {
         } else {
             write!(f, "{:?}", self)
         }
+    }
+
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::Struct(self)
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {

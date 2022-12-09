@@ -317,6 +317,10 @@ fn expand_reflect(
             #fn_clone_reflect
             #fn_debug
 
+            fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+                ReflectOwned::Enum(self)
+            }
+
             fn reflect_ref(&self) -> ReflectRef<'_> {
                 ReflectRef::Enum(self)
             }

@@ -48,6 +48,10 @@ macro_rules! impl_reflect_via_scalar {
                     self
                 }
 
+                fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+                    ReflectOwned::Scalar(ScalarOwned::from($get_fn(&*self)))
+                }
+
                 fn reflect_ref(&self) -> ReflectRef<'_> {
                     ReflectRef::Scalar(ScalarRef::from($get_fn(self)))
                 }

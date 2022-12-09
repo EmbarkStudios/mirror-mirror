@@ -117,6 +117,8 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect;
 
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned;
+
     fn reflect_ref(&self) -> ReflectRef<'_>;
 
     fn reflect_mut(&mut self) -> ReflectMut<'_>;
@@ -266,6 +268,10 @@ macro_rules! impl_for_core_types {
                     Value::from(self.to_owned())
                 }
 
+                fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+                    ReflectOwned::Scalar(ScalarOwned::from(*self))
+                }
+
                 fn reflect_ref(&self) -> ReflectRef<'_> {
                     ReflectRef::Scalar(ScalarRef::from(*self))
                 }
@@ -286,6 +292,12 @@ macro_rules! impl_for_core_types {
             impl FromReflect for $ty {
                 fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
                     Some(reflect.downcast_ref::<$ty>()?.clone())
+                }
+            }
+
+            impl From<$ty> for ScalarOwned {
+                fn from(value: $ty) -> Self {
+                    ScalarOwned::$ty(value)
                 }
             }
 
@@ -350,6 +362,10 @@ impl Reflect for String {
         Value::from(self.to_owned())
     }
 
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        ReflectOwned::Scalar(ScalarOwned::from(*self))
+    }
+
     fn reflect_ref(&self) -> ReflectRef<'_> {
         ReflectRef::Scalar(ScalarRef::from(self))
     }
@@ -373,6 +389,12 @@ impl FromReflect for String {
     }
 }
 
+impl From<String> for ScalarOwned {
+    fn from(value: String) -> Self {
+        ScalarOwned::String(value)
+    }
+}
+
 impl<'a> From<&'a String> for ScalarRef<'a> {
     fn from(value: &'a String) -> Self {
         ScalarRef::String(value.as_str())
@@ -387,6 +409,123 @@ impl<'a> From<&'a mut String> for ScalarMut<'a> {
 
 pub trait FromReflect: Reflect + Sized {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self>;
+}
+
+#[derive(Debug)]
+pub enum ReflectOwned {
+    Struct(Box<dyn Struct>),
+    TupleStruct(Box<dyn TupleStruct>),
+    Tuple(Box<dyn Tuple>),
+    Enum(Box<dyn Enum>),
+    Array(Box<dyn Array>),
+    List(Box<dyn List>),
+    Map(Box<dyn Map>),
+    Scalar(ScalarOwned),
+    /// Not all `Reflect` implementations allow access to the underlying value. This variant can be
+    /// used for such types.
+    Opaque(Box<dyn Reflect>),
+}
+
+impl ReflectOwned {
+    pub fn into_tuple(self) -> Option<Box<dyn Tuple>> {
+        match self {
+            Self::Tuple(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_struct(self) -> Option<Box<dyn Struct>> {
+        match self {
+            Self::Struct(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_tuple_struct(self) -> Option<Box<dyn TupleStruct>> {
+        match self {
+            Self::TupleStruct(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_enum(self) -> Option<Box<dyn Enum>> {
+        match self {
+            Self::Enum(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_list(self) -> Option<Box<dyn List>> {
+        match self {
+            Self::List(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_array(self) -> Option<Box<dyn Array>> {
+        match self {
+            Self::Array(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_map(self) -> Option<Box<dyn Map>> {
+        match self {
+            Self::Map(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_scalar(self) -> Option<ScalarOwned> {
+        match self {
+            Self::Scalar(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn into_opaque(self) -> Option<Box<dyn Reflect>> {
+        match self {
+            Self::Opaque(inner) => Some(inner),
+            _ => None,
+        }
+    }
+}
+
+impl Clone for ReflectOwned {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Struct(inner) => inner.clone_reflect().reflect_owned(),
+            Self::TupleStruct(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Tuple(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Enum(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Array(inner) => inner.clone_reflect().reflect_owned(),
+            Self::List(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Map(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Opaque(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Scalar(inner) => Self::Scalar(inner.clone()),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[allow(non_camel_case_types)]
+pub enum ScalarOwned {
+    usize(usize),
+    u8(u8),
+    u16(u16),
+    u32(u32),
+    u64(u64),
+    u128(u128),
+    i8(i8),
+    i16(i16),
+    i32(i32),
+    i64(i64),
+    i128(i128),
+    bool(bool),
+    char(char),
+    f32(f32),
+    f64(f64),
+    String(String),
 }
 
 #[derive(Debug, Copy, Clone)]

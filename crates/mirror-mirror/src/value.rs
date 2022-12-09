@@ -19,8 +19,10 @@ use crate::type_info::graph::TypeGraph;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
+use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::ScalarMut;
+use crate::ScalarOwned;
 use crate::ScalarRef;
 use crate::TypeRoot;
 use crate::Typed;
@@ -196,6 +198,33 @@ impl Reflect for Value {
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         for_each_variant!(self, inner => inner)
+    }
+
+    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
+        match *self {
+            Value::usize(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::u8(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::u16(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::u32(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::u64(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::u128(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::i8(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::i16(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::i32(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::i64(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::i128(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::bool(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::char(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::f32(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::f64(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::String(inner) => ReflectOwned::Scalar(ScalarOwned::from(inner)),
+            Value::StructValue(inner) => ReflectOwned::Struct(inner),
+            Value::EnumValue(inner) => ReflectOwned::Enum(inner),
+            Value::TupleStructValue(inner) => ReflectOwned::TupleStruct(Box::new(inner)),
+            Value::TupleValue(inner) => ReflectOwned::Tuple(Box::new(inner)),
+            Value::List(inner) => ReflectOwned::List(Box::new(inner)),
+            Value::Map(inner) => ReflectOwned::Map(Box::new(inner)),
+        }
     }
 
     fn reflect_ref(&self) -> ReflectRef<'_> {
