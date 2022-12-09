@@ -41,7 +41,7 @@ fn static_tuple() {
     assert_eq!(fields[0].downcast_ref::<i32>().unwrap(), &42);
     assert_eq!(fields[1].downcast_ref::<bool>().unwrap(), &false);
 
-    tuple.field_mut(1).unwrap().patch(&true);
+    tuple.field_at_mut(1).unwrap().patch(&true);
     assert!(tuple.1);
 }
 

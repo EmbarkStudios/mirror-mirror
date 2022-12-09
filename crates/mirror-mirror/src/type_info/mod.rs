@@ -584,7 +584,7 @@ impl<'a> TupleStructType<'a> {
         })
     }
 
-    pub fn field_type(self, index: usize) -> Option<UnnamedField<'a>> {
+    pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
         let node = self.node.fields.get(index)?;
         Some(UnnamedField {
             node,
@@ -615,7 +615,7 @@ impl<'a> TupleType<'a> {
         })
     }
 
-    pub fn field_type(self, index: usize) -> Option<UnnamedField<'a>> {
+    pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
         let node = self.node.fields.get(index)?;
         Some(UnnamedField {
             node,
@@ -703,7 +703,7 @@ impl<'a> Variant<'a> {
     pub fn field_type_at(self, index: usize) -> Option<VariantField<'a>> {
         match self {
             Variant::Struct(inner) => inner.field_type_at(index).map(VariantField::Named),
-            Variant::Tuple(inner) => inner.field_type(index).map(VariantField::Unnamed),
+            Variant::Tuple(inner) => inner.field_type_at(index).map(VariantField::Unnamed),
             Variant::Unit(_) => None,
         }
     }
@@ -836,7 +836,7 @@ impl<'a> TupleVariant<'a> {
         })
     }
 
-    pub fn field_type(self, index: usize) -> Option<UnnamedField<'a>> {
+    pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
         let node = self.node.fields.get(index)?;
         Some(UnnamedField {
             node,

@@ -56,8 +56,8 @@ where
                     | ReflectRef::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_ref() {
-                    ReflectRef::TupleStruct(inner) => inner.field(*index)?,
-                    ReflectRef::Tuple(inner) => inner.field(*index)?,
+                    ReflectRef::TupleStruct(inner) => inner.field_at(*index)?,
+                    ReflectRef::Tuple(inner) => inner.field_at(*index)?,
                     ReflectRef::Enum(inner) => inner.field_at(*index)?,
                     ReflectRef::List(inner) => inner.get(*index)?,
                     ReflectRef::Array(inner) => inner.get(*index)?,
@@ -121,8 +121,8 @@ where
                     | ReflectMut::Scalar(_) => return None,
                 },
                 Key::Element(index) => match value.reflect_mut() {
-                    ReflectMut::TupleStruct(inner) => inner.field_mut(*index)?,
-                    ReflectMut::Tuple(inner) => inner.field_mut(*index)?,
+                    ReflectMut::TupleStruct(inner) => inner.field_at_mut(*index)?,
+                    ReflectMut::Tuple(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Enum(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::List(inner) => inner.get_mut(*index)?,
                     ReflectMut::Array(inner) => inner.get_mut(*index)?,
