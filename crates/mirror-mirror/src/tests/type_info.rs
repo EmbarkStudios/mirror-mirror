@@ -1,3 +1,5 @@
+use core::any::type_name;
+
 use crate::type_info::*;
 use crate::Reflect;
 
@@ -75,4 +77,25 @@ fn complex_meta_type() {
 
     let foo = type_info.get_type().get_meta::<Foo>("a").unwrap();
     assert_eq!(foo, Foo(1337));
+}
+
+#[test]
+fn type_to_root() {
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate), meta(a = Foo(1337)))]
+    struct Foo(i32);
+
+    let type_info = <Foo as Typed>::type_info();
+
+    assert_eq!(
+        type_info.get_type().as_tuple_struct().unwrap().type_name(),
+        type_name::<Foo>()
+    );
+
+    let type_info = type_info
+        .get_type()
+        .as_tuple_struct()
+        .unwrap()
+        .to_type_root();
+    assert_eq!(type_info.get_type().type_name(), type_name::<Foo>());
 }
