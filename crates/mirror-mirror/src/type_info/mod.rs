@@ -16,6 +16,7 @@ use crate::key_path::KeyPath;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
+use crate::FromReflect;
 use crate::Reflect;
 use crate::Value;
 
@@ -131,31 +132,52 @@ impl<'a> Type<'a> {
     fn new(id: NodeId, graph: &'a TypeGraph) -> Self {
         match graph.get(id) {
             TypeNode::Struct(node) => {
-                let node = StructType { node, graph };
+                let node = StructType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::Struct(node)
             }
             TypeNode::TupleStruct(node) => {
-                let node = TupleStructType { node, graph };
+                let node = TupleStructType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::TupleStruct(node)
             }
             TypeNode::Tuple(node) => {
-                let node = TupleType { node, graph };
+                let node = TupleType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::Tuple(node)
             }
             TypeNode::Enum(node) => {
-                let node = EnumType { node, graph };
+                let node = EnumType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::Enum(node)
             }
             TypeNode::List(node) => {
-                let node = ListType { node, graph };
+                let node = ListType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::List(node)
             }
             TypeNode::Array(node) => {
-                let node = ArrayType { node, graph };
+                let node = ArrayType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::Array(node)
             }
             TypeNode::Map(node) => {
-                let node = MapType { node, graph };
+                let node = MapType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::Map(node)
             }
             TypeNode::Scalar(scalar) => {
@@ -180,7 +202,10 @@ impl<'a> Type<'a> {
                 Type::Scalar(node)
             }
             TypeNode::Opaque(node) => {
-                let node = OpaqueType { node, graph };
+                let node = OpaqueType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
                 Type::Opaque(node)
             }
         }
@@ -284,6 +309,37 @@ impl<'a> Type<'a> {
             Type::Opaque(_) => return None,
         };
         Some(value)
+    }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        match self {
+            Type::Struct(inner) => inner.to_type_root(),
+            Type::TupleStruct(inner) => inner.to_type_root(),
+            Type::Tuple(inner) => inner.to_type_root(),
+            Type::Enum(inner) => inner.to_type_root(),
+            Type::List(inner) => inner.to_type_root(),
+            Type::Array(inner) => inner.to_type_root(),
+            Type::Map(inner) => inner.to_type_root(),
+            Type::Scalar(inner) => match inner {
+                ScalarType::usize => <usize as Typed>::type_info(),
+                ScalarType::u8 => <u8 as Typed>::type_info(),
+                ScalarType::u16 => <u16 as Typed>::type_info(),
+                ScalarType::u32 => <u32 as Typed>::type_info(),
+                ScalarType::u64 => <u64 as Typed>::type_info(),
+                ScalarType::u128 => <u128 as Typed>::type_info(),
+                ScalarType::i8 => <i8 as Typed>::type_info(),
+                ScalarType::i16 => <i16 as Typed>::type_info(),
+                ScalarType::i32 => <i32 as Typed>::type_info(),
+                ScalarType::i64 => <i64 as Typed>::type_info(),
+                ScalarType::i128 => <i128 as Typed>::type_info(),
+                ScalarType::bool => <bool as Typed>::type_info(),
+                ScalarType::char => <char as Typed>::type_info(),
+                ScalarType::f32 => <f32 as Typed>::type_info(),
+                ScalarType::f64 => <f64 as Typed>::type_info(),
+                ScalarType::String => <String as Typed>::type_info(),
+            },
+            Type::Opaque(inner) => inner.to_type_root(),
+        }
     }
 
     pub fn as_struct(self) -> Option<StructType<'a>> {
@@ -428,12 +484,12 @@ mod private {
 pub trait GetMeta<'a>: private::Sealed {
     fn meta(self, key: &str) -> Option<&'a dyn Reflect>;
 
-    fn get_meta<T>(self, key: &str) -> Option<&'a T>
+    fn get_meta<T>(self, key: &str) -> Option<T>
     where
-        T: Reflect,
+        T: FromReflect,
         Self: Sized,
     {
-        self.meta(key)?.downcast_ref()
+        T::from_reflect(self.meta(key)?)
     }
 
     fn docs(self) -> &'a [String];
@@ -556,7 +612,7 @@ impl ScalarType {
 
 #[derive(Copy, Clone, Debug)]
 pub struct StructType<'a> {
-    node: &'a StructNode,
+    node: WithId<&'a StructNode>,
     graph: &'a TypeGraph,
 }
 
@@ -588,11 +644,18 @@ impl<'a> StructType<'a> {
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Struct(self)
     }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct TupleStructType<'a> {
-    node: &'a TupleStructNode,
+    node: WithId<&'a TupleStructNode>,
     graph: &'a TypeGraph,
 }
 
@@ -619,11 +682,18 @@ impl<'a> TupleStructType<'a> {
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::TupleStruct(self)
     }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct TupleType<'a> {
-    node: &'a TupleNode,
+    node: WithId<&'a TupleNode>,
     graph: &'a TypeGraph,
 }
 
@@ -650,11 +720,18 @@ impl<'a> TupleType<'a> {
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Tuple(self)
     }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct EnumType<'a> {
-    node: &'a EnumNode,
+    node: WithId<&'a EnumNode>,
     graph: &'a TypeGraph,
 }
 
@@ -664,7 +741,7 @@ impl<'a> EnumType<'a> {
     }
 
     pub fn variants(self) -> impl Iterator<Item = Variant<'a>> {
-        self.node.variants.iter().map(|variant| match variant {
+        self.node.variants.iter().map(move |variant| match variant {
             VariantNode::Struct(node) => Variant::Struct(StructVariant {
                 node,
                 enum_node: self.node,
@@ -689,6 +766,13 @@ impl<'a> EnumType<'a> {
 
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Enum(self)
+    }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
     }
 }
 
@@ -804,7 +888,7 @@ impl<'a> GetMeta<'a> for VariantField<'a> {
 #[derive(Copy, Clone, Debug)]
 pub struct StructVariant<'a> {
     node: &'a StructVariantNode,
-    enum_node: &'a EnumNode,
+    enum_node: WithId<&'a EnumNode>,
     graph: &'a TypeGraph,
 }
 
@@ -844,7 +928,7 @@ impl<'a> StructVariant<'a> {
 #[derive(Copy, Clone, Debug)]
 pub struct TupleVariant<'a> {
     node: &'a TupleVariantNode,
-    enum_node: &'a EnumNode,
+    enum_node: WithId<&'a EnumNode>,
     graph: &'a TypeGraph,
 }
 
@@ -879,7 +963,7 @@ impl<'a> TupleVariant<'a> {
 #[derive(Copy, Clone, Debug)]
 pub struct UnitVariant<'a> {
     node: &'a UnitVariantNode,
-    enum_node: &'a EnumNode,
+    enum_node: WithId<&'a EnumNode>,
     graph: &'a TypeGraph,
 }
 
@@ -934,7 +1018,7 @@ impl<'a> NamedField<'a> {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ArrayType<'a> {
-    node: &'a ArrayNode,
+    node: WithId<&'a ArrayNode>,
     graph: &'a TypeGraph,
 }
 
@@ -958,11 +1042,18 @@ impl<'a> ArrayType<'a> {
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Array(self)
     }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct ListType<'a> {
-    node: &'a ListNode,
+    node: WithId<&'a ListNode>,
     graph: &'a TypeGraph,
 }
 
@@ -978,11 +1069,18 @@ impl<'a> ListType<'a> {
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::List(self)
     }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct MapType<'a> {
-    node: &'a MapNode,
+    node: WithId<&'a MapNode>,
     graph: &'a TypeGraph,
 }
 
@@ -1002,12 +1100,18 @@ impl<'a> MapType<'a> {
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Map(self)
     }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct OpaqueType<'a> {
-    node: &'a OpaqueNode,
-    #[allow(dead_code)]
+    node: WithId<&'a OpaqueNode>,
     graph: &'a TypeGraph,
 }
 
@@ -1018,6 +1122,13 @@ impl<'a> OpaqueType<'a> {
 
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Opaque(self)
+    }
+
+    pub fn to_type_root(self) -> TypeRoot {
+        TypeRoot {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
     }
 }
 
@@ -1251,75 +1362,5 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
         }
 
         go(self, key_path.path.iter().peekable())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::Reflect;
-
-    #[test]
-    fn struct_() {
-        #[derive(Reflect, Clone, Debug)]
-        #[reflect(crate_name(crate))]
-        struct Foo {
-            n: i32,
-            foos: Vec<Foo>,
-        }
-
-        let type_info = <Foo as Typed>::type_info();
-
-        assert_eq!(
-            type_info.get_type().type_name(),
-            "mirror_mirror::type_info::tests::struct_::Foo"
-        );
-
-        let struct_ = type_info.get_type().as_struct().unwrap();
-
-        assert_eq!(
-            struct_.type_name(),
-            "mirror_mirror::type_info::tests::struct_::Foo"
-        );
-
-        for field in struct_.field_types() {
-            match field.name() {
-                "foos" => {
-                    assert_eq!(
-                        field.get_type().type_name(),
-                        "alloc::vec::Vec<mirror_mirror::type_info::tests::struct_::Foo>"
-                    );
-
-                    let list = field.get_type().as_list().unwrap();
-
-                    assert_eq!(
-                        list.type_name(),
-                        "alloc::vec::Vec<mirror_mirror::type_info::tests::struct_::Foo>"
-                    );
-
-                    assert_eq!(
-                        list.element_type().type_name(),
-                        "mirror_mirror::type_info::tests::struct_::Foo"
-                    );
-                }
-                "n" => {
-                    assert_eq!(field.get_type().type_name(), "i32");
-                    let scalar = field.get_type().as_scalar().unwrap();
-                    assert_eq!(scalar.type_name(), "i32");
-                }
-                _ => panic!("wat"),
-            }
-        }
-    }
-
-    #[test]
-    fn enum_() {
-        #[derive(Reflect, Clone, Debug)]
-        #[reflect(crate_name(crate))]
-        enum Foo {
-            A { a: String },
-            B(Vec<Foo>),
-            C,
-        }
     }
 }

@@ -223,7 +223,7 @@ mod derive_reflect;
 ///         .unwrap()
 ///         .get_meta::<i32>("field_key")
 ///         .unwrap(),
-///     &1337,
+///     1337,
 /// );
 /// ```
 ///

@@ -5,6 +5,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::type_name;
 use core::any::TypeId;
+use core::ops::Deref;
 
 use super::*;
 use crate::Value;
@@ -25,6 +26,26 @@ impl NodeId {
         let mut hasher = ahash::AHasher::default();
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(super) struct WithId<T> {
+    pub(super) id: NodeId,
+    inner: T,
+}
+
+impl<T> WithId<T> {
+    pub(super) fn new(id: NodeId, inner: T) -> Self {
+        Self { id, inner }
+    }
+}
+
+impl<T> Deref for WithId<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
     }
 }
 
