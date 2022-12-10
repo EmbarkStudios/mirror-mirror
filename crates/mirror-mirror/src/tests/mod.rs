@@ -8,6 +8,7 @@ mod meta;
 mod struct_;
 mod tuple;
 mod tuple_struct;
+mod type_info;
 mod value;
 
 #[derive(Reflect)]
