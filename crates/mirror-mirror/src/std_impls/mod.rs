@@ -18,8 +18,8 @@ __private_derive_reflect_foreign! {
     where
         T: FromReflect + Typed,
     {
-        Some(T),
         None,
+        Some(T),
     }
 }
 
