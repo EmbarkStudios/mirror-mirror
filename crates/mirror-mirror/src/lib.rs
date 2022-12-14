@@ -175,7 +175,7 @@
 //! // Convert the `value` back into a `Foo`.
 //! let new_foo = Foo::from_reflect(&value)?;
 //!
-//! // Our changes we applied.
+//! // Our changes were applied.
 //! assert_eq!(new_foo.0, vec![1, 2, 3, 4]);
 //! # Some(())
 //! # })().unwrap();

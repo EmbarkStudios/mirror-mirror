@@ -129,7 +129,7 @@ mod derive_reflect;
 ///
 /// ## `skip`
 ///
-/// You can exclude fields or variants from being reflected with `#[reflect(skip)]`. The type is
+/// You can exclude fields or variants from being reflected with `#[reflect(skip)]`. The type of the skipped field/variant is
 /// required to implement `Default` by the default `FromReflect` implementation.
 ///
 /// ```
@@ -183,7 +183,7 @@ mod derive_reflect;
 ///
 /// ## `meta`
 ///
-/// Metadata associated with types or enum variants be added with `#[reflect(meta(...))]`
+/// Metadata associated with types or enum variants can be added with `#[reflect(meta(...))]`
 ///
 /// ```
 /// use mirror_mirror::{
