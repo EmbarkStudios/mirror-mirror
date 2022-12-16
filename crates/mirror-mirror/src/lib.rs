@@ -307,7 +307,6 @@ macro_rules! fn_type_descriptor {
             {
                 // required for generic types to have different type descriptors
                 // such as `Vec<i32>` and `Vec<bool>`
-                use once_cell::race::OnceBox;
                 use std::collections::HashMap;
                 use std::sync::RwLock;
                 use $crate::__private::*;
@@ -1156,7 +1155,7 @@ pub mod __private {
     pub use core::any::TypeId;
     pub use core::fmt;
 
-    pub use once_cell;
+    pub use once_cell::race::OnceBox;
 
     pub use self::enum_::*;
     pub use self::key_path::*;
