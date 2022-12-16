@@ -27,7 +27,7 @@
 //! // fields by name and iterating over the fields.
 //! let struct_obj: &mut dyn Struct = foo.as_struct_mut()?;
 //!
-//! // Mutably borrow the `x` field. We can access the name of the field as a `String`.
+//! // Mutably borrow the `x` field. We can access fields using string names.
 //! let x: &mut dyn Reflect = struct_obj.field_mut("x")?;
 //!
 //! // Downcast `x` into a mutable `i32`
