@@ -210,7 +210,7 @@ fn accessing_docs_in_type_info() {
         },
     }
 
-    let type_info = <Foo as Typed>::type_info();
+    let type_info = <Foo as Typed>::type_descriptor();
 
     assert_eq!(
         type_info.get_type().docs(),

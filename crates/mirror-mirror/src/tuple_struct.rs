@@ -13,7 +13,7 @@ use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Tuple;
-use crate::TypeRoot;
+use crate::TypeDescriptor;
 use crate::Typed;
 use crate::Value;
 
@@ -62,7 +62,7 @@ impl TupleStructValue {
 }
 
 impl Reflect for TupleStructValue {
-    fn type_info(&self) -> TypeRoot {
+    fn type_descriptor(&self) -> TypeDescriptor {
         impl Typed for TupleStructValue {
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
@@ -70,7 +70,7 @@ impl Reflect for TupleStructValue {
                 })
             }
         }
-        <Self as Typed>::type_info()
+        <Self as Typed>::type_descriptor()
     }
 
     trivial_reflect_methods!();

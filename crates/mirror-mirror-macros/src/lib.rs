@@ -208,7 +208,7 @@ mod derive_reflect;
 /// }
 ///
 /// // Access the metadata through the type information
-/// let type_info = <Foo as Typed>::type_info();
+/// let type_info = <Foo as Typed>::type_descriptor();
 ///
 /// assert_eq!(
 ///     type_info.get_meta::<String>("item_key").unwrap(),

@@ -10,7 +10,7 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeRoot;
+use crate::TypeDescriptor;
 use crate::Typed;
 use crate::Value;
 
@@ -18,7 +18,7 @@ impl<T> Reflect for Box<T>
 where
     T: Reflect + Typed,
 {
-    fn type_info(&self) -> TypeRoot {
+    fn type_descriptor(&self) -> TypeDescriptor {
         impl<T> Typed for Box<T>
         where
             T: Typed,
@@ -28,7 +28,7 @@ where
             }
         }
 
-        <T as Typed>::type_info()
+        <T as Typed>::type_descriptor()
     }
 
     fn into_any(self: Box<Self>) -> Box<dyn Any> {
