@@ -17,6 +17,9 @@ proc-macro2 = "1.0.47"
 quote = "1.0.21"
 syn = { version = "1.0.102", features = ["full", "visit"] }
 
+[dev-dependencies]
+mirror-mirror = { path = "../mirror-mirror", version = "0.1", default-features = false }
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]

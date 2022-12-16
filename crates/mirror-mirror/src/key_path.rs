@@ -240,18 +240,12 @@ impl KeyPath {
         self.path.push(Key::FieldAt(field.into()))
     }
 
-    pub fn variant<S>(mut self, variant: S) -> Self
-    where
-        S: Into<String>,
-    {
+    pub fn variant(mut self, variant: impl Into<String>) -> Self {
         self.push_variant(variant);
         self
     }
 
-    pub fn push_variant<S>(&mut self, variant: S)
-    where
-        S: Into<String>,
-    {
+    pub fn push_variant(&mut self, variant: impl Into<String>) {
         self.path.push(Key::Variant(variant.into()));
     }
 
@@ -328,13 +322,13 @@ pub fn get(field: impl Into<Value>) -> KeyPath {
     KeyPath::default().get(field)
 }
 
-pub fn variant<S>(variant: S) -> KeyPath
-where
-    S: Into<String>,
-{
+pub fn variant(variant: impl Into<String>) -> KeyPath {
     KeyPath::default().variant(variant)
 }
 
+/// Convenience macro for creating [`KeyPath`]s.
+///
+/// Expands to calls to [`field`], [`get`], [`variant`], and methods on [`KeyPath`].
 #[macro_export]
 macro_rules! key_path {
     // base case

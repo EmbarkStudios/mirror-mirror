@@ -4,6 +4,7 @@ use core::fmt;
 use crate::array::Array;
 use crate::Reflect;
 
+/// A reflected list type.
 pub trait List: Array {
     fn push(&mut self, value: &dyn Reflect);
 

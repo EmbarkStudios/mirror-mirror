@@ -1,3 +1,216 @@
+//! General purpose reflection library for Rust.
+//!
+//! # 🚨 Warning 🚨
+//!
+//! This library is still experimental and should not be used for anything serious, yet. Many
+//! things are still undocumented and breaking changes are to be expected, though we do adhere to
+//! semver.
+//!
+//! # Examples
+//!
+//! ## Access a field by its string name and mutate it
+//!
+//! ```
+//! use mirror_mirror::{Reflect, Struct};
+//!
+//! #[derive(Reflect, Clone, Debug)]
+//! struct Foo {
+//!     x: i32,
+//! }
+//!
+//! let mut foo = Foo { x: 42 };
+//!
+//! # (|| {
+//! // Get a `Struct` trait object for `Foo`.
+//! //
+//! // The `Struct` trait has methods available for all structs such as accessing
+//! // fields by name and iterating over the fields.
+//! let struct_obj: &mut dyn Struct = foo.as_struct_mut()?;
+//!
+//! // Mutably borrow the `x` field. We can access fields using string names.
+//! let x: &mut dyn Reflect = struct_obj.field_mut("x")?;
+//!
+//! // Downcast `x` into a mutable `i32`
+//! let x: &mut i32 = x.downcast_mut::<i32>()?;
+//!
+//! // Change the value of `x`
+//! *x += 1;
+//!
+//! // The value of `x` in `foo` has now changed.
+//! assert_eq!(foo.x, 43);
+//! # Some(())
+//! # })().unwrap();
+//! ```
+//!
+//! ## Iterate over all fields
+//!
+//! ```
+//! use mirror_mirror::{Reflect, Struct, ReflectMut, ScalarMut, enum_::VariantFieldMut};
+//!
+//! // A function that iterates over the fields in an enum and mutates them.
+//! fn change_enum_fields(value: &mut dyn Reflect) -> Option<()> {
+//!     let enum_ = value.as_enum_mut()?;
+//!
+//!     for field in enum_.fields_mut() {
+//!         match field {
+//!             VariantFieldMut::Struct(_, value) | VariantFieldMut::Tuple(value) => {
+//!                 match value.reflect_mut() {
+//!                     ReflectMut::Scalar(ScalarMut::i32(n)) => {
+//!                         *n *= 2;
+//!                     }
+//!                     ReflectMut::Scalar(ScalarMut::String(s)) => {
+//!                         *s = format!("{s}bar");
+//!                     }
+//!                     // Ignore other types
+//!                     _ =>  {}
+//!                 }
+//!             }
+//!         }
+//!     }
+//!
+//!     Some(())
+//! }
+//!
+//! #[derive(Reflect, Clone, Debug)]
+//! enum Bar {
+//!     X { x: i32 },
+//!     Y(String),
+//! }
+//!
+//! # (|| {
+//! let mut bar = Bar::X { x: 42 };
+//! change_enum_fields(bar.as_reflect_mut())?;
+//!
+//! assert!(matches!(bar, Bar::X { x: 84 }));
+//!
+//! let mut bar = Bar::Y("foo".to_owned());
+//! change_enum_fields(bar.as_reflect_mut())?;
+//!
+//! assert!(matches!(bar, Bar::Y(s) if s == "foobar"));
+//! # Some(())
+//! # })().unwrap();
+//! ```
+//!
+//! ## Query value and type information using key paths
+//!
+//! ```
+//! use mirror_mirror::{
+//!     Reflect,
+//!     key_path,
+//!     key_path::{GetPath, GetTypePath, field},
+//!     type_info::{Typed, ScalarType},
+//! };
+//!
+//! // Some complex nested data type.
+//! #[derive(Reflect, Clone, Debug)]
+//! struct User {
+//!     employer: Option<Company>,
+//! }
+//!
+//! #[derive(Reflect, Clone, Debug)]
+//! struct Company {
+//!     countries: Vec<Country>,
+//! }
+//!
+//! #[derive(Reflect, Clone, Debug)]
+//! struct Country {
+//!     name: String
+//! }
+//!
+//! let user = User {
+//!     employer: Some(Company {
+//!         countries: vec![Country {
+//!             name: "Denmark".to_owned(),
+//!         }],
+//!     }),
+//! };
+//!
+//! // Build a key path that represents accessing `.employer::Some.0.countries[0].name`.
+//! //
+//! // `::Some` means to access the `Some` variant of `Option<Company>`.
+//! let path = field("employer").variant("Some").field(0).field("countries").get(0).field("name");
+//!
+//! // Get the value at the key path.
+//! assert_eq!(user.get_at::<String>(&path).unwrap(), "Denmark");
+//!
+//! // Key paths can also be constructed using the `key_path!` macro.
+//! // This invocation expands the same code we have above.
+//! let path = key_path!(.employer::Some.0.countries[0].name);
+//!
+//! // Use the same key path to query type information. You don't need a value
+//! // of the type to access its type information.
+//! let user_type = <User as Typed>::type_info();
+//! assert!(matches!(
+//!     user_type.type_at(&path).unwrap().as_scalar().unwrap(),
+//!     ScalarType::String,
+//! ));
+//! ```
+//!
+//! ## Using opaque `Value` types
+//!
+//! ```
+//! use mirror_mirror::{Reflect, Value, FromReflect};
+//!
+//! #[derive(Reflect, Clone, Debug)]
+//! struct Foo(Vec<i32>);
+//!
+//! # (|| {
+//! let foo = Foo(vec![1, 2, 3]);
+//!
+//! // Convert `foo` into general "value" type.
+//! let mut value: Value = foo.to_value();
+//!
+//! // `Value` also implements `Reflect` so it can be mutated in the
+//! // same way we've seen before. So these mutations can be made
+//! // by another crate that doesn't know about the `Foo` type.
+//! //
+//! // `Value` is also serializable with `speedy`, for binary serialization,
+//! // or `serde`, for everything else.
+//! value
+//!     .as_tuple_struct_mut()?
+//!     .field_at_mut(0)?
+//!     .as_list_mut()?
+//!     .push(&4);
+//!
+//! // Convert the `value` back into a `Foo`.
+//! let new_foo = Foo::from_reflect(&value)?;
+//!
+//! // Our changes were applied.
+//! assert_eq!(new_foo.0, vec![1, 2, 3, 4]);
+//! # Some(())
+//! # })().unwrap();
+//! ```
+//!
+//! # Inspiration
+//!
+//! The design of this library is heavily inspired by [`bevy_reflect`] but with a few key
+//! differences:
+//!
+//! - [`speedy`] integration which is useful for marshalling data perhaps to send it across FFI.
+//! - A [`Value`] type that can be serialized and deserialized without using trait objects.
+//! - More [type information][type_info] captured.
+//! - Add meta data to types which becomes part of the type information.
+//! - [Key paths][mod@key_path] for querying value and type information.
+//! - No dependencies on [`bevy`] specific crates.
+//! - `#![no_std]` support.
+//!
+//! # Feature flags
+//!
+//! mirror-mirror uses a set of [feature flags] to optionally reduce the number of dependencies.
+//!
+//! The following optional features are available:
+//!
+//! Name | Description | Default?
+//! ---|---|---
+//! `std` | Enables using the standard library (`core` and `alloc` are always required) | Yes
+//! `speedy` | Enables [`speedy`] support for most types | Yes
+//! `serde` | Enables [`serde`] support for most types | Yes
+//!
+//! [`speedy`]: https://crates.io/crates/speedy
+//! [`serde`]: https://crates.io/crates/serde
+//! [`bevy_reflect`]: https://crates.io/crates/bevy_reflect
+//! [`bevy`]: https://crates.io/crates/bevy
+
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     clippy::all,
@@ -85,17 +298,40 @@ macro_rules! trivial_reflect_methods {
     };
 }
 
+/// Reflected array types.
 pub mod array;
+
+/// Reflected enum types.
 pub mod enum_;
+
+/// Helper traits for accessing fields on reflected values.
 pub mod get_field;
+
+/// Iterator types.
 pub mod iter;
+
+/// Key paths for querying value and type information.
 pub mod key_path;
+
+/// Reflected list types.
 pub mod list;
+
+/// Reflected map types.
 pub mod map;
+
+/// Reflected struct types.
 pub mod struct_;
+
+/// Reflected tuple types.
 pub mod tuple;
+
+/// Reflected tuple struct types.
 pub mod tuple_struct;
+
+/// Type information.
 pub mod type_info;
+
+/// Type erased value types.
 pub mod value;
 
 mod std_impls;
@@ -132,6 +368,7 @@ pub use self::type_info::Typed;
 #[doc(inline)]
 pub use self::value::Value;
 
+/// A reflected type.
 pub trait Reflect: Any + Send + 'static {
     fn type_info(&self) -> TypeRoot;
 
@@ -433,10 +670,16 @@ impl<'a> From<&'a mut String> for ScalarMut<'a> {
     }
 }
 
+/// A trait for types which can be constructed from a reflected type.
+///
+/// Will be implemented by `#[derive(Reflect)]`.
 pub trait FromReflect: Reflect + Sized {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self>;
 }
 
+/// An owned reflected value.
+///
+/// Constructed with [`Reflect::reflect_owned`].
 #[derive(Debug)]
 pub enum ReflectOwned {
     Struct(Box<dyn Struct>),
@@ -533,6 +776,7 @@ impl Clone for ReflectOwned {
     }
 }
 
+/// An owned reflected scalar type.
 #[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 pub enum ScalarOwned {
@@ -554,6 +798,9 @@ pub enum ScalarOwned {
     String(String),
 }
 
+/// An immutable reflected value.
+///
+/// Constructed with [`Reflect::reflect_ref`].
 #[derive(Debug, Copy, Clone)]
 pub enum ReflectRef<'a> {
     Struct(&'a dyn Struct),
@@ -634,6 +881,7 @@ impl<'a> ReflectRef<'a> {
     }
 }
 
+/// An immutable reflected scalar value.
 #[derive(Debug, Copy, Clone)]
 #[allow(non_camel_case_types)]
 pub enum ScalarRef<'a> {
@@ -655,6 +903,9 @@ pub enum ScalarRef<'a> {
     String(&'a str),
 }
 
+/// A mutable reflected value.
+///
+/// Constructed with [`Reflect::reflect_mut`].
 #[derive(Debug)]
 pub enum ReflectMut<'a> {
     Struct(&'a mut dyn Struct),
@@ -735,6 +986,7 @@ impl<'a> ReflectMut<'a> {
     }
 }
 
+/// An mutable reflected scalar value.
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub enum ScalarMut<'a> {
@@ -756,6 +1008,7 @@ pub enum ScalarMut<'a> {
     String(&'a mut String),
 }
 
+/// Debug formatter for any reflection value.
 pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     fn scalar_debug(
         scalar: &dyn core::fmt::Debug,

@@ -4,6 +4,17 @@ use core::fmt;
 use crate::iter::PairIterMut;
 use crate::Reflect;
 
+/// A reflected map type.
+///
+/// Note this is only implemented for [`BTreeMap`] and _not_ [`HashMap`] due to technical
+/// limitations.
+///
+/// [`BTreeMap`]: alloc::collections::BTreeMap
+/// [`HashMap`]: std::collections::HashMap
+// HashMap isn't supported because we need a `Value` variant for map values. The most obvious
+// choice is `enum Value { Map(HashMap<Value, Value>) }`. However now `Value` is used as the key in
+// a `HashMap` so it most implement `Hash + Eq` but it can't since it contains a `HashMap` which
+// doesn't implement `Hash + Eq`, because there is no stable iteration order.
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;
 

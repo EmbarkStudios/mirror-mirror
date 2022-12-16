@@ -18,6 +18,9 @@ use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
+/// A reflected struct type.
+///
+/// Will be implemented by `#[derive(Reflect)]` on structs.
 pub trait Struct: Reflect {
     fn field(&self, name: &str) -> Option<&dyn Reflect>;
 

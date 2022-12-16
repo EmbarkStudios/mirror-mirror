@@ -19,6 +19,7 @@ use crate::TypeRoot;
 use crate::Typed;
 use crate::Value;
 
+/// A reflected tuple type.
 pub trait Tuple: Reflect {
     fn field_at(&self, index: usize) -> Option<&dyn Reflect>;
 
