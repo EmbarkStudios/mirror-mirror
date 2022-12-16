@@ -260,6 +260,7 @@
 
 extern crate alloc;
 
+use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -294,6 +295,51 @@ macro_rules! trivial_reflect_methods {
 
         fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
             self
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! fn_type_descriptor {
+    () => {
+        fn type_descriptor() -> $crate::__private::Cow<'static, $crate::type_info::TypeDescriptor> {
+            #[cfg(feature = "std")]
+            {
+                // required for generic types to have different type descriptors
+                // such as `Vec<i32>` and `Vec<bool>`
+                use once_cell::race::OnceBox;
+                use std::collections::HashMap;
+                use std::sync::RwLock;
+                use $crate::__private::*;
+
+                static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor>>> =
+                    OnceBox::new();
+
+                let type_id = TypeId::of::<Self>();
+
+                let lock = INFO.get_or_init(Box::default);
+                if let Some(info) = lock.read().unwrap().get(&type_id) {
+                    return Cow::Borrowed(info);
+                }
+
+                let mut map = lock.write().unwrap();
+                let info = map.entry(type_id).or_insert_with(|| {
+                    let mut graph = TypeGraph::default();
+                    let id = Self::build(&mut graph);
+                    let info = TypeDescriptor::__private_new(id, graph);
+                    Box::leak(Box::new(info))
+                });
+                Cow::Borrowed(*info)
+            }
+
+            #[cfg(not(feature = "std"))]
+            {
+                use $crate::__private::*;
+
+                let mut graph = TypeGraph::default();
+                let id = Self::build(&mut graph);
+                Cow::Owned(TypeDescriptor::__private_new(id, graph))
+            }
         }
     };
 }
@@ -370,7 +416,7 @@ pub use self::value::Value;
 
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
-    fn type_descriptor(&self) -> TypeDescriptor;
+    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor>;
 
     fn into_any(self: Box<Self>) -> Box<dyn Any>;
 
@@ -529,7 +575,7 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
-                fn type_descriptor(&self) -> TypeDescriptor {
+                fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
                     <Self as Typed>::type_descriptor()
                 }
 
@@ -605,7 +651,7 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
-    fn type_descriptor(&self) -> TypeDescriptor {
+    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         <Self as Typed>::type_descriptor()
     }
 
@@ -1104,9 +1150,13 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
 /// Private. Used by macros
 #[doc(hidden)]
 pub mod __private {
+    pub use alloc::borrow::Cow;
     pub use alloc::collections::BTreeMap;
     pub use core::any::Any;
+    pub use core::any::TypeId;
     pub use core::fmt;
+
+    pub use once_cell;
 
     pub use self::enum_::*;
     pub use self::key_path::*;

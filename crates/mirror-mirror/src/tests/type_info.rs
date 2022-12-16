@@ -1,6 +1,7 @@
 use core::any::type_name;
 
 use crate::type_info::*;
+use crate::FromReflect;
 use crate::Reflect;
 
 #[test]
@@ -96,6 +97,74 @@ fn type_to_root() {
         .get_type()
         .as_tuple_struct()
         .unwrap()
-        .to_type_root();
+        .into_type_descriptor();
     assert_eq!(type_info.get_type().type_name(), type_name::<Foo>());
+}
+
+#[test]
+fn two_types() {
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
+    struct Foo(i32);
+
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
+    struct Bar(bool);
+
+    assert_eq!(
+        <Foo as Typed>::type_descriptor()
+            .as_tuple_struct()
+            .unwrap()
+            .field_type_at(0)
+            .unwrap()
+            .get_type()
+            .as_scalar()
+            .unwrap(),
+        ScalarType::i32,
+    );
+
+    assert_eq!(
+        <Bar as Typed>::type_descriptor()
+            .as_tuple_struct()
+            .unwrap()
+            .field_type_at(0)
+            .unwrap()
+            .get_type()
+            .as_scalar()
+            .unwrap(),
+        ScalarType::bool,
+    )
+}
+
+#[test]
+fn how_to_handle_generics() {
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate), opt_out(Debug, Clone))]
+    struct Foo<T>(T)
+    where
+        T: Reflect + FromReflect + Typed;
+
+    assert_eq!(
+        <Foo<i32> as Typed>::type_descriptor()
+            .as_tuple_struct()
+            .unwrap()
+            .field_type_at(0)
+            .unwrap()
+            .get_type()
+            .as_scalar()
+            .unwrap(),
+        ScalarType::i32,
+    );
+
+    assert_eq!(
+        <Foo<bool> as Typed>::type_descriptor()
+            .as_tuple_struct()
+            .unwrap()
+            .field_type_at(0)
+            .unwrap()
+            .get_type()
+            .as_scalar()
+            .unwrap(),
+        ScalarType::bool,
+    );
 }
