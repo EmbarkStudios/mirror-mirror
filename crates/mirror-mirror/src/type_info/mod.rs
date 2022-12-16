@@ -26,10 +26,10 @@ pub mod graph;
 ///
 /// Will be implemented by `#[derive(Reflect)]`.
 pub trait Typed: 'static {
-    fn type_info() -> TypeRoot {
+    fn type_descriptor() -> TypeDescriptor {
         let mut graph = TypeGraph::default();
         let id = Self::build(&mut graph);
-        TypeRoot { root: id, graph }
+        TypeDescriptor { root: id, graph }
     }
 
     fn build(graph: &mut TypeGraph) -> NodeId;
@@ -44,12 +44,12 @@ pub trait Typed: 'static {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TypeRoot {
+pub struct TypeDescriptor {
     root: NodeId,
     graph: TypeGraph,
 }
 
-impl TypeRoot {
+impl TypeDescriptor {
     pub fn get_type(&self) -> Type<'_> {
         Type::new(self.root, &self.graph)
     }
@@ -99,13 +99,13 @@ impl TypeRoot {
     }
 }
 
-impl<'a> GetTypePath<'a> for &'a TypeRoot {
+impl<'a> GetTypePath<'a> for &'a TypeDescriptor {
     fn type_at(self, key_path: &KeyPath) -> Option<TypeAtPath<'a>> {
         self.get_type().type_at(key_path)
     }
 }
 
-impl<'a> GetMeta<'a> for &'a TypeRoot {
+impl<'a> GetMeta<'a> for &'a TypeDescriptor {
     fn meta(self, key: &str) -> Option<&'a dyn Reflect> {
         self.get_type().meta(key)
     }
@@ -311,7 +311,7 @@ impl<'a> Type<'a> {
         Some(value)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
         match self {
             Type::Struct(inner) => inner.to_type_root(),
             Type::TupleStruct(inner) => inner.to_type_root(),
@@ -321,22 +321,22 @@ impl<'a> Type<'a> {
             Type::Array(inner) => inner.to_type_root(),
             Type::Map(inner) => inner.to_type_root(),
             Type::Scalar(inner) => match inner {
-                ScalarType::usize => <usize as Typed>::type_info(),
-                ScalarType::u8 => <u8 as Typed>::type_info(),
-                ScalarType::u16 => <u16 as Typed>::type_info(),
-                ScalarType::u32 => <u32 as Typed>::type_info(),
-                ScalarType::u64 => <u64 as Typed>::type_info(),
-                ScalarType::u128 => <u128 as Typed>::type_info(),
-                ScalarType::i8 => <i8 as Typed>::type_info(),
-                ScalarType::i16 => <i16 as Typed>::type_info(),
-                ScalarType::i32 => <i32 as Typed>::type_info(),
-                ScalarType::i64 => <i64 as Typed>::type_info(),
-                ScalarType::i128 => <i128 as Typed>::type_info(),
-                ScalarType::bool => <bool as Typed>::type_info(),
-                ScalarType::char => <char as Typed>::type_info(),
-                ScalarType::f32 => <f32 as Typed>::type_info(),
-                ScalarType::f64 => <f64 as Typed>::type_info(),
-                ScalarType::String => <String as Typed>::type_info(),
+                ScalarType::usize => <usize as Typed>::type_descriptor(),
+                ScalarType::u8 => <u8 as Typed>::type_descriptor(),
+                ScalarType::u16 => <u16 as Typed>::type_descriptor(),
+                ScalarType::u32 => <u32 as Typed>::type_descriptor(),
+                ScalarType::u64 => <u64 as Typed>::type_descriptor(),
+                ScalarType::u128 => <u128 as Typed>::type_descriptor(),
+                ScalarType::i8 => <i8 as Typed>::type_descriptor(),
+                ScalarType::i16 => <i16 as Typed>::type_descriptor(),
+                ScalarType::i32 => <i32 as Typed>::type_descriptor(),
+                ScalarType::i64 => <i64 as Typed>::type_descriptor(),
+                ScalarType::i128 => <i128 as Typed>::type_descriptor(),
+                ScalarType::bool => <bool as Typed>::type_descriptor(),
+                ScalarType::char => <char as Typed>::type_descriptor(),
+                ScalarType::f32 => <f32 as Typed>::type_descriptor(),
+                ScalarType::f64 => <f64 as Typed>::type_descriptor(),
+                ScalarType::String => <String as Typed>::type_descriptor(),
             },
             Type::Opaque(inner) => inner.to_type_root(),
         }
@@ -465,7 +465,7 @@ mod private {
 
     pub trait Sealed {}
 
-    impl<'a> Sealed for &'a TypeRoot {}
+    impl<'a> Sealed for &'a TypeDescriptor {}
     impl Sealed for Type<'_> {}
     impl Sealed for StructType<'_> {}
     impl Sealed for TupleStructType<'_> {}
@@ -645,8 +645,8 @@ impl<'a> StructType<'a> {
         TypeAtPath::Struct(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -683,8 +683,8 @@ impl<'a> TupleStructType<'a> {
         TypeAtPath::TupleStruct(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -721,8 +721,8 @@ impl<'a> TupleType<'a> {
         TypeAtPath::Tuple(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -768,8 +768,8 @@ impl<'a> EnumType<'a> {
         TypeAtPath::Enum(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -1043,8 +1043,8 @@ impl<'a> ArrayType<'a> {
         TypeAtPath::Array(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -1070,8 +1070,8 @@ impl<'a> ListType<'a> {
         TypeAtPath::List(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -1101,8 +1101,8 @@ impl<'a> MapType<'a> {
         TypeAtPath::Map(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }
@@ -1124,8 +1124,8 @@ impl<'a> OpaqueType<'a> {
         TypeAtPath::Opaque(self)
     }
 
-    pub fn to_type_root(self) -> TypeRoot {
-        TypeRoot {
+    pub fn to_type_root(self) -> TypeDescriptor {
+        TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
         }

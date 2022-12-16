@@ -13,7 +13,7 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeRoot;
+use crate::TypeDescriptor;
 use crate::Typed;
 use crate::Value;
 
@@ -21,7 +21,7 @@ impl<T, const N: usize> Reflect for [T; N]
 where
     T: FromReflect + Typed,
 {
-    fn type_info(&self) -> TypeRoot {
+    fn type_descriptor(&self) -> TypeDescriptor {
         impl<T, const N: usize> Typed for [T; N]
         where
             T: Typed,
@@ -31,7 +31,7 @@ where
             }
         }
 
-        <Self as Typed>::type_info()
+        <Self as Typed>::type_descriptor()
     }
 
     trivial_reflect_methods!();

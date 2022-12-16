@@ -139,7 +139,7 @@
 //!
 //! // Use the same key path to query type information. You don't need a value
 //! // of the type to access its type information.
-//! let user_type = <User as Typed>::type_info();
+//! let user_type = <User as Typed>::type_descriptor();
 //! assert!(matches!(
 //!     user_type.type_at(&path).unwrap().as_scalar().unwrap(),
 //!     ScalarType::String,
@@ -362,7 +362,7 @@ pub use self::tuple::Tuple;
 #[doc(inline)]
 pub use self::tuple_struct::TupleStruct;
 #[doc(inline)]
-pub use self::type_info::TypeRoot;
+pub use self::type_info::TypeDescriptor;
 #[doc(inline)]
 pub use self::type_info::Typed;
 #[doc(inline)]
@@ -370,7 +370,7 @@ pub use self::value::Value;
 
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
-    fn type_info(&self) -> TypeRoot;
+    fn type_descriptor(&self) -> TypeDescriptor;
 
     fn into_any(self: Box<Self>) -> Box<dyn Any>;
 
@@ -529,8 +529,8 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
-                fn type_info(&self) -> TypeRoot {
-                    <Self as Typed>::type_info()
+                fn type_descriptor(&self) -> TypeDescriptor {
+                    <Self as Typed>::type_descriptor()
                 }
 
                 trivial_reflect_methods!();
@@ -605,8 +605,8 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
-    fn type_info(&self) -> TypeRoot {
-        <Self as Typed>::type_info()
+    fn type_descriptor(&self) -> TypeDescriptor {
+        <Self as Typed>::type_descriptor()
     }
 
     trivial_reflect_methods!();

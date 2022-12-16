@@ -265,7 +265,7 @@ fn expand_reflect(
         } = generics;
 
         quote! {
-            fn type_info(&self) -> TypeRoot {
+            fn type_descriptor(&self) -> TypeDescriptor {
                 impl #impl_generics Typed for #ident #type_generics #where_clause {
                     fn build(graph: &mut TypeGraph) -> NodeId {
                         let variants = &[#(#code_for_variants),*];
@@ -275,7 +275,7 @@ fn expand_reflect(
                     }
                 }
 
-                <Self as Typed>::type_info()
+                <Self as Typed>::type_descriptor()
             }
         }
     };

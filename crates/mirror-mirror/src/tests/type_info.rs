@@ -12,7 +12,7 @@ fn struct_() {
         foos: Vec<Foo>,
     }
 
-    let type_info = <Foo as Typed>::type_info();
+    let type_info = <Foo as Typed>::type_descriptor();
 
     assert_eq!(
         type_info.get_type().type_name(),
@@ -73,7 +73,7 @@ fn complex_meta_type() {
     #[reflect(crate_name(crate), meta(a = Foo(1337)))]
     struct Foo(i32);
 
-    let type_info = <Foo as Typed>::type_info();
+    let type_info = <Foo as Typed>::type_descriptor();
 
     let foo = type_info.get_type().get_meta::<Foo>("a").unwrap();
     assert_eq!(foo, Foo(1337));
@@ -85,7 +85,7 @@ fn type_to_root() {
     #[reflect(crate_name(crate), meta(a = Foo(1337)))]
     struct Foo(i32);
 
-    let type_info = <Foo as Typed>::type_info();
+    let type_info = <Foo as Typed>::type_descriptor();
 
     assert_eq!(
         type_info.get_type().as_tuple_struct().unwrap().type_name(),

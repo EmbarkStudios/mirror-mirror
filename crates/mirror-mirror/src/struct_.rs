@@ -14,7 +14,7 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeRoot;
+use crate::TypeDescriptor;
 use crate::Typed;
 use crate::Value;
 
@@ -72,7 +72,7 @@ impl StructValue {
 }
 
 impl Reflect for StructValue {
-    fn type_info(&self) -> TypeRoot {
+    fn type_descriptor(&self) -> TypeDescriptor {
         impl Typed for StructValue {
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
@@ -80,7 +80,7 @@ impl Reflect for StructValue {
                 })
             }
         }
-        <Self as Typed>::type_info()
+        <Self as Typed>::type_descriptor()
     }
 
     trivial_reflect_methods!();
