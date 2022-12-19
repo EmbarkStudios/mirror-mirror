@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
@@ -72,8 +73,10 @@ impl StructValue {
 }
 
 impl Reflect for StructValue {
-    fn type_descriptor(&self) -> TypeDescriptor {
+    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl Typed for StructValue {
+            fn_type_descriptor!();
+
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)

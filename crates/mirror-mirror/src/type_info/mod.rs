@@ -1,5 +1,6 @@
 use core::iter::Peekable;
 
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
@@ -26,11 +27,7 @@ pub mod graph;
 ///
 /// Will be implemented by `#[derive(Reflect)]`.
 pub trait Typed: 'static {
-    fn type_descriptor() -> TypeDescriptor {
-        let mut graph = TypeGraph::default();
-        let id = Self::build(&mut graph);
-        TypeDescriptor { root: id, graph }
-    }
+    fn type_descriptor() -> Cow<'static, TypeDescriptor>;
 
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
@@ -50,6 +47,11 @@ pub struct TypeDescriptor {
 }
 
 impl TypeDescriptor {
+    #[doc(hidden)]
+    pub fn __private_new(root: NodeId, graph: TypeGraph) -> Self {
+        Self { root, graph }
+    }
+
     pub fn get_type(&self) -> Type<'_> {
         Type::new(self.root, &self.graph)
     }
@@ -311,15 +313,15 @@ impl<'a> Type<'a> {
         Some(value)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> Cow<'static, TypeDescriptor> {
         match self {
-            Type::Struct(inner) => inner.to_type_root(),
-            Type::TupleStruct(inner) => inner.to_type_root(),
-            Type::Tuple(inner) => inner.to_type_root(),
-            Type::Enum(inner) => inner.to_type_root(),
-            Type::List(inner) => inner.to_type_root(),
-            Type::Array(inner) => inner.to_type_root(),
-            Type::Map(inner) => inner.to_type_root(),
+            Type::Struct(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::TupleStruct(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::Tuple(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::Enum(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::List(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::Array(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::Map(inner) => Cow::Owned(inner.into_type_descriptor()),
             Type::Scalar(inner) => match inner {
                 ScalarType::usize => <usize as Typed>::type_descriptor(),
                 ScalarType::u8 => <u8 as Typed>::type_descriptor(),
@@ -338,7 +340,7 @@ impl<'a> Type<'a> {
                 ScalarType::f64 => <f64 as Typed>::type_descriptor(),
                 ScalarType::String => <String as Typed>::type_descriptor(),
             },
-            Type::Opaque(inner) => inner.to_type_root(),
+            Type::Opaque(inner) => Cow::Owned(inner.into_type_descriptor()),
         }
     }
 
@@ -561,7 +563,7 @@ impl<'a> GetMeta<'a> for OpaqueType<'a> {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScalarType {
@@ -645,7 +647,7 @@ impl<'a> StructType<'a> {
         TypeAtPath::Struct(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -683,7 +685,7 @@ impl<'a> TupleStructType<'a> {
         TypeAtPath::TupleStruct(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -721,7 +723,7 @@ impl<'a> TupleType<'a> {
         TypeAtPath::Tuple(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -768,7 +770,7 @@ impl<'a> EnumType<'a> {
         TypeAtPath::Enum(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -1043,7 +1045,7 @@ impl<'a> ArrayType<'a> {
         TypeAtPath::Array(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -1070,7 +1072,7 @@ impl<'a> ListType<'a> {
         TypeAtPath::List(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -1101,7 +1103,7 @@ impl<'a> MapType<'a> {
         TypeAtPath::Map(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),
@@ -1124,7 +1126,7 @@ impl<'a> OpaqueType<'a> {
         TypeAtPath::Opaque(self)
     }
 
-    pub fn to_type_root(self) -> TypeDescriptor {
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
         TypeDescriptor {
             root: self.node.id,
             graph: self.graph.clone(),

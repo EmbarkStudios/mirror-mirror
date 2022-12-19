@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -84,8 +85,10 @@ impl Tuple for TupleValue {
 }
 
 impl Reflect for TupleValue {
-    fn type_descriptor(&self) -> TypeDescriptor {
+    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl Typed for TupleValue {
+            fn_type_descriptor!();
+
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
@@ -155,6 +158,8 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
+            fn_type_descriptor!();
+
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     let fields = &[
@@ -172,7 +177,7 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn type_descriptor(&self) -> TypeDescriptor {
+            fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
                 <Self as Typed>::type_descriptor()
             }
 

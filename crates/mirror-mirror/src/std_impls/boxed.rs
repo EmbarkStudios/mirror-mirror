@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use core::any::Any;
 use core::fmt;
@@ -18,11 +19,13 @@ impl<T> Reflect for Box<T>
 where
     T: Reflect + Typed,
 {
-    fn type_descriptor(&self) -> TypeDescriptor {
+    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl<T> Typed for Box<T>
         where
             T: Typed,
         {
+            fn_type_descriptor!();
+
             fn build(graph: &mut TypeGraph) -> NodeId {
                 T::build(graph)
             }

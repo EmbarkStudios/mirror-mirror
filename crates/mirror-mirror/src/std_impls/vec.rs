@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -81,11 +82,13 @@ impl<T> Reflect for Vec<T>
 where
     T: FromReflect + Typed,
 {
-    fn type_descriptor(&self) -> TypeDescriptor {
+    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl<T> Typed for Vec<T>
         where
             T: Typed,
         {
+            fn_type_descriptor!();
+
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| ListNode::new::<Self, T>(graph))
             }
