@@ -310,8 +310,7 @@ macro_rules! fn_type_descriptor {
 
             // a map required for generic types to have different type descriptors such as
             // `Vec<i32>` and `Vec<bool>`
-            static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor>>> =
-                OnceBox::new();
+            static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor>>> = OnceBox::new();
 
             let type_id = TypeId::of::<Self>();
 
