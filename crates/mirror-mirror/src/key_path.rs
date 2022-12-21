@@ -52,7 +52,7 @@ where
 
             let value_at_key = match head {
                 // .foo
-                Key::Field(KeyOrIndex::Key(key)) => match value.reflect_ref() {
+                Key::Field(NamedOrNumbered::Named(key)) => match value.reflect_ref() {
                     ReflectRef::Struct(inner) => inner.field(key)?,
                     ReflectRef::Enum(inner) => match inner.variant_kind() {
                         VariantKind::Struct => inner.field(key)?,
@@ -67,7 +67,7 @@ where
                     | ReflectRef::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(KeyOrIndex::Index(index)) => match value.reflect_ref() {
+                Key::Field(NamedOrNumbered::Numbered(index)) => match value.reflect_ref() {
                     ReflectRef::TupleStruct(inner) => inner.field_at(*index)?,
                     ReflectRef::Tuple(inner) => inner.field_at(*index)?,
                     ReflectRef::Enum(inner) => match inner.variant_kind() {
@@ -139,7 +139,7 @@ where
 
             let value_at_key = match head {
                 // .foo
-                Key::Field(KeyOrIndex::Key(key)) => match value.reflect_mut() {
+                Key::Field(NamedOrNumbered::Named(key)) => match value.reflect_mut() {
                     ReflectMut::Struct(inner) => inner.field_mut(key)?,
                     ReflectMut::Enum(inner) => match inner.variant_kind() {
                         VariantKind::Struct => inner.field_mut(key)?,
@@ -154,7 +154,7 @@ where
                     | ReflectMut::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(KeyOrIndex::Index(index)) => match value.reflect_mut() {
+                Key::Field(NamedOrNumbered::Numbered(index)) => match value.reflect_mut() {
                     ReflectMut::TupleStruct(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Tuple(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Enum(inner) => match inner.variant_kind() {
@@ -353,20 +353,20 @@ mod private {
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Key {
-    Field(KeyOrIndex),
+    Field(NamedOrNumbered),
     Get(Value),
     Variant(String),
 }
 
 impl Key {
     /// Create a `Key` that'll access a named field of a struct.
-    pub fn field(name: impl Into<String>) -> Self {
-        Self::Field(KeyOrIndex::Key(name.into()))
+    pub fn named_field(name: impl Into<String>) -> Self {
+        Self::Field(NamedOrNumbered::Named(name.into()))
     }
 
     /// Create a `Key` that'll access a numbered field of a tuple struct or tuple.
-    pub fn field_at(index: usize) -> Self {
-        Self::Field(KeyOrIndex::Index(index))
+    pub fn numbered_field(index: usize) -> Self {
+        Self::Field(NamedOrNumbered::Numbered(index))
     }
 
     /// Create a `Key` that'll access an element in a list, array, or map.
@@ -393,45 +393,45 @@ impl fmt::Display for Key {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum KeyOrIndex {
-    Key(String),
-    Index(usize),
+pub enum NamedOrNumbered {
+    Named(String),
+    Numbered(usize),
 }
 
-impl fmt::Display for KeyOrIndex {
+impl fmt::Display for NamedOrNumbered {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            KeyOrIndex::Key(key) => write!(f, ".{key}"),
-            KeyOrIndex::Index(index) => write!(f, ".{index}"),
+            NamedOrNumbered::Named(field) => write!(f, ".{field}"),
+            NamedOrNumbered::Numbered(index) => write!(f, ".{index}"),
         }
     }
 }
 
 pub trait IntoKeyOrIndex: private::Sealed {
-    fn into_key_or_index(self) -> KeyOrIndex;
+    fn into_key_or_index(self) -> NamedOrNumbered;
 }
 
 impl IntoKeyOrIndex for &str {
-    fn into_key_or_index(self) -> KeyOrIndex {
-        KeyOrIndex::Key(self.to_owned())
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Named(self.to_owned())
     }
 }
 
 impl IntoKeyOrIndex for &String {
-    fn into_key_or_index(self) -> KeyOrIndex {
-        KeyOrIndex::Key(self.to_owned())
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Named(self.to_owned())
     }
 }
 
 impl IntoKeyOrIndex for String {
-    fn into_key_or_index(self) -> KeyOrIndex {
-        KeyOrIndex::Key(self)
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Named(self)
     }
 }
 
 impl IntoKeyOrIndex for usize {
-    fn into_key_or_index(self) -> KeyOrIndex {
-        KeyOrIndex::Index(self)
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Numbered(self)
     }
 }
 

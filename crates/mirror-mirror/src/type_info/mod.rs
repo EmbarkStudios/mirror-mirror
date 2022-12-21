@@ -12,7 +12,7 @@ use crate::enum_::EnumValue;
 use crate::key_path::value_to_usize;
 use crate::key_path::GetTypePath;
 use crate::key_path::Key;
-use crate::key_path::KeyOrIndex;
+use crate::key_path::NamedOrNumbered;
 use crate::key_path::KeyPath;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
@@ -1314,7 +1314,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
 
             let value_at_key: TypeAtPath<'_> = match head {
                 // .foo
-                Key::Field(KeyOrIndex::Key(key)) => match type_info {
+                Key::Field(NamedOrNumbered::Named(key)) => match type_info {
                     TypeAtPath::Struct(struct_) => {
                         struct_.field_type(key)?.into_type_info_at_path()
                     }
@@ -1334,7 +1334,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(KeyOrIndex::Index(index)) => match type_info {
+                Key::Field(NamedOrNumbered::Numbered(index)) => match type_info {
                     TypeAtPath::TupleStruct(tuple_struct) => {
                         tuple_struct.field_type_at(*index)?.into_type_info_at_path()
                     }
