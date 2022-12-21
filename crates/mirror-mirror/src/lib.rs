@@ -566,6 +566,14 @@ impl dyn Reflect {
     }
 }
 
+impl ToOwned for dyn Reflect {
+    type Owned = Box<dyn Reflect>;
+
+    fn to_owned(&self) -> Self::Owned {
+        self.clone_reflect()
+    }
+}
+
 impl fmt::Debug for dyn Reflect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.debug(f)

@@ -344,6 +344,12 @@ impl From<&str> for Value {
     }
 }
 
+impl From<&dyn Reflect> for Value {
+    fn from(reflect: &dyn Reflect) -> Self {
+        reflect.to_value()
+    }
+}
+
 from_impls! {
     usize u8 u16 u32 u64 u128
     i8 i16 i32 i64 i128
