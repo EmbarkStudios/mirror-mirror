@@ -1,6 +1,8 @@
 use crate::tuple::TupleValue;
+use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
+use crate::Typed;
 
 #[test]
 fn tuple_value() {
@@ -24,4 +26,15 @@ fn static_tuple() {
     tuple.patch(&TupleValue::new().with_field(42_i32));
     assert_eq!(tuple.get_field::<i32>(0).unwrap(), &42);
     assert_eq!(tuple.get_field::<bool>(1).unwrap(), &false);
+}
+
+#[test]
+fn from_default() {
+    type Pair = (i32, bool);
+
+    let default_value = <Pair as Typed>::type_descriptor().default_value().unwrap();
+
+    let foo = Pair::from_reflect(&default_value).unwrap();
+
+    assert_eq!(foo, (0, false));
 }

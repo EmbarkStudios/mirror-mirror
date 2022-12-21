@@ -6,6 +6,7 @@ use crate::GetField;
 use crate::GetFieldMut;
 use crate::Map;
 use crate::Reflect;
+use crate::Typed;
 
 #[test]
 fn works() {
@@ -44,4 +45,19 @@ fn exotic_key_type() {
     assert_eq!(map.get_at::<i32>(&key_path!([Foo(1)])).unwrap(), &1);
     assert_eq!(map.get_at::<i32>(&key_path!([Foo(2)])).unwrap(), &2);
     assert!(map.get_at::<i32>(&key_path!([Foo(3)])).is_none());
+}
+
+#[test]
+fn exoctic_value_type() {
+    #[derive(Debug, Clone, Reflect)]
+    #[reflect(crate_name(crate))]
+    struct Foo {
+        array: [i32; 5],
+        tuple: (Vec<i32>, bool),
+    }
+
+    let mut map = BTreeMap::<i32, Foo>::new();
+    let foo_default_value = <Foo as Typed>::type_descriptor().default_value().unwrap();
+    map.as_map_mut().unwrap().insert(&1, &foo_default_value);
+    assert_eq!(map.len(), 1);
 }

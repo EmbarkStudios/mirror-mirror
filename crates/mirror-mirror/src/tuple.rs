@@ -281,8 +281,10 @@ macro_rules! impl_tuple {
             $($ident: FromReflect + Typed + Clone,)*
         {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
+                let tuple = reflect.as_tuple()?;
+                let mut fields = tuple.fields();
                 Some((
-                    $($ident::from_reflect(reflect)?,)*
+                    $($ident::from_reflect(fields.next()?)?,)*
                 ))
             }
         }
