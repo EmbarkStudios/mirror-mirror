@@ -242,75 +242,17 @@ impl<'a> Type<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let value = match self {
-            Type::Struct(struct_) => {
-                let mut value = StructValue::new();
-                for field in struct_.field_types() {
-                    value.set_field(field.name(), field.get_type().default_value()?);
-                }
-                value.to_value()
-            }
-            Type::TupleStruct(tuple_struct) => {
-                let mut value = TupleStructValue::new();
-                for field in tuple_struct.field_types() {
-                    value.push_field(field.get_type().default_value()?);
-                }
-                value.to_value()
-            }
-            Type::Tuple(tuple) => {
-                let mut value = TupleValue::new();
-                for field in tuple.field_types() {
-                    value.push_field(field.get_type().default_value()?);
-                }
-                value.to_value()
-            }
-            Type::Enum(enum_) => {
-                let mut variants = enum_.variants();
-                let variant = variants.next()?;
-                match variant {
-                    Variant::Struct(variant) => {
-                        let mut value = EnumValue::new_struct_variant(variant.name());
-                        for field in variant.field_types() {
-                            value.set_struct_field(field.name(), field.get_type().default_value()?);
-                        }
-                        value.finish().to_value()
-                    }
-                    Variant::Tuple(variant) => {
-                        let mut value = EnumValue::new_tuple_variant(variant.name());
-                        for field in variant.field_types() {
-                            value.push_tuple_field(field.get_type().default_value()?);
-                        }
-                        value.finish().to_value()
-                    }
-                    Variant::Unit(variant) => {
-                        EnumValue::new_unit_variant(variant.name()).to_value()
-                    }
-                }
-            }
-            Type::List(_) => Vec::<()>::new().to_value(),
-            Type::Array(_) => <[(); 0] as Reflect>::to_value(&[]),
-            Type::Map(_) => BTreeMap::<(), ()>::new().to_value(),
-            Type::Scalar(scalar) => match scalar {
-                ScalarType::usize => usize::default().to_value(),
-                ScalarType::u8 => u8::default().to_value(),
-                ScalarType::u16 => u16::default().to_value(),
-                ScalarType::u32 => u32::default().to_value(),
-                ScalarType::u64 => u64::default().to_value(),
-                ScalarType::u128 => u128::default().to_value(),
-                ScalarType::i8 => i8::default().to_value(),
-                ScalarType::i16 => i16::default().to_value(),
-                ScalarType::i32 => i32::default().to_value(),
-                ScalarType::i64 => i64::default().to_value(),
-                ScalarType::i128 => i128::default().to_value(),
-                ScalarType::bool => bool::default().to_value(),
-                ScalarType::char => char::default().to_value(),
-                ScalarType::f32 => f32::default().to_value(),
-                ScalarType::f64 => f64::default().to_value(),
-                ScalarType::String => String::default().to_value(),
-            },
-            Type::Opaque(_) => return None,
-        };
-        Some(value)
+        match self {
+            Type::Struct(inner) => inner.default_value(),
+            Type::TupleStruct(inner) => inner.default_value(),
+            Type::Tuple(inner) => inner.default_value(),
+            Type::Enum(inner) => inner.default_value(),
+            Type::List(inner) => Some(inner.default_value()),
+            Type::Array(inner) => Some(inner.default_value()),
+            Type::Map(inner) => Some(inner.default_value()),
+            Type::Scalar(inner) => Some(inner.default_value()),
+            Type::Opaque(inner) => inner.default_value(),
+        }
     }
 
     pub fn into_type_descriptor(self) -> Cow<'static, TypeDescriptor> {
@@ -610,6 +552,27 @@ impl ScalarType {
     fn into_type_info_at_path(self) -> TypeAtPath<'static> {
         TypeAtPath::Scalar(self)
     }
+
+    pub fn default_value(self) -> Value {
+        match self {
+            ScalarType::usize => usize::default().to_value(),
+            ScalarType::u8 => u8::default().to_value(),
+            ScalarType::u16 => u16::default().to_value(),
+            ScalarType::u32 => u32::default().to_value(),
+            ScalarType::u64 => u64::default().to_value(),
+            ScalarType::u128 => u128::default().to_value(),
+            ScalarType::i8 => i8::default().to_value(),
+            ScalarType::i16 => i16::default().to_value(),
+            ScalarType::i32 => i32::default().to_value(),
+            ScalarType::i64 => i64::default().to_value(),
+            ScalarType::i128 => i128::default().to_value(),
+            ScalarType::bool => bool::default().to_value(),
+            ScalarType::char => char::default().to_value(),
+            ScalarType::f32 => f32::default().to_value(),
+            ScalarType::f64 => f64::default().to_value(),
+            ScalarType::String => String::default().to_value(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -653,6 +616,14 @@ impl<'a> StructType<'a> {
             graph: self.graph.clone(),
         }
     }
+
+    pub fn default_value(self) -> Option<Value> {
+        let mut value = StructValue::new();
+        for field in self.field_types() {
+            value.set_field(field.name(), field.get_type().default_value()?);
+        }
+        Some(value.to_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -691,6 +662,14 @@ impl<'a> TupleStructType<'a> {
             graph: self.graph.clone(),
         }
     }
+
+    pub fn default_value(self) -> Option<Value> {
+        let mut value = TupleStructValue::new();
+        for field in self.field_types() {
+            value.push_field(field.get_type().default_value()?);
+        }
+        Some(value.to_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -728,6 +707,14 @@ impl<'a> TupleType<'a> {
             root: self.node.id,
             graph: self.graph.clone(),
         }
+    }
+
+    pub fn default_value(self) -> Option<Value> {
+        let mut value = TupleValue::new();
+        for field in self.field_types() {
+            value.push_field(field.get_type().default_value()?);
+        }
+        Some(value.to_value())
     }
 }
 
@@ -775,6 +762,12 @@ impl<'a> EnumType<'a> {
             root: self.node.id,
             graph: self.graph.clone(),
         }
+    }
+
+    pub fn default_value(self) -> Option<Value> {
+        let mut variants = self.variants();
+        let variant = variants.next()?;
+        variant.default_value()
     }
 }
 
@@ -828,6 +821,14 @@ impl<'a> Variant<'a> {
 
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
         TypeAtPath::Variant(self)
+    }
+
+    pub fn default_value(self) -> Option<Value> {
+        match self {
+            Variant::Struct(variant) => variant.default_value(),
+            Variant::Tuple(variant) => variant.default_value(),
+            Variant::Unit(variant) => Some(variant.default_value()),
+        }
     }
 }
 
@@ -925,6 +926,14 @@ impl<'a> StructVariant<'a> {
             graph: self.graph,
         }
     }
+
+    pub fn default_value(self) -> Option<Value> {
+        let mut value = EnumValue::new_struct_variant(self.name());
+        for field in self.field_types() {
+            value.set_struct_field(field.name(), field.get_type().default_value()?);
+        }
+        Some(value.finish().to_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -960,6 +969,14 @@ impl<'a> TupleVariant<'a> {
             graph: self.graph,
         }
     }
+
+    pub fn default_value(self) -> Option<Value> {
+        let mut value = EnumValue::new_tuple_variant(self.name());
+        for field in self.field_types() {
+            value.push_tuple_field(field.get_type().default_value()?);
+        }
+        Some(value.finish().to_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -979,6 +996,10 @@ impl<'a> UnitVariant<'a> {
             node: self.enum_node,
             graph: self.graph,
         }
+    }
+
+    pub fn default_value(self) -> Value {
+        EnumValue::new_unit_variant(self.name()).to_value()
     }
 }
 
@@ -1051,6 +1072,10 @@ impl<'a> ArrayType<'a> {
             graph: self.graph.clone(),
         }
     }
+
+    pub fn default_value(self) -> Value {
+        <[(); 0] as Reflect>::to_value(&[])
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -1077,6 +1102,10 @@ impl<'a> ListType<'a> {
             root: self.node.id,
             graph: self.graph.clone(),
         }
+    }
+
+    pub fn default_value(self) -> Value {
+        Vec::<()>::new().to_value()
     }
 }
 
@@ -1109,6 +1138,10 @@ impl<'a> MapType<'a> {
             graph: self.graph.clone(),
         }
     }
+
+    pub fn default_value(self) -> Value {
+        BTreeMap::<(), ()>::new().to_value()
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -1131,6 +1164,10 @@ impl<'a> OpaqueType<'a> {
             root: self.node.id,
             graph: self.graph.clone(),
         }
+    }
+
+    pub fn default_value(self) -> Option<Value> {
+        None
     }
 }
 
@@ -1181,6 +1218,21 @@ impl<'a> GetMeta<'a> for TypeAtPath<'a> {
 }
 
 impl<'a> TypeAtPath<'a> {
+    pub fn default_value(self) -> Option<Value> {
+        match self {
+            TypeAtPath::Struct(inner) => inner.default_value(),
+            TypeAtPath::TupleStruct(inner) => inner.default_value(),
+            TypeAtPath::Tuple(inner) => inner.default_value(),
+            TypeAtPath::Enum(inner) => inner.default_value(),
+            TypeAtPath::Variant(inner) => inner.default_value(),
+            TypeAtPath::List(inner) => Some(inner.default_value()),
+            TypeAtPath::Array(inner) => Some(inner.default_value()),
+            TypeAtPath::Map(inner) => Some(inner.default_value()),
+            TypeAtPath::Scalar(inner) => Some(inner.default_value()),
+            TypeAtPath::Opaque(inner) => inner.default_value(),
+        }
+    }
+
     pub fn as_struct(self) -> Option<StructType<'a>> {
         match self {
             Self::Struct(inner) => Some(inner),
