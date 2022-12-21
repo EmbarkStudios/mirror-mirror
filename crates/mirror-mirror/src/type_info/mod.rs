@@ -248,7 +248,7 @@ impl<'a> Type<'a> {
             Type::Tuple(inner) => inner.default_value(),
             Type::Enum(inner) => inner.default_value(),
             Type::List(inner) => Some(inner.default_value()),
-            Type::Array(inner) => Some(inner.default_value()),
+            Type::Array(inner) => inner.default_value(),
             Type::Map(inner) => Some(inner.default_value()),
             Type::Scalar(inner) => Some(inner.default_value()),
             Type::Opaque(inner) => inner.default_value(),
@@ -1093,8 +1093,12 @@ impl<'a> ArrayType<'a> {
         }
     }
 
-    pub fn default_value(self) -> Value {
-        <[(); 0] as Reflect>::to_value(&[])
+    pub fn default_value(self) -> Option<Value> {
+        let mut acc = Vec::with_capacity(self.len());
+        for _ in 0..self.len() {
+            acc.push(self.element_type().default_value()?);
+        }
+        Some(acc.to_value())
     }
 }
 
@@ -1246,7 +1250,7 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::Enum(inner) => inner.default_value(),
             TypeAtPath::Variant(inner) => inner.default_value(),
             TypeAtPath::List(inner) => Some(inner.default_value()),
-            TypeAtPath::Array(inner) => Some(inner.default_value()),
+            TypeAtPath::Array(inner) => inner.default_value(),
             TypeAtPath::Map(inner) => Some(inner.default_value()),
             TypeAtPath::Scalar(inner) => Some(inner.default_value()),
             TypeAtPath::Opaque(inner) => inner.default_value(),
