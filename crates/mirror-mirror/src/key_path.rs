@@ -229,7 +229,7 @@ impl KeyPath {
     }
 
     pub fn push_field(&mut self, field: impl IntoKeyOrIndex) {
-        self.path.push(Key::Field(field.into_key_or_index()));
+        self.push(Key::Field(field.into_key_or_index()));
     }
 
     pub fn get(mut self, field: impl Into<Value>) -> Self {
@@ -238,7 +238,7 @@ impl KeyPath {
     }
 
     pub fn push_get(&mut self, field: impl Into<Value>) {
-        self.path.push(Key::FieldAt(field.into()))
+        self.push(Key::FieldAt(field.into()))
     }
 
     pub fn variant(mut self, variant: impl Into<String>) -> Self {
@@ -247,7 +247,11 @@ impl KeyPath {
     }
 
     pub fn push_variant(&mut self, variant: impl Into<String>) {
-        self.path.push(Key::Variant(variant.into()));
+        self.push(Key::Variant(variant.into()));
+    }
+
+    pub fn push(&mut self, key: Key) {
+        self.path.push(key);
     }
 
     pub fn len(&self) -> usize {
