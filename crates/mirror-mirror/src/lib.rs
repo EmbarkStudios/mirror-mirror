@@ -715,7 +715,7 @@ impl From<String> for ScalarOwned {
 
 impl<'a> From<&'a String> for ScalarRef<'a> {
     fn from(value: &'a String) -> Self {
-        ScalarRef::String(value.as_str())
+        ScalarRef::String(value)
     }
 }
 
@@ -751,6 +751,48 @@ pub enum ReflectOwned {
 }
 
 impl ReflectOwned {
+    pub fn into_reflect(self) -> Box<dyn Reflect> {
+        match self {
+            Self::Struct(inner) => inner.into_reflect(),
+            Self::TupleStruct(inner) => inner.into_reflect(),
+            Self::Tuple(inner) => inner.into_reflect(),
+            Self::Enum(inner) => inner.into_reflect(),
+            Self::Array(inner) => inner.into_reflect(),
+            Self::List(inner) => inner.into_reflect(),
+            Self::Map(inner) => inner.into_reflect(),
+            Self::Scalar(inner) => inner.into_reflect(),
+            Self::Opaque(inner) => inner.into_reflect(),
+        }
+    }
+
+    pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        match self {
+            ReflectOwned::Struct(inner) => inner.as_reflect_mut(),
+            ReflectOwned::TupleStruct(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Tuple(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Enum(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Array(inner) => inner.as_reflect_mut(),
+            ReflectOwned::List(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Map(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Scalar(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Opaque(inner) => inner.as_reflect_mut(),
+        }
+    }
+
+    pub fn as_reflect(&self) -> &dyn Reflect {
+        match self {
+            ReflectOwned::Struct(inner) => inner.as_reflect(),
+            ReflectOwned::TupleStruct(inner) => inner.as_reflect(),
+            ReflectOwned::Tuple(inner) => inner.as_reflect(),
+            ReflectOwned::Enum(inner) => inner.as_reflect(),
+            ReflectOwned::Array(inner) => inner.as_reflect(),
+            ReflectOwned::List(inner) => inner.as_reflect(),
+            ReflectOwned::Map(inner) => inner.as_reflect(),
+            ReflectOwned::Scalar(inner) => inner.as_reflect(),
+            ReflectOwned::Opaque(inner) => inner.as_reflect(),
+        }
+    }
+
     pub fn into_tuple(self) -> Option<Box<dyn Tuple>> {
         match self {
             Self::Tuple(inner) => Some(inner),
@@ -853,6 +895,71 @@ pub enum ScalarOwned {
     String(String),
 }
 
+impl ScalarOwned {
+    pub fn into_reflect(self) -> Box<dyn Reflect> {
+        match self {
+            ScalarOwned::usize(inner) => Box::new(inner),
+            ScalarOwned::u8(inner) => Box::new(inner),
+            ScalarOwned::u16(inner) => Box::new(inner),
+            ScalarOwned::u32(inner) => Box::new(inner),
+            ScalarOwned::u64(inner) => Box::new(inner),
+            ScalarOwned::u128(inner) => Box::new(inner),
+            ScalarOwned::i8(inner) => Box::new(inner),
+            ScalarOwned::i16(inner) => Box::new(inner),
+            ScalarOwned::i32(inner) => Box::new(inner),
+            ScalarOwned::i64(inner) => Box::new(inner),
+            ScalarOwned::i128(inner) => Box::new(inner),
+            ScalarOwned::bool(inner) => Box::new(inner),
+            ScalarOwned::char(inner) => Box::new(inner),
+            ScalarOwned::f32(inner) => Box::new(inner),
+            ScalarOwned::f64(inner) => Box::new(inner),
+            ScalarOwned::String(inner) => Box::new(inner),
+        }
+    }
+
+    pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        match self {
+            ScalarOwned::usize(inner) => inner,
+            ScalarOwned::u8(inner) => inner,
+            ScalarOwned::u16(inner) => inner,
+            ScalarOwned::u32(inner) => inner,
+            ScalarOwned::u64(inner) => inner,
+            ScalarOwned::u128(inner) => inner,
+            ScalarOwned::i8(inner) => inner,
+            ScalarOwned::i16(inner) => inner,
+            ScalarOwned::i32(inner) => inner,
+            ScalarOwned::i64(inner) => inner,
+            ScalarOwned::i128(inner) => inner,
+            ScalarOwned::bool(inner) => inner,
+            ScalarOwned::char(inner) => inner,
+            ScalarOwned::f32(inner) => inner,
+            ScalarOwned::f64(inner) => inner,
+            ScalarOwned::String(inner) => inner,
+        }
+    }
+
+    pub fn as_reflect(&self) -> &dyn Reflect {
+        match self {
+            ScalarOwned::usize(inner) => inner,
+            ScalarOwned::u8(inner) => inner,
+            ScalarOwned::u16(inner) => inner,
+            ScalarOwned::u32(inner) => inner,
+            ScalarOwned::u64(inner) => inner,
+            ScalarOwned::u128(inner) => inner,
+            ScalarOwned::i8(inner) => inner,
+            ScalarOwned::i16(inner) => inner,
+            ScalarOwned::i32(inner) => inner,
+            ScalarOwned::i64(inner) => inner,
+            ScalarOwned::i128(inner) => inner,
+            ScalarOwned::bool(inner) => inner,
+            ScalarOwned::char(inner) => inner,
+            ScalarOwned::f32(inner) => inner,
+            ScalarOwned::f64(inner) => inner,
+            ScalarOwned::String(inner) => inner,
+        }
+    }
+}
+
 /// An immutable reflected value.
 ///
 /// Constructed with [`Reflect::reflect_ref`].
@@ -872,6 +979,20 @@ pub enum ReflectRef<'a> {
 }
 
 impl<'a> ReflectRef<'a> {
+    pub fn as_reflect(&self) -> &dyn Reflect {
+        match self {
+            ReflectRef::Struct(inner) => inner.as_reflect(),
+            ReflectRef::TupleStruct(inner) => inner.as_reflect(),
+            ReflectRef::Tuple(inner) => inner.as_reflect(),
+            ReflectRef::Enum(inner) => inner.as_reflect(),
+            ReflectRef::Array(inner) => inner.as_reflect(),
+            ReflectRef::List(inner) => inner.as_reflect(),
+            ReflectRef::Map(inner) => inner.as_reflect(),
+            ReflectRef::Scalar(inner) => inner.as_reflect(),
+            ReflectRef::Opaque(inner) => inner.as_reflect(),
+        }
+    }
+
     pub fn as_tuple(self) -> Option<&'a dyn Tuple> {
         match self {
             Self::Tuple(inner) => Some(inner),
@@ -955,7 +1076,30 @@ pub enum ScalarRef<'a> {
     char(char),
     f32(f32),
     f64(f64),
-    String(&'a str),
+    String(&'a String),
+}
+
+impl<'a> ScalarRef<'a> {
+    pub fn as_reflect(&self) -> &dyn Reflect {
+        match self {
+            ScalarRef::usize(inner) => inner,
+            ScalarRef::u8(inner) => inner,
+            ScalarRef::u16(inner) => inner,
+            ScalarRef::u32(inner) => inner,
+            ScalarRef::u64(inner) => inner,
+            ScalarRef::u128(inner) => inner,
+            ScalarRef::i8(inner) => inner,
+            ScalarRef::i16(inner) => inner,
+            ScalarRef::i32(inner) => inner,
+            ScalarRef::i64(inner) => inner,
+            ScalarRef::i128(inner) => inner,
+            ScalarRef::bool(inner) => inner,
+            ScalarRef::char(inner) => inner,
+            ScalarRef::f32(inner) => inner,
+            ScalarRef::f64(inner) => inner,
+            ScalarRef::String(inner) => *inner,
+        }
+    }
 }
 
 /// A mutable reflected value.
@@ -977,6 +1121,34 @@ pub enum ReflectMut<'a> {
 }
 
 impl<'a> ReflectMut<'a> {
+    pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        match self {
+            ReflectMut::Struct(inner) => inner.as_reflect_mut(),
+            ReflectMut::TupleStruct(inner) => inner.as_reflect_mut(),
+            ReflectMut::Tuple(inner) => inner.as_reflect_mut(),
+            ReflectMut::Enum(inner) => inner.as_reflect_mut(),
+            ReflectMut::Array(inner) => inner.as_reflect_mut(),
+            ReflectMut::List(inner) => inner.as_reflect_mut(),
+            ReflectMut::Map(inner) => inner.as_reflect_mut(),
+            ReflectMut::Scalar(inner) => inner.as_reflect_mut(),
+            ReflectMut::Opaque(inner) => inner.as_reflect_mut(),
+        }
+    }
+
+    pub fn as_reflect(&self) -> &dyn Reflect {
+        match self {
+            ReflectMut::Struct(inner) => inner.as_reflect(),
+            ReflectMut::TupleStruct(inner) => inner.as_reflect(),
+            ReflectMut::Tuple(inner) => inner.as_reflect(),
+            ReflectMut::Enum(inner) => inner.as_reflect(),
+            ReflectMut::Array(inner) => inner.as_reflect(),
+            ReflectMut::List(inner) => inner.as_reflect(),
+            ReflectMut::Map(inner) => inner.as_reflect(),
+            ReflectMut::Scalar(inner) => inner.as_reflect(),
+            ReflectMut::Opaque(inner) => inner.as_reflect(),
+        }
+    }
+
     pub fn as_tuple_mut(self) -> Option<&'a mut dyn Tuple> {
         match self {
             Self::Tuple(inner) => Some(inner),
@@ -1061,6 +1233,50 @@ pub enum ScalarMut<'a> {
     f32(&'a mut f32),
     f64(&'a mut f64),
     String(&'a mut String),
+}
+
+impl<'a> ScalarMut<'a> {
+    pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+        match self {
+            ScalarMut::usize(inner) => *inner,
+            ScalarMut::u8(inner) => *inner,
+            ScalarMut::u16(inner) => *inner,
+            ScalarMut::u32(inner) => *inner,
+            ScalarMut::u64(inner) => *inner,
+            ScalarMut::u128(inner) => *inner,
+            ScalarMut::i8(inner) => *inner,
+            ScalarMut::i16(inner) => *inner,
+            ScalarMut::i32(inner) => *inner,
+            ScalarMut::i64(inner) => *inner,
+            ScalarMut::i128(inner) => *inner,
+            ScalarMut::bool(inner) => *inner,
+            ScalarMut::char(inner) => *inner,
+            ScalarMut::f32(inner) => *inner,
+            ScalarMut::f64(inner) => *inner,
+            ScalarMut::String(inner) => *inner,
+        }
+    }
+
+    pub fn as_reflect(&self) -> &dyn Reflect {
+        match self {
+            ScalarMut::usize(inner) => *inner,
+            ScalarMut::u8(inner) => *inner,
+            ScalarMut::u16(inner) => *inner,
+            ScalarMut::u32(inner) => *inner,
+            ScalarMut::u64(inner) => *inner,
+            ScalarMut::u128(inner) => *inner,
+            ScalarMut::i8(inner) => *inner,
+            ScalarMut::i16(inner) => *inner,
+            ScalarMut::i32(inner) => *inner,
+            ScalarMut::i64(inner) => *inner,
+            ScalarMut::i128(inner) => *inner,
+            ScalarMut::bool(inner) => *inner,
+            ScalarMut::char(inner) => *inner,
+            ScalarMut::f32(inner) => *inner,
+            ScalarMut::f64(inner) => *inner,
+            ScalarMut::String(inner) => *inner,
+        }
+    }
 }
 
 /// Debug formatter for any reflection value.
