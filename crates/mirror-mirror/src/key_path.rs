@@ -595,7 +595,6 @@ pub struct Breadcrumbs<'a> {
 impl<'a> Iterator for Breadcrumbs<'a> {
     type Item = &'a [Key];
 
-    #[allow(warnings)]
     fn next(&mut self) -> Option<Self::Item> {
         let keys = self.key_path.path.get(0..self.index)?;
         self.index += 1;
