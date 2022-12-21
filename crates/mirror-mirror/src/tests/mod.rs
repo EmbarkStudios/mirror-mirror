@@ -1,5 +1,6 @@
 use crate::Reflect;
 
+mod array;
 mod enum_;
 mod key_path;
 mod list;
