@@ -12,8 +12,8 @@ use crate::enum_::EnumValue;
 use crate::key_path::value_to_usize;
 use crate::key_path::GetTypePath;
 use crate::key_path::Key;
-use crate::key_path::KeyOrIndex;
 use crate::key_path::KeyPath;
+use crate::key_path::NamedOrNumbered;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
@@ -1314,7 +1314,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
 
             let value_at_key: TypeAtPath<'_> = match head {
                 // .foo
-                Key::Field(KeyOrIndex::Key(key)) => match type_info {
+                Key::Field(NamedOrNumbered::Named(key)) => match type_info {
                     TypeAtPath::Struct(struct_) => {
                         struct_.field_type(key)?.into_type_info_at_path()
                     }
@@ -1334,7 +1334,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(KeyOrIndex::Index(index)) => match type_info {
+                Key::Field(NamedOrNumbered::Numbered(index)) => match type_info {
                     TypeAtPath::TupleStruct(tuple_struct) => {
                         tuple_struct.field_type_at(*index)?.into_type_info_at_path()
                     }
@@ -1356,7 +1356,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::Opaque(_) => return None,
                 },
                 // ["foo"] or [0]
-                Key::FieldAt(key) => match type_info {
+                Key::Get(key) => match type_info {
                     TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeAtPath::List(list) => {
                         if value_to_usize(key).is_some() {

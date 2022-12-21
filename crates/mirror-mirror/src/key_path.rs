@@ -2,6 +2,7 @@ use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
+use core::iter::FusedIterator;
 use core::iter::Peekable;
 
 use crate::enum_::VariantKind;
@@ -51,7 +52,7 @@ where
 
             let value_at_key = match head {
                 // .foo
-                Key::Field(private::KeyOrIndex::Key(key)) => match value.reflect_ref() {
+                Key::Field(NamedOrNumbered::Named(key)) => match value.reflect_ref() {
                     ReflectRef::Struct(inner) => inner.field(key)?,
                     ReflectRef::Enum(inner) => match inner.variant_kind() {
                         VariantKind::Struct => inner.field(key)?,
@@ -66,7 +67,7 @@ where
                     | ReflectRef::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(private::KeyOrIndex::Index(index)) => match value.reflect_ref() {
+                Key::Field(NamedOrNumbered::Numbered(index)) => match value.reflect_ref() {
                     ReflectRef::TupleStruct(inner) => inner.field_at(*index)?,
                     ReflectRef::Tuple(inner) => inner.field_at(*index)?,
                     ReflectRef::Enum(inner) => match inner.variant_kind() {
@@ -81,7 +82,7 @@ where
                     | ReflectRef::Opaque(_) => return None,
                 },
                 // ["foo"] or [0]
-                Key::FieldAt(key) => match value.reflect_ref() {
+                Key::Get(key) => match value.reflect_ref() {
                     ReflectRef::Map(inner) => inner.get(key)?,
                     ReflectRef::Array(inner) => inner.get(value_to_usize(key)?)?,
                     ReflectRef::List(inner) => inner.get(value_to_usize(key)?)?,
@@ -138,7 +139,7 @@ where
 
             let value_at_key = match head {
                 // .foo
-                Key::Field(private::KeyOrIndex::Key(key)) => match value.reflect_mut() {
+                Key::Field(NamedOrNumbered::Named(key)) => match value.reflect_mut() {
                     ReflectMut::Struct(inner) => inner.field_mut(key)?,
                     ReflectMut::Enum(inner) => match inner.variant_kind() {
                         VariantKind::Struct => inner.field_mut(key)?,
@@ -153,7 +154,7 @@ where
                     | ReflectMut::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(private::KeyOrIndex::Index(index)) => match value.reflect_mut() {
+                Key::Field(NamedOrNumbered::Numbered(index)) => match value.reflect_mut() {
                     ReflectMut::TupleStruct(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Tuple(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Enum(inner) => match inner.variant_kind() {
@@ -168,7 +169,7 @@ where
                     | ReflectMut::Opaque(_) => return None,
                 },
                 // ["foo"] or [0]
-                Key::FieldAt(key) => match value.reflect_mut() {
+                Key::Get(key) => match value.reflect_mut() {
                     ReflectMut::Array(inner) => inner.get_mut(value_to_usize(key)?)?,
                     ReflectMut::List(inner) => inner.get_mut(value_to_usize(key)?)?,
                     ReflectMut::Map(inner) => inner.get_mut(key)?,
@@ -228,7 +229,7 @@ impl KeyPath {
     }
 
     pub fn push_field(&mut self, field: impl IntoKeyOrIndex) {
-        self.path.push(Key::Field(field.into_key_or_index()));
+        self.push(Key::Field(field.into_key_or_index()));
     }
 
     pub fn get(mut self, field: impl Into<Value>) -> Self {
@@ -237,7 +238,7 @@ impl KeyPath {
     }
 
     pub fn push_get(&mut self, field: impl Into<Value>) {
-        self.path.push(Key::FieldAt(field.into()))
+        self.push(Key::Get(field.into()))
     }
 
     pub fn variant(mut self, variant: impl Into<String>) -> Self {
@@ -246,7 +247,11 @@ impl KeyPath {
     }
 
     pub fn push_variant(&mut self, variant: impl Into<String>) {
-        self.path.push(Key::Variant(variant.into()));
+        self.push(Key::Variant(variant.into()));
+    }
+
+    pub fn push(&mut self, key: Key) {
+        self.path.push(key);
     }
 
     pub fn len(&self) -> usize {
@@ -260,57 +265,173 @@ impl KeyPath {
     pub fn pop(&mut self) {
         self.path.pop();
     }
+
+    pub fn iter(&self) -> Iter<'_> {
+        self.into_iter()
+    }
 }
+
+impl IntoIterator for KeyPath {
+    type Item = Key;
+    type IntoIter = IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self.path.into_iter())
+    }
+}
+
+#[derive(Debug)]
+pub struct IntoIter(alloc::vec::IntoIter<Key>);
+
+impl Iterator for IntoIter {
+    type Item = Key;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl DoubleEndedIterator for IntoIter {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.0.next_back()
+    }
+}
+
+impl ExactSizeIterator for IntoIter {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl FusedIterator for IntoIter {}
+
+impl<'a> IntoIterator for &'a KeyPath {
+    type Item = &'a Key;
+    type IntoIter = Iter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter(self.path.iter())
+    }
+}
+
+#[derive(Debug)]
+pub struct Iter<'a>(alloc::slice::Iter<'a, Key>);
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = &'a Key;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl<'a> DoubleEndedIterator for Iter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.0.next_back()
+    }
+}
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}
 
 mod private {
     use super::*;
 
     pub trait Sealed {}
     impl Sealed for &str {}
+    impl Sealed for &String {}
     impl Sealed for String {}
     impl Sealed for usize {}
+}
 
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    #[allow(unreachable_pub)]
-    pub enum Key {
-        Field(KeyOrIndex),
-        FieldAt(Value),
-        Variant(String),
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum Key {
+    Field(NamedOrNumbered),
+    Get(Value),
+    Variant(String),
+}
+
+impl Key {
+    /// Create a `Key` that'll access a named field of a struct.
+    pub fn named_field(name: impl Into<String>) -> Self {
+        Self::Field(NamedOrNumbered::Named(name.into()))
     }
 
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub enum KeyOrIndex {
-        Key(String),
-        Index(usize),
+    /// Create a `Key` that'll access a numbered field of a tuple struct or tuple.
+    pub fn numbered_field(index: usize) -> Self {
+        Self::Field(NamedOrNumbered::Numbered(index))
+    }
+
+    /// Create a `Key` that'll access an element in a list, array, or map.
+    pub fn get(value: impl Into<Value>) -> Self {
+        Self::Get(value.into())
+    }
+
+    /// Create a `Key` that'll access an enum variant.
+    pub fn variant(name: impl Into<String>) -> Self {
+        Self::Variant(name.into())
     }
 }
 
-pub(crate) use private::Key;
-pub(crate) use private::KeyOrIndex;
+impl fmt::Display for Key {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Key::Field(key) => write!(f, "{key}"),
+            Key::Get(value) => write!(f, "[{:?}]", value.as_reflect()),
+            Key::Variant(variant) => write!(f, "::{variant}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum NamedOrNumbered {
+    Named(String),
+    Numbered(usize),
+}
+
+impl fmt::Display for NamedOrNumbered {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NamedOrNumbered::Named(field) => write!(f, ".{field}"),
+            NamedOrNumbered::Numbered(index) => write!(f, ".{index}"),
+        }
+    }
+}
 
 pub trait IntoKeyOrIndex: private::Sealed {
-    fn into_key_or_index(self) -> private::KeyOrIndex;
+    fn into_key_or_index(self) -> NamedOrNumbered;
 }
 
 impl IntoKeyOrIndex for &str {
-    fn into_key_or_index(self) -> private::KeyOrIndex {
-        private::KeyOrIndex::Key(self.to_owned())
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Named(self.to_owned())
+    }
+}
+
+impl IntoKeyOrIndex for &String {
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Named(self.to_owned())
     }
 }
 
 impl IntoKeyOrIndex for String {
-    fn into_key_or_index(self) -> private::KeyOrIndex {
-        private::KeyOrIndex::Key(self)
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Named(self)
     }
 }
 
 impl IntoKeyOrIndex for usize {
-    fn into_key_or_index(self) -> private::KeyOrIndex {
-        private::KeyOrIndex::Index(self)
+    fn into_key_or_index(self) -> NamedOrNumbered {
+        NamedOrNumbered::Numbered(self)
     }
 }
 
@@ -414,12 +535,7 @@ macro_rules! key_path {
 impl fmt::Display for KeyPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for key in &self.path {
-            match key {
-                Key::Field(private::KeyOrIndex::Key(key)) => write!(f, ".{key}")?,
-                Key::Field(private::KeyOrIndex::Index(index)) => write!(f, ".{index}")?,
-                Key::FieldAt(value) => write!(f, "[{:?}]", value.as_reflect())?,
-                Key::Variant(variant) => write!(f, "::{variant}")?,
-            }
+            write!(f, "{key}")?;
         }
         Ok(())
     }
