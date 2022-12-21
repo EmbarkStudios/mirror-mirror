@@ -1356,7 +1356,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::Opaque(_) => return None,
                 },
                 // ["foo"] or [0]
-                Key::FieldAt(key) => match type_info {
+                Key::Get(key) => match type_info {
                     TypeAtPath::Map(map) => map.value_type().into_type_info_at_path(),
                     TypeAtPath::List(list) => {
                         if value_to_usize(key).is_some() {

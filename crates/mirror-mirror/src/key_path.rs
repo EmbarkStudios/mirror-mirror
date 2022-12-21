@@ -82,7 +82,7 @@ where
                     | ReflectRef::Opaque(_) => return None,
                 },
                 // ["foo"] or [0]
-                Key::FieldAt(key) => match value.reflect_ref() {
+                Key::Get(key) => match value.reflect_ref() {
                     ReflectRef::Map(inner) => inner.get(key)?,
                     ReflectRef::Array(inner) => inner.get(value_to_usize(key)?)?,
                     ReflectRef::List(inner) => inner.get(value_to_usize(key)?)?,
@@ -169,7 +169,7 @@ where
                     | ReflectMut::Opaque(_) => return None,
                 },
                 // ["foo"] or [0]
-                Key::FieldAt(key) => match value.reflect_mut() {
+                Key::Get(key) => match value.reflect_mut() {
                     ReflectMut::Array(inner) => inner.get_mut(value_to_usize(key)?)?,
                     ReflectMut::List(inner) => inner.get_mut(value_to_usize(key)?)?,
                     ReflectMut::Map(inner) => inner.get_mut(key)?,
@@ -238,7 +238,7 @@ impl KeyPath {
     }
 
     pub fn push_get(&mut self, field: impl Into<Value>) {
-        self.push(Key::FieldAt(field.into()))
+        self.push(Key::Get(field.into()))
     }
 
     pub fn variant(mut self, variant: impl Into<String>) -> Self {
@@ -354,7 +354,7 @@ mod private {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Key {
     Field(KeyOrIndex),
-    FieldAt(Value),
+    Get(Value),
     Variant(String),
 }
 
@@ -362,7 +362,7 @@ impl fmt::Display for Key {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Key::Field(key) => write!(f, "{key}"),
-            Key::FieldAt(value) => write!(f, "[{:?}]", value.as_reflect()),
+            Key::Get(value) => write!(f, "[{:?}]", value.as_reflect()),
             Key::Variant(variant) => write!(f, "::{variant}"),
         }
     }
