@@ -358,6 +358,28 @@ pub enum Key {
     Variant(String),
 }
 
+impl Key {
+    /// Create a `Key` that'll access a named field of a struct.
+    pub fn field(name: impl Into<String>) -> Self {
+        Self::Field(KeyOrIndex::Key(name.into()))
+    }
+
+    /// Create a `Key` that'll access a numbered field of a tuple struct or tuple.
+    pub fn field_at(index: usize) -> Self {
+        Self::Field(KeyOrIndex::Index(index))
+    }
+
+    /// Create a `Key` that'll access an element in a list, array, or map.
+    pub fn get(value: impl Into<Value>) -> Self {
+        Self::Get(value.into())
+    }
+
+    /// Create a `Key` that'll access an enum variant.
+    pub fn variant(name: impl Into<String>) -> Self {
+        Self::Variant(name.into())
+    }
+}
+
 impl fmt::Display for Key {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
