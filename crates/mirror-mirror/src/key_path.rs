@@ -215,7 +215,7 @@ where
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KeyPath {
@@ -268,6 +268,13 @@ impl KeyPath {
 
     pub fn iter(&self) -> Iter<'_> {
         self.into_iter()
+    }
+
+    pub fn breadcrumbs(&self) -> Breadcrumbs<'_> {
+        Breadcrumbs {
+            key_path: self,
+            index: 1,
+        }
     }
 }
 
@@ -565,5 +572,33 @@ pub(crate) fn value_to_usize(value: &Value) -> Option<usize> {
         | Value::TupleValue(_)
         | Value::List(_)
         | Value::Map(_) => None,
+    }
+}
+
+impl FromIterator<Key> for KeyPath {
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = Key>,
+    {
+        Self {
+            path: Vec::from_iter(iter),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Breadcrumbs<'a> {
+    key_path: &'a KeyPath,
+    index: usize,
+}
+
+impl<'a> Iterator for Breadcrumbs<'a> {
+    type Item = &'a [Key];
+
+    #[allow(warnings)]
+    fn next(&mut self) -> Option<Self::Item> {
+        let keys = self.key_path.path.get(0..self.index)?;
+        self.index += 1;
+        Some(keys)
     }
 }
