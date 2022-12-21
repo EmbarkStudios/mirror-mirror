@@ -787,6 +787,14 @@ impl<'a> Variant<'a> {
         }
     }
 
+    pub fn type_name(self) -> &'a str {
+        match self {
+            Variant::Struct(inner) => inner.type_name(),
+            Variant::Tuple(inner) => inner.type_name(),
+            Variant::Unit(inner) => inner.type_name(),
+        }
+    }
+
     pub fn field_types(self) -> impl Iterator<Item = VariantField<'a>> {
         match self {
             Variant::Struct(inner) => Box::new(inner.field_types().map(VariantField::Named))
@@ -900,6 +908,10 @@ impl<'a> StructVariant<'a> {
         &self.node.name
     }
 
+    pub fn type_name(self) -> &'a str {
+        self.enum_type().type_name()
+    }
+
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
         self.node.fields.values().map(|node| NamedField {
             node,
@@ -948,6 +960,10 @@ impl<'a> TupleVariant<'a> {
         &self.node.name
     }
 
+    pub fn type_name(self) -> &'a str {
+        self.enum_type().type_name()
+    }
+
     pub fn field_types(self) -> impl Iterator<Item = UnnamedField<'a>> {
         self.node.fields.iter().map(|node| UnnamedField {
             node,
@@ -989,6 +1005,10 @@ pub struct UnitVariant<'a> {
 impl<'a> UnitVariant<'a> {
     pub fn name(self) -> &'a str {
         &self.node.name
+    }
+
+    pub fn type_name(self) -> &'a str {
+        self.enum_type().type_name()
     }
 
     pub fn enum_type(self) -> EnumType<'a> {
@@ -1230,6 +1250,21 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::Map(inner) => Some(inner.default_value()),
             TypeAtPath::Scalar(inner) => Some(inner.default_value()),
             TypeAtPath::Opaque(inner) => inner.default_value(),
+        }
+    }
+
+    pub fn type_name(self) -> &'a str {
+        match self {
+            TypeAtPath::Struct(inner) => inner.type_name(),
+            TypeAtPath::TupleStruct(inner) => inner.type_name(),
+            TypeAtPath::Tuple(inner) => inner.type_name(),
+            TypeAtPath::Enum(inner) => inner.type_name(),
+            TypeAtPath::Variant(inner) => inner.type_name(),
+            TypeAtPath::List(inner) => inner.type_name(),
+            TypeAtPath::Array(inner) => inner.type_name(),
+            TypeAtPath::Map(inner) => inner.type_name(),
+            TypeAtPath::Scalar(inner) => inner.type_name(),
+            TypeAtPath::Opaque(inner) => inner.type_name(),
         }
     }
 
