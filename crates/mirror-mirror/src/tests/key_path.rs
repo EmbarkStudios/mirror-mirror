@@ -152,3 +152,23 @@ fn select_tuple_field() {
     assert_eq!(foo.get_at::<i32>(&key_path!(.0)).unwrap(), &42);
     assert_eq!(foo.get_at::<bool>(&key_path!(.1)).unwrap(), &true);
 }
+
+#[test]
+fn breadcrumbs() {
+    let path = key_path!(.a.b.c.d);
+
+    let actual = path
+        .breadcrumbs()
+        .map(|key| key.iter().cloned().collect::<KeyPath>());
+
+    let expected = Vec::from([
+        key_path!(.a),
+        key_path!(.a.b),
+        key_path!(.a.b.c),
+        key_path!(.a.b.c.d),
+    ]);
+
+    for (a, b) in actual.into_iter().zip(expected) {
+        assert_eq!(a, b);
+    }
+}
