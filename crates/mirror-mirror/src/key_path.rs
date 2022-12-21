@@ -2,6 +2,7 @@ use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
+use core::iter::FusedIterator;
 use core::iter::Peekable;
 
 use crate::enum_::VariantKind;
@@ -51,7 +52,7 @@ where
 
             let value_at_key = match head {
                 // .foo
-                Key::Field(private::KeyOrIndex::Key(key)) => match value.reflect_ref() {
+                Key::Field(KeyOrIndex::Key(key)) => match value.reflect_ref() {
                     ReflectRef::Struct(inner) => inner.field(key)?,
                     ReflectRef::Enum(inner) => match inner.variant_kind() {
                         VariantKind::Struct => inner.field(key)?,
@@ -66,7 +67,7 @@ where
                     | ReflectRef::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(private::KeyOrIndex::Index(index)) => match value.reflect_ref() {
+                Key::Field(KeyOrIndex::Index(index)) => match value.reflect_ref() {
                     ReflectRef::TupleStruct(inner) => inner.field_at(*index)?,
                     ReflectRef::Tuple(inner) => inner.field_at(*index)?,
                     ReflectRef::Enum(inner) => match inner.variant_kind() {
@@ -138,7 +139,7 @@ where
 
             let value_at_key = match head {
                 // .foo
-                Key::Field(private::KeyOrIndex::Key(key)) => match value.reflect_mut() {
+                Key::Field(KeyOrIndex::Key(key)) => match value.reflect_mut() {
                     ReflectMut::Struct(inner) => inner.field_mut(key)?,
                     ReflectMut::Enum(inner) => match inner.variant_kind() {
                         VariantKind::Struct => inner.field_mut(key)?,
@@ -153,7 +154,7 @@ where
                     | ReflectMut::Opaque(_) => return None,
                 },
                 // .0
-                Key::Field(private::KeyOrIndex::Index(index)) => match value.reflect_mut() {
+                Key::Field(KeyOrIndex::Index(index)) => match value.reflect_mut() {
                     ReflectMut::TupleStruct(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Tuple(inner) => inner.field_at_mut(*index)?,
                     ReflectMut::Enum(inner) => match inner.variant_kind() {
@@ -260,57 +261,151 @@ impl KeyPath {
     pub fn pop(&mut self) {
         self.path.pop();
     }
+
+    pub fn iter(&self) -> Iter<'_> {
+        self.into_iter()
+    }
 }
+
+impl IntoIterator for KeyPath {
+    type Item = Key;
+    type IntoIter = IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self.path.into_iter())
+    }
+}
+
+#[derive(Debug)]
+pub struct IntoIter(alloc::vec::IntoIter<Key>);
+
+impl Iterator for IntoIter {
+    type Item = Key;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl DoubleEndedIterator for IntoIter {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.0.next_back()
+    }
+}
+
+impl ExactSizeIterator for IntoIter {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl FusedIterator for IntoIter {}
+
+impl<'a> IntoIterator for &'a KeyPath {
+    type Item = &'a Key;
+    type IntoIter = Iter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter(self.path.iter())
+    }
+}
+
+#[derive(Debug)]
+pub struct Iter<'a>(alloc::slice::Iter<'a, Key>);
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = &'a Key;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl<'a> DoubleEndedIterator for Iter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.0.next_back()
+    }
+}
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}
 
 mod private {
     use super::*;
 
     pub trait Sealed {}
     impl Sealed for &str {}
+    impl Sealed for &String {}
     impl Sealed for String {}
     impl Sealed for usize {}
+}
 
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    #[allow(unreachable_pub)]
-    pub enum Key {
-        Field(KeyOrIndex),
-        FieldAt(Value),
-        Variant(String),
-    }
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum Key {
+    Field(KeyOrIndex),
+    FieldAt(Value),
+    Variant(String),
+}
 
-    #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub enum KeyOrIndex {
-        Key(String),
-        Index(usize),
+impl fmt::Display for Key {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Key::Field(key) => write!(f, "{key}"),
+            Key::FieldAt(value) => write!(f, "[{:?}]", value.as_reflect()),
+            Key::Variant(variant) => write!(f, "::{variant}"),
+        }
     }
 }
 
-pub(crate) use private::Key;
-pub(crate) use private::KeyOrIndex;
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum KeyOrIndex {
+    Key(String),
+    Index(usize),
+}
+
+impl fmt::Display for KeyOrIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            KeyOrIndex::Key(key) => write!(f, ".{key}"),
+            KeyOrIndex::Index(index) => write!(f, ".{index}"),
+        }
+    }
+}
 
 pub trait IntoKeyOrIndex: private::Sealed {
-    fn into_key_or_index(self) -> private::KeyOrIndex;
+    fn into_key_or_index(self) -> KeyOrIndex;
 }
 
 impl IntoKeyOrIndex for &str {
-    fn into_key_or_index(self) -> private::KeyOrIndex {
-        private::KeyOrIndex::Key(self.to_owned())
+    fn into_key_or_index(self) -> KeyOrIndex {
+        KeyOrIndex::Key(self.to_owned())
+    }
+}
+
+impl IntoKeyOrIndex for &String {
+    fn into_key_or_index(self) -> KeyOrIndex {
+        KeyOrIndex::Key(self.to_owned())
     }
 }
 
 impl IntoKeyOrIndex for String {
-    fn into_key_or_index(self) -> private::KeyOrIndex {
-        private::KeyOrIndex::Key(self)
+    fn into_key_or_index(self) -> KeyOrIndex {
+        KeyOrIndex::Key(self)
     }
 }
 
 impl IntoKeyOrIndex for usize {
-    fn into_key_or_index(self) -> private::KeyOrIndex {
-        private::KeyOrIndex::Index(self)
+    fn into_key_or_index(self) -> KeyOrIndex {
+        KeyOrIndex::Index(self)
     }
 }
 
@@ -414,12 +509,7 @@ macro_rules! key_path {
 impl fmt::Display for KeyPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for key in &self.path {
-            match key {
-                Key::Field(private::KeyOrIndex::Key(key)) => write!(f, ".{key}")?,
-                Key::Field(private::KeyOrIndex::Index(index)) => write!(f, ".{index}")?,
-                Key::FieldAt(value) => write!(f, "[{:?}]", value.as_reflect())?,
-                Key::Variant(variant) => write!(f, "::{variant}")?,
-            }
+            write!(f, "{key}")?;
         }
         Ok(())
     }
