@@ -278,6 +278,15 @@ impl KeyPath {
     }
 }
 
+impl Extend<Key> for KeyPath {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = Key>,
+    {
+        self.path.extend(iter);
+    }
+}
+
 impl IntoIterator for KeyPath {
     type Item = Key;
     type IntoIter = IntoIter;
