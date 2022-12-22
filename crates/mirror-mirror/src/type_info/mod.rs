@@ -23,6 +23,10 @@ use crate::Value;
 
 pub mod graph;
 
+mod simple_type_name;
+
+pub use self::simple_type_name::SimpleTypeName;
+
 /// Trait for accessing type information.
 ///
 /// Will be implemented by `#[derive(Reflect)]`.

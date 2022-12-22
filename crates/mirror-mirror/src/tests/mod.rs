@@ -6,6 +6,7 @@ mod key_path;
 mod list;
 mod map;
 mod meta;
+mod simple_type_name;
 mod struct_;
 mod tuple;
 mod tuple_struct;
