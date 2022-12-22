@@ -23,8 +23,10 @@ use crate::Value;
 
 pub mod graph;
 
+#[cfg(feature = "std")]
 mod simple_type_name;
 
+#[cfg(feature = "std")]
 pub use self::simple_type_name::SimpleTypeName;
 
 /// Trait for accessing type information.
