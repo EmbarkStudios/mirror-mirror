@@ -12,7 +12,7 @@ keywords = ["reflection"]
 
 [features]
 default = ["speedy", "serde", "std"]
-std = []
+std = ["dep:syn"]
 speedy = ["std", "dep:speedy"]
 serde = ["dep:serde"]
 
@@ -23,7 +23,7 @@ once_cell = { version = "1.16", features = ["alloc", "race", "critical-section"]
 ordered-float = { version = "3.4.0", default-features = false }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"], optional = true }
 speedy = { version = "0.8", optional = true }
-syn = { version = "1.0", default-features = false, features = ["full", "parsing"] }
+syn = { version = "1.0.102", features = ["full", "parsing"], optional = true }
 
 [package.metadata.docs.rs]
 all-features = true
