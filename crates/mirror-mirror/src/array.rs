@@ -1,4 +1,5 @@
 use core::fmt;
+use core::iter::FusedIterator;
 
 use crate::iter::ValueIterMut;
 use crate::Reflect;
@@ -27,12 +28,12 @@ impl fmt::Debug for dyn Array {
 #[derive(Debug)]
 pub struct Iter<'a> {
     index: usize,
-    reflect: &'a dyn Array,
+    array: &'a dyn Array,
 }
 
 impl<'a> Iter<'a> {
-    pub fn new(reflect: &'a dyn Array) -> Self {
-        Self { index: 0, reflect }
+    pub fn new(array: &'a dyn Array) -> Self {
+        Self { index: 0, array }
     }
 }
 
@@ -40,8 +41,16 @@ impl<'a> Iterator for Iter<'a> {
     type Item = &'a dyn Reflect;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let value = self.reflect.get(self.index)?;
+        let value = self.array.get(self.index)?;
         self.index += 1;
         Some(value)
     }
 }
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.array.len()
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}

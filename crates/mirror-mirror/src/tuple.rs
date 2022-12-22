@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 use core::any::Any;
 use core::fmt;
 use core::fmt::Debug;
+use core::iter::FusedIterator;
 
 use crate::iter::ValueIterMut;
 use crate::type_info::graph::NodeId;
@@ -346,3 +347,11 @@ impl<'a> Iterator for Iter<'a> {
         Some(value)
     }
 }
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.tuple.fields_len()
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}

@@ -2,6 +2,7 @@ use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use core::any::Any;
 use core::fmt;
+use core::iter::FusedIterator;
 
 use crate::iter::ValueIterMut;
 use crate::tuple::TupleValue;
@@ -191,3 +192,11 @@ impl<'a> Iterator for Iter<'a> {
         Some(value)
     }
 }
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.tuple_struct.fields_len()
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}

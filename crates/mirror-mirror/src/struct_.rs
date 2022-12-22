@@ -5,6 +5,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::Any;
 use core::fmt;
+use core::iter::FusedIterator;
 
 use crate::iter::PairIterMut;
 use crate::type_info::graph::NodeId;
@@ -218,3 +219,11 @@ impl<'a> Iterator for Iter<'a> {
         Some((name, value))
     }
 }
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.struct_.fields_len()
+    }
+}
+
+impl<'a> FusedIterator for Iter<'a> {}
