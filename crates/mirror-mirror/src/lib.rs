@@ -281,10 +281,6 @@ macro_rules! trivial_reflect_methods {
             self
         }
 
-        fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
-            self
-        }
-
         fn as_reflect(&self) -> &dyn Reflect {
             self
         }
@@ -418,8 +414,6 @@ pub trait Reflect: Any + Send + 'static {
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
-
-    fn into_reflect(self: Box<Self>) -> Box<dyn Reflect>;
 
     fn as_reflect(&self) -> &dyn Reflect;
 
@@ -745,20 +739,6 @@ pub enum ReflectOwned {
 }
 
 impl ReflectOwned {
-    pub fn into_reflect(self) -> Box<dyn Reflect> {
-        match self {
-            Self::Struct(inner) => inner.into_reflect(),
-            Self::TupleStruct(inner) => inner.into_reflect(),
-            Self::Tuple(inner) => inner.into_reflect(),
-            Self::Enum(inner) => inner.into_reflect(),
-            Self::Array(inner) => inner.into_reflect(),
-            Self::List(inner) => inner.into_reflect(),
-            Self::Map(inner) => inner.into_reflect(),
-            Self::Scalar(inner) => inner.into_reflect(),
-            Self::Opaque(inner) => inner.into_reflect(),
-        }
-    }
-
     pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         match self {
             ReflectOwned::Struct(inner) => inner.as_reflect_mut(),
@@ -890,27 +870,6 @@ pub enum ScalarOwned {
 }
 
 impl ScalarOwned {
-    pub fn into_reflect(self) -> Box<dyn Reflect> {
-        match self {
-            ScalarOwned::usize(inner) => Box::new(inner),
-            ScalarOwned::u8(inner) => Box::new(inner),
-            ScalarOwned::u16(inner) => Box::new(inner),
-            ScalarOwned::u32(inner) => Box::new(inner),
-            ScalarOwned::u64(inner) => Box::new(inner),
-            ScalarOwned::u128(inner) => Box::new(inner),
-            ScalarOwned::i8(inner) => Box::new(inner),
-            ScalarOwned::i16(inner) => Box::new(inner),
-            ScalarOwned::i32(inner) => Box::new(inner),
-            ScalarOwned::i64(inner) => Box::new(inner),
-            ScalarOwned::i128(inner) => Box::new(inner),
-            ScalarOwned::bool(inner) => Box::new(inner),
-            ScalarOwned::char(inner) => Box::new(inner),
-            ScalarOwned::f32(inner) => Box::new(inner),
-            ScalarOwned::f64(inner) => Box::new(inner),
-            ScalarOwned::String(inner) => Box::new(inner),
-        }
-    }
-
     pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         match self {
             ScalarOwned::usize(inner) => inner,

@@ -42,10 +42,6 @@ where
         <T as Reflect>::as_any_mut(self)
     }
 
-    fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
-        <T as Reflect>::into_reflect(*self)
-    }
-
     fn as_reflect(&self) -> &dyn Reflect {
         <T as Reflect>::as_reflect(self)
     }
