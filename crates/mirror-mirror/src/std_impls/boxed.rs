@@ -34,10 +34,6 @@ where
         <T as Typed>::type_descriptor()
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        <T as Reflect>::into_any(*self)
-    }
-
     fn as_any(&self) -> &dyn Any {
         <T as Reflect>::as_any(self)
     }

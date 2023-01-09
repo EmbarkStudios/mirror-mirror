@@ -273,10 +273,6 @@ use crate::enum_::VariantKind;
 
 macro_rules! trivial_reflect_methods {
     () => {
-        fn into_any(self: Box<Self>) -> Box<dyn Any> {
-            self
-        }
-
         fn as_any(&self) -> &dyn Any {
             self
         }
@@ -418,8 +414,6 @@ pub use self::value::Value;
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor>;
-
-    fn into_any(self: Box<Self>) -> Box<dyn Any>;
 
     fn as_any(&self) -> &dyn Any;
 

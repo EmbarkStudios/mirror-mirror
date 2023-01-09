@@ -186,10 +186,6 @@ impl Reflect for Value {
         <Self as Typed>::type_descriptor()
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        for_each_variant!(*self, inner => Box::new(inner))
-    }
-
     fn as_any(&self) -> &dyn Any {
         for_each_variant!(self, inner => inner)
     }
