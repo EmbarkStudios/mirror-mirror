@@ -186,8 +186,6 @@ impl TupleVariantBuilder {
 impl Reflect for EnumValue {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl DescribeType for EnumValue {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)

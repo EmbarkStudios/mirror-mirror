@@ -24,8 +24,6 @@ where
         where
             T: DescribeType,
         {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 T::build(graph)
             }

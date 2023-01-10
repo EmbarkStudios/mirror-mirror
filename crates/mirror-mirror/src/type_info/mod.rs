@@ -33,8 +33,51 @@ pub use self::simple_type_name::SimpleTypeName;
 ///
 /// Will be implemented by `#[derive(Reflect)]`.
 pub trait DescribeType: 'static {
-    fn type_descriptor() -> Cow<'static, TypeDescriptor>;
+    /// Creates a type descriptor for the current type.
+    ///
+    /// On targets with the standard library, it's done only once per process, then subsequent
+    /// accesses are "free" because the result is cached. On non-std targets, the type descriptor
+    /// is recomputed and reallocated on each call.
+    fn type_descriptor() -> Cow<'static, TypeDescriptor> {
+        #[cfg(feature = "std")]
+        {
+            use crate::__private::*;
+            use std::collections::HashMap;
+            use std::sync::RwLock;
 
+            // a map required for generic types to have different type descriptors such as
+            // `Vec<i32>` and `Vec<bool>`
+            static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor>>> = OnceBox::new();
+
+            let type_id = TypeId::of::<Self>();
+
+            let lock = INFO.get_or_init(Box::default);
+            if let Some(info) = lock.read().unwrap().get(&type_id) {
+                return Cow::Borrowed(info);
+            }
+
+            let mut map = lock.write().unwrap();
+            let info = map.entry(type_id).or_insert_with(|| {
+                let mut graph = TypeGraph::default();
+                let id = Self::build(&mut graph);
+                let info = TypeDescriptor::new(id, graph);
+                Box::leak(Box::new(info))
+            });
+            Cow::Borrowed(*info)
+        }
+
+        #[cfg(not(feature = "std"))]
+        {
+            use crate::__private::*;
+
+            let mut graph = TypeGraph::default();
+            let id = Self::build(&mut graph);
+            Cow::Owned(TypeDescriptor::new(id, graph))
+        }
+    }
+
+    /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
+    /// for the root item.
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
 
@@ -53,8 +96,7 @@ pub struct TypeDescriptor {
 }
 
 impl TypeDescriptor {
-    #[doc(hidden)]
-    pub fn __private_new(root: NodeId, graph: TypeGraph) -> Self {
+    fn new(root: NodeId, graph: TypeGraph) -> Self {
         Self { root, graph }
     }
 

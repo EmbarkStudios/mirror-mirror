@@ -487,8 +487,6 @@ macro_rules! scalar_typed {
     ($($ty:ident)*) => {
         $(
             impl DescribeType for $ty {
-                fn_type_descriptor!();
-
                 fn build(graph: &mut TypeGraph) -> NodeId {
                     graph.get_or_build_node_with::<Self, _>(|_graph| ScalarNode::$ty)
                 }
