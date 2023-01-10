@@ -87,8 +87,6 @@ where
         where
             T: Typed,
         {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| ListNode::new::<Self, T>(graph))
             }

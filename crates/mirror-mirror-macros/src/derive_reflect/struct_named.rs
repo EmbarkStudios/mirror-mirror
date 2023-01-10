@@ -113,8 +113,6 @@ fn expand_reflect(
         quote! {
             fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
                 impl #impl_generics Typed for #ident #type_generics #where_clause {
-                    fn_type_descriptor!();
-
                     fn build(graph: &mut TypeGraph) -> NodeId {
                         graph.get_or_build_node_with::<Self, _>(|graph| {
                             let fields = &[#(#code_for_fields),*];

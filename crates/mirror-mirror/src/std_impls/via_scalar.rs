@@ -19,8 +19,6 @@ macro_rules! impl_reflect_via_scalar {
             impl Reflect for $ty {
                 fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
                     impl Typed for $ty {
-                        fn_type_descriptor!();
-
                         fn build(graph: &mut TypeGraph) -> NodeId {
                             graph.get_or_build_node_with::<Self, _>(|graph| {
                                 OpaqueNode::new::<Self>(Default::default(), graph)

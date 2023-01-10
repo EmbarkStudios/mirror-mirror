@@ -82,8 +82,6 @@ where
             K: Typed,
             V: Typed,
         {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
             }

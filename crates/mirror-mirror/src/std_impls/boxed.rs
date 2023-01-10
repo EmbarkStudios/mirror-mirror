@@ -24,8 +24,6 @@ where
         where
             T: Typed,
         {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 T::build(graph)
             }

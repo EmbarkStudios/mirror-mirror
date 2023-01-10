@@ -88,8 +88,6 @@ impl Tuple for TupleValue {
 impl Reflect for TupleValue {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl Typed for TupleValue {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
@@ -159,8 +157,6 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + Typed + Clone,)*
         {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     let fields = &[

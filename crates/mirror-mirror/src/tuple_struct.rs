@@ -66,8 +66,6 @@ impl TupleStructValue {
 impl Reflect for TupleStructValue {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
         impl Typed for TupleStructValue {
-            fn_type_descriptor!();
-
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)

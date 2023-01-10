@@ -33,7 +33,43 @@ pub use self::simple_type_name::SimpleTypeName;
 ///
 /// Will be implemented by `#[derive(Reflect)]`.
 pub trait Typed: 'static {
-    fn type_descriptor() -> Cow<'static, TypeDescriptor>;
+    fn type_descriptor() -> Cow<'static, TypeDescriptor> {
+        #[cfg(feature = "std")]
+        {
+            use crate::__private::*;
+            use std::collections::HashMap;
+            use std::sync::RwLock;
+
+            // a map required for generic types to have different type descriptors such as
+            // `Vec<i32>` and `Vec<bool>`
+            static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor>>> = OnceBox::new();
+
+            let type_id = TypeId::of::<Self>();
+
+            let lock = INFO.get_or_init(Box::default);
+            if let Some(info) = lock.read().unwrap().get(&type_id) {
+                return Cow::Borrowed(info);
+            }
+
+            let mut map = lock.write().unwrap();
+            let info = map.entry(type_id).or_insert_with(|| {
+                let mut graph = TypeGraph::default();
+                let id = Self::build(&mut graph);
+                let info = TypeDescriptor::__private_new(id, graph);
+                Box::leak(Box::new(info))
+            });
+            Cow::Borrowed(*info)
+        }
+
+        #[cfg(not(feature = "std"))]
+        {
+            use crate::__private::*;
+
+            let mut graph = TypeGraph::default();
+            let id = Self::build(&mut graph);
+            Cow::Owned(TypeDescriptor::__private_new(id, graph))
+        }
+    }
 
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
