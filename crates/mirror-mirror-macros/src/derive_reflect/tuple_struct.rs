@@ -114,7 +114,7 @@ fn expand_reflect(
 
         quote! {
             fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                impl #impl_generics Typed for #ident #type_generics #where_clause {
+                impl #impl_generics DescribeType for #ident #type_generics #where_clause {
                     fn_type_descriptor!();
 
                     fn build(graph: &mut TypeGraph) -> NodeId {
@@ -125,7 +125,7 @@ fn expand_reflect(
                     }
                 }
 
-                <Self as Typed>::type_descriptor()
+                <Self as DescribeType>::type_descriptor()
             }
         }
     };

@@ -6,23 +6,23 @@ use core::fmt;
 use crate::reflect_debug;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::Typed;
 use crate::Value;
 
 impl<T> Reflect for Box<T>
 where
-    T: Reflect + Typed,
+    T: Reflect + DescribeType,
 {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<T> Typed for Box<T>
+        impl<T> DescribeType for Box<T>
         where
-            T: Typed,
+            T: DescribeType,
         {
             fn_type_descriptor!();
 
@@ -31,7 +31,7 @@ where
             }
         }
 
-        <T as Typed>::type_descriptor()
+        <T as DescribeType>::type_descriptor()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -81,7 +81,7 @@ where
 
 impl<T> FromReflect for Box<T>
 where
-    T: FromReflect + Typed,
+    T: FromReflect + DescribeType,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         Some(Box::new(T::from_reflect(reflect)?))

@@ -11,13 +11,13 @@ use crate::iter::PairIterMut;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::Typed;
 use crate::Value;
 
 /// A reflected struct type.
@@ -75,7 +75,7 @@ impl StructValue {
 
 impl Reflect for StructValue {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl Typed for StructValue {
+        impl DescribeType for StructValue {
             fn_type_descriptor!();
 
             fn build(graph: &mut TypeGraph) -> NodeId {
@@ -84,7 +84,7 @@ impl Reflect for StructValue {
                 })
             }
         }
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     trivial_reflect_methods!();

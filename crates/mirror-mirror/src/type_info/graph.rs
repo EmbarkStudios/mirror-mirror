@@ -65,7 +65,7 @@ impl TypeGraph {
     pub fn get_or_build_node_with<T, I>(&mut self, f: impl FnOnce(&mut Self) -> I) -> NodeId
     where
         I: Into<TypeNode>,
-        T: Typed,
+        T: DescribeType,
     {
         let id = NodeId::new::<T>();
         match self.map.get(&id) {
@@ -137,7 +137,7 @@ impl StructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -180,7 +180,7 @@ impl TupleStructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -208,7 +208,7 @@ impl EnumNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -325,7 +325,7 @@ impl TupleNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -354,7 +354,7 @@ impl NamedFieldNode {
         graph: &mut TypeGraph,
     ) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             name: name.to_owned(),
@@ -381,7 +381,7 @@ impl UnnamedFieldNode {
         graph: &mut TypeGraph,
     ) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             id: T::build(graph),
@@ -403,8 +403,8 @@ pub struct ArrayNode {
 impl ArrayNode {
     pub(crate) fn new<L, T, const N: usize>(graph: &mut TypeGraph) -> Self
     where
-        L: Typed,
-        T: Typed,
+        L: DescribeType,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<L>().to_owned(),
@@ -425,8 +425,8 @@ pub struct ListNode {
 impl ListNode {
     pub(crate) fn new<L, T>(graph: &mut TypeGraph) -> Self
     where
-        L: Typed,
-        T: Typed,
+        L: DescribeType,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<L>().to_owned(),
@@ -447,9 +447,9 @@ pub struct MapNode {
 impl MapNode {
     pub(crate) fn new<M, K, V>(graph: &mut TypeGraph) -> Self
     where
-        M: Typed,
-        K: Typed,
-        V: Typed,
+        M: DescribeType,
+        K: DescribeType,
+        V: DescribeType,
     {
         Self {
             type_name: type_name::<M>().to_owned(),
@@ -485,7 +485,7 @@ pub enum ScalarNode {
 macro_rules! scalar_typed {
     ($($ty:ident)*) => {
         $(
-            impl Typed for $ty {
+            impl DescribeType for $ty {
                 fn_type_descriptor!();
 
                 fn build(graph: &mut TypeGraph) -> NodeId {
@@ -514,7 +514,7 @@ pub struct OpaqueNode {
 impl OpaqueNode {
     pub fn new<T>(metadata: BTreeMap<&'static str, Value>, _graph: &mut TypeGraph) -> Self
     where
-        T: Typed,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),

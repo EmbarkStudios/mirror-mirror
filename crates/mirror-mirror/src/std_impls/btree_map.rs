@@ -8,6 +8,7 @@ use crate::iter::PairIterMut;
 use crate::type_info::graph::MapNode;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Map;
 use crate::Reflect;
@@ -15,13 +16,12 @@ use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::Typed;
 use crate::Value;
 
 impl<K, V> Map for BTreeMap<K, V>
 where
-    K: FromReflect + Typed + Ord,
-    V: FromReflect + Typed,
+    K: FromReflect + DescribeType + Ord,
+    V: FromReflect + DescribeType,
 {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
         let key = K::from_reflect(key)?;
@@ -73,14 +73,14 @@ where
 
 impl<K, V> Reflect for BTreeMap<K, V>
 where
-    K: FromReflect + Typed + Ord,
-    V: FromReflect + Typed,
+    K: FromReflect + DescribeType + Ord,
+    V: FromReflect + DescribeType,
 {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<K, V> Typed for BTreeMap<K, V>
+        impl<K, V> DescribeType for BTreeMap<K, V>
         where
-            K: Typed,
-            V: Typed,
+            K: DescribeType,
+            V: DescribeType,
         {
             fn_type_descriptor!();
 
@@ -89,7 +89,7 @@ where
             }
         }
 
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     trivial_reflect_methods!();
@@ -136,8 +136,8 @@ where
 
 impl<K, V> FromReflect for BTreeMap<K, V>
 where
-    K: FromReflect + Typed + Ord,
-    V: FromReflect + Typed,
+    K: FromReflect + DescribeType + Ord,
+    V: FromReflect + DescribeType,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_reflect().as_map()?;

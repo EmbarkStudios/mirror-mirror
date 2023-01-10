@@ -13,7 +13,7 @@ fn struct_() {
         foos: Vec<Foo>,
     }
 
-    let type_info = <Foo as Typed>::type_descriptor();
+    let type_info = <Foo as DescribeType>::type_descriptor();
 
     assert_eq!(
         type_info.get_type().type_name(),
@@ -74,7 +74,7 @@ fn complex_meta_type() {
     #[reflect(crate_name(crate), meta(a = Foo(1337)))]
     struct Foo(i32);
 
-    let type_info = <Foo as Typed>::type_descriptor();
+    let type_info = <Foo as DescribeType>::type_descriptor();
 
     let foo = type_info.get_type().get_meta::<Foo>("a").unwrap();
     assert_eq!(foo, Foo(1337));
@@ -86,7 +86,7 @@ fn type_to_root() {
     #[reflect(crate_name(crate), meta(a = Foo(1337)))]
     struct Foo(i32);
 
-    let type_info = <Foo as Typed>::type_descriptor();
+    let type_info = <Foo as DescribeType>::type_descriptor();
 
     assert_eq!(
         type_info.get_type().as_tuple_struct().unwrap().type_name(),
@@ -112,7 +112,7 @@ fn two_types() {
     struct Bar(bool);
 
     assert_eq!(
-        <Foo as Typed>::type_descriptor()
+        <Foo as DescribeType>::type_descriptor()
             .as_tuple_struct()
             .unwrap()
             .field_type_at(0)
@@ -124,7 +124,7 @@ fn two_types() {
     );
 
     assert_eq!(
-        <Bar as Typed>::type_descriptor()
+        <Bar as DescribeType>::type_descriptor()
             .as_tuple_struct()
             .unwrap()
             .field_type_at(0)
@@ -142,10 +142,10 @@ fn how_to_handle_generics() {
     #[reflect(crate_name(crate), opt_out(Debug, Clone))]
     struct Foo<T>(T)
     where
-        T: Reflect + FromReflect + Typed;
+        T: Reflect + FromReflect + DescribeType;
 
     assert_eq!(
-        <Foo<i32> as Typed>::type_descriptor()
+        <Foo<i32> as DescribeType>::type_descriptor()
             .as_tuple_struct()
             .unwrap()
             .field_type_at(0)
@@ -157,7 +157,7 @@ fn how_to_handle_generics() {
     );
 
     assert_eq!(
-        <Foo<bool> as Typed>::type_descriptor()
+        <Foo<bool> as DescribeType>::type_descriptor()
             .as_tuple_struct()
             .unwrap()
             .field_type_at(0)

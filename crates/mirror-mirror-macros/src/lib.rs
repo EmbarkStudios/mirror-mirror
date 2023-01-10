@@ -191,7 +191,7 @@ mod derive_reflect;
 ///     key_path,
 ///     key_path::GetTypePath,
 ///     FromReflect,
-///     type_info::{GetMeta, Typed},
+///     type_info::{GetMeta, DescribeType},
 /// };
 ///
 /// #[derive(Reflect, Debug, Clone)]
@@ -208,7 +208,7 @@ mod derive_reflect;
 /// }
 ///
 /// // Access the metadata through the type information
-/// let type_info = <Foo as Typed>::type_descriptor();
+/// let type_info = <Foo as DescribeType>::type_descriptor();
 ///
 /// assert_eq!(
 ///     type_info.get_meta::<String>("item_key").unwrap(),
