@@ -52,7 +52,7 @@ impl fmt::Debug for dyn Struct {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructValue {
     field_names: Vec<String>,
-    // use a `BTreeMap` because `HashMap` isn't `Hash`
+    // use a `BTreeMap` because `HashMap` isn't `serde::Serialize`
     fields: BTreeMap<String, Value>,
 }
 
