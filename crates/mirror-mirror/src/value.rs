@@ -186,20 +186,12 @@ impl Reflect for Value {
         <Self as Typed>::type_descriptor()
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        for_each_variant!(*self, inner => Box::new(inner))
-    }
-
     fn as_any(&self) -> &dyn Any {
         for_each_variant!(self, inner => inner)
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         for_each_variant!(self, inner => inner)
-    }
-
-    fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
-        for_each_variant!(*self, inner => Box::new(inner))
     }
 
     fn as_reflect(&self) -> &dyn Reflect {

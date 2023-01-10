@@ -34,20 +34,12 @@ where
         <T as Typed>::type_descriptor()
     }
 
-    fn into_any(self: Box<Self>) -> Box<dyn Any> {
-        <T as Reflect>::into_any(*self)
-    }
-
     fn as_any(&self) -> &dyn Any {
         <T as Reflect>::as_any(self)
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         <T as Reflect>::as_any_mut(self)
-    }
-
-    fn into_reflect(self: Box<Self>) -> Box<dyn Reflect> {
-        <T as Reflect>::into_reflect(*self)
     }
 
     fn as_reflect(&self) -> &dyn Reflect {
