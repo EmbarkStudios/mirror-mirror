@@ -1,6 +1,6 @@
 use crate::FromReflect;
 use crate::Reflect;
-use crate::Typed;
+use crate::DescribeType;
 
 #[test]
 fn from_default() {
@@ -8,7 +8,7 @@ fn from_default() {
     #[reflect(crate_name(crate))]
     struct Foo([i32; 5]);
 
-    let foo_default_value = <Foo as Typed>::type_descriptor().default_value().unwrap();
+    let foo_default_value = <Foo as DescribeType>::type_descriptor().default_value().unwrap();
 
     let foo = Foo::from_reflect(&foo_default_value).unwrap();
 

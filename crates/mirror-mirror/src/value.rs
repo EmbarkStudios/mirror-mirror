@@ -26,7 +26,7 @@ use crate::ScalarMut;
 use crate::ScalarOwned;
 use crate::ScalarRef;
 use crate::TypeDescriptor;
-use crate::Typed;
+use crate::DescribeType;
 
 /// A type erased value type.
 ///
@@ -173,7 +173,7 @@ macro_rules! for_each_variant {
 
 impl Reflect for Value {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl Typed for Value {
+        impl DescribeType for Value {
             fn_type_descriptor!();
 
             fn build(graph: &mut TypeGraph) -> NodeId {
@@ -183,7 +183,7 @@ impl Reflect for Value {
             }
         }
 
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     fn into_any(self: Box<Self>) -> Box<dyn Any> {

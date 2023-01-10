@@ -6,7 +6,7 @@ use crate::GetField;
 use crate::GetFieldMut;
 use crate::Map;
 use crate::Reflect;
-use crate::Typed;
+use crate::DescribeType;
 
 #[test]
 fn works() {
@@ -57,7 +57,7 @@ fn exoctic_value_type() {
     }
 
     let mut map = BTreeMap::<i32, Foo>::new();
-    let foo_default_value = <Foo as Typed>::type_descriptor().default_value().unwrap();
+    let foo_default_value = <Foo as DescribeType>::type_descriptor().default_value().unwrap();
     map.as_map_mut().unwrap().insert(&1, &foo_default_value);
     assert_eq!(map.len(), 1);
 }

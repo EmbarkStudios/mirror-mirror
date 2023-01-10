@@ -32,7 +32,7 @@ use syn::{
 ///
 /// `SimpleTypeName` doesn't support printing absolutely all Rust types. It supports the most
 /// common ones but exotic types like function pointers or trait objects are not supported. Such
-/// types don't implement [`Typed`](super::Typed) anyway and are unlikely to show up when using
+/// types don't implement [`DescribeType`](super::DescribeType) anyway and are unlikely to show up when using
 /// `mirror-mirror`.
 ///
 /// Thus be careful when calling `to_string()` or using `format!()` as those will panic on

@@ -11,7 +11,7 @@ use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
 use crate::Struct;
-use crate::Typed;
+use crate::DescribeType;
 use crate::Value;
 
 #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]
@@ -210,7 +210,7 @@ fn accessing_docs_in_type_info() {
         },
     }
 
-    let type_info = <Foo as Typed>::type_descriptor();
+    let type_info = <Foo as DescribeType>::type_descriptor();
 
     assert_eq!(
         type_info.get_type().docs(),

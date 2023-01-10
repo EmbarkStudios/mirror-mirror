@@ -15,17 +15,17 @@ use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::Typed;
+use crate::DescribeType;
 use crate::Value;
 
 impl<T, const N: usize> Reflect for [T; N]
 where
-    T: FromReflect + Typed,
+    T: FromReflect + DescribeType,
 {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<T, const N: usize> Typed for [T; N]
+        impl<T, const N: usize> DescribeType for [T; N]
         where
-            T: Typed,
+            T: DescribeType,
         {
             fn_type_descriptor!();
 
@@ -34,7 +34,7 @@ where
             }
         }
 
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     trivial_reflect_methods!();
@@ -78,7 +78,7 @@ where
 
 impl<T, const N: usize> Array for [T; N]
 where
-    T: FromReflect + Typed,
+    T: FromReflect + DescribeType,
 {
     fn get(&self, index: usize) -> Option<&dyn Reflect> {
         self.as_slice().get(index).map(|value| value.as_reflect())
@@ -113,7 +113,7 @@ where
 
 impl<T, const N: usize> FromReflect for [T; N]
 where
-    T: FromReflect + Typed,
+    T: FromReflect + DescribeType,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         Vec::<T>::from_reflect(reflect)?.try_into().ok()

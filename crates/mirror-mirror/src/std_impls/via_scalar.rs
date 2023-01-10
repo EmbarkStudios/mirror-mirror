@@ -18,7 +18,7 @@ macro_rules! impl_reflect_via_scalar {
 
             impl Reflect for $ty {
                 fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                    impl Typed for $ty {
+                    impl DescribeType for $ty {
                         fn_type_descriptor!();
 
                         fn build(graph: &mut TypeGraph) -> NodeId {
@@ -27,7 +27,7 @@ macro_rules! impl_reflect_via_scalar {
                             })
                         }
                     }
-                    <Self as Typed>::type_descriptor()
+                    <Self as DescribeType>::type_descriptor()
                 }
 
                 trivial_reflect_methods!();
@@ -120,19 +120,19 @@ impl<T> IntoOption<T> for T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Typed;
+    use crate::DescribeType;
 
     #[test]
     fn keeps_type_name() {
         assert_eq!(
-            <NonZeroI8 as Typed>::type_descriptor()
+            <NonZeroI8 as DescribeType>::type_descriptor()
                 .get_type()
                 .type_name(),
             "core::num::nonzero::NonZeroI8"
         );
 
         assert_eq!(
-            <Duration as Typed>::type_descriptor()
+            <Duration as DescribeType>::type_descriptor()
                 .get_type()
                 .type_name(),
             "core::time::Duration"

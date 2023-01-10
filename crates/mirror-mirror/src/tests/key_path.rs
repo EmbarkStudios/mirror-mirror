@@ -5,7 +5,7 @@ use crate::key_path::*;
 use crate::type_info::ScalarType;
 use crate::type_info::TypeAtPath;
 use crate::Reflect;
-use crate::Typed;
+use crate::DescribeType;
 
 #[test]
 #[allow(clippy::bool_assert_comparison)]
@@ -99,7 +99,7 @@ fn query_type_info_struct() {
 
     assert_eq!(user.get_at::<String>(&key_path).unwrap(), "Denmark");
 
-    let type_info = <User as Typed>::type_descriptor();
+    let type_info = <User as DescribeType>::type_descriptor();
 
     assert!(matches!(
         dbg!(type_info.type_at(&key_path).unwrap()),
@@ -118,24 +118,24 @@ fn query_type_info_enum() {
     }
 
     assert!(matches!(
-        dbg!(<Foo as Typed>::type_descriptor()
+        dbg!(<Foo as DescribeType>::type_descriptor()
             .type_at(&key_path!(::A.a))
             .unwrap()),
         TypeAtPath::Scalar(ScalarType::String)
     ));
 
     assert!(matches!(
-        dbg!(<Foo as Typed>::type_descriptor()
+        dbg!(<Foo as DescribeType>::type_descriptor()
             .type_at(&key_path!(::B.0))
             .unwrap()),
         TypeAtPath::Scalar(ScalarType::i32)
     ));
 
-    assert!(<Foo as Typed>::type_descriptor()
+    assert!(<Foo as DescribeType>::type_descriptor()
         .type_at(&key_path!(::B[0]))
         .is_none());
 
-    let info = <Foo as Typed>::type_descriptor();
+    let info = <Foo as DescribeType>::type_descriptor();
     let variant = info.type_at(&key_path!(::C)).unwrap().as_variant().unwrap();
 
     assert_eq!(variant.name(), "C");
