@@ -17,6 +17,7 @@ use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -26,7 +27,6 @@ use crate::ScalarMut;
 use crate::ScalarOwned;
 use crate::ScalarRef;
 use crate::TypeDescriptor;
-use crate::DescribeType;
 
 /// A type erased value type.
 ///

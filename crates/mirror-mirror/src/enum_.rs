@@ -12,6 +12,7 @@ use crate::tuple::TupleValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -20,7 +21,6 @@ use crate::ReflectRef;
 use crate::Struct;
 use crate::Tuple;
 use crate::TypeDescriptor;
-use crate::DescribeType;
 use crate::Value;
 
 /// A reflected enum type.

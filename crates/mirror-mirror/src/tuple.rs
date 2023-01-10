@@ -12,13 +12,13 @@ use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TupleNode;
 use crate::type_info::graph::TypeGraph;
 use crate::type_info::graph::UnnamedFieldNode;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::DescribeType;
 use crate::Value;
 
 /// A reflected tuple type.

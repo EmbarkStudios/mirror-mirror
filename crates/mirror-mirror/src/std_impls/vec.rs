@@ -8,6 +8,7 @@ use crate::iter::ValueIterMut;
 use crate::type_info::graph::ListNode;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::List;
 use crate::Reflect;
@@ -15,7 +16,6 @@ use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::DescribeType;
 use crate::Value;
 
 impl<T> List for Vec<T>

@@ -9,13 +9,13 @@ use crate::iter::ValueIterMut;
 use crate::type_info::graph::ArrayNode;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::DescribeType;
 use crate::Value;
 
 impl<T, const N: usize> Reflect for [T; N]

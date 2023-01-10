@@ -1,6 +1,6 @@
 use crate::type_info::GetMeta;
-use crate::Reflect;
 use crate::DescribeType;
+use crate::Reflect;
 
 #[test]
 fn works() {

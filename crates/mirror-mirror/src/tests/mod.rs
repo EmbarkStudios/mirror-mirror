@@ -111,8 +111,8 @@ mod derive_foreign {
 
     use mirror_mirror_macros::*;
 
-    use crate::FromReflect;
     use crate::DescribeType;
+    use crate::FromReflect;
 
     enum Foo<A, B>
     where

@@ -409,9 +409,9 @@ pub use self::tuple::Tuple;
 #[doc(inline)]
 pub use self::tuple_struct::TupleStruct;
 #[doc(inline)]
-pub use self::type_info::TypeDescriptor;
-#[doc(inline)]
 pub use self::type_info::DescribeType;
+#[doc(inline)]
+pub use self::type_info::TypeDescriptor;
 #[doc(inline)]
 pub use self::value::Value;
 

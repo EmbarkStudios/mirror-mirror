@@ -7,11 +7,11 @@ use crate::key_path;
 use crate::key_path::GetTypePath;
 use crate::struct_::StructValue;
 use crate::type_info::GetMeta;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
 use crate::Struct;
-use crate::DescribeType;
 use crate::Value;
 
 #[derive(Reflect, Default, Clone, Eq, PartialEq, Debug)]

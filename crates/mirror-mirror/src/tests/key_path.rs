@@ -4,8 +4,8 @@ use crate::key_path;
 use crate::key_path::*;
 use crate::type_info::ScalarType;
 use crate::type_info::TypeAtPath;
-use crate::Reflect;
 use crate::DescribeType;
+use crate::Reflect;
 
 #[test]
 #[allow(clippy::bool_assert_comparison)]
