@@ -12,13 +12,13 @@ use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TupleNode;
 use crate::type_info::graph::TypeGraph;
 use crate::type_info::graph::UnnamedFieldNode;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::TypeDescriptor;
-use crate::Typed;
 use crate::Value;
 
 /// A reflected tuple type.
@@ -87,14 +87,14 @@ impl Tuple for TupleValue {
 
 impl Reflect for TupleValue {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl Typed for TupleValue {
+        impl DescribeType for TupleValue {
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }
         }
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     trivial_reflect_methods!();
@@ -153,9 +153,9 @@ impl FromReflect for TupleValue {
 macro_rules! impl_tuple {
     ($($ident:ident),* $(,)?) => {
         #[allow(non_snake_case, unused_mut, unused_variables)]
-        impl<$($ident,)*> Typed for ($($ident,)*)
+        impl<$($ident,)*> DescribeType for ($($ident,)*)
         where
-            $($ident: Reflect + Typed + Clone,)*
+            $($ident: Reflect + DescribeType + Clone,)*
         {
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
@@ -172,10 +172,10 @@ macro_rules! impl_tuple {
         #[allow(non_snake_case, unused_mut, unused_variables)]
         impl<$($ident,)*> Reflect for ($($ident,)*)
         where
-            $($ident: Reflect + Typed + Clone,)*
+            $($ident: Reflect + DescribeType + Clone,)*
         {
             fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                <Self as Typed>::type_descriptor()
+                <Self as DescribeType>::type_descriptor()
             }
 
             trivial_reflect_methods!();
@@ -227,7 +227,7 @@ macro_rules! impl_tuple {
         #[allow(non_snake_case, unused_mut, unused_assignments, unused_variables)]
         impl<$($ident,)*> Tuple for ($($ident,)*)
         where
-            $($ident: Reflect + Typed + Clone,)*
+            $($ident: Reflect + DescribeType + Clone,)*
         {
             fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
                 let mut i = 0;
@@ -275,7 +275,7 @@ macro_rules! impl_tuple {
         #[allow(non_snake_case, unused_mut, unused_assignments, unused_variables)]
         impl<$($ident,)*> FromReflect for ($($ident,)*)
         where
-            $($ident: FromReflect + Typed + Clone,)*
+            $($ident: FromReflect + DescribeType + Clone,)*
         {
             fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
                 let tuple = reflect.as_tuple()?;

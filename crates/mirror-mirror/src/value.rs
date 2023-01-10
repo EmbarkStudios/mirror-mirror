@@ -17,6 +17,7 @@ use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -26,7 +27,6 @@ use crate::ScalarMut;
 use crate::ScalarOwned;
 use crate::ScalarRef;
 use crate::TypeDescriptor;
-use crate::Typed;
 
 /// A type erased value type.
 ///
@@ -173,7 +173,7 @@ macro_rules! for_each_variant {
 
 impl Reflect for Value {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl Typed for Value {
+        impl DescribeType for Value {
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
@@ -181,7 +181,7 @@ impl Reflect for Value {
             }
         }
 
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     fn as_any(&self) -> &dyn Any {

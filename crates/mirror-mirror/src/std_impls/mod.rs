@@ -16,7 +16,7 @@ __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]
     enum Option<T>
     where
-        T: FromReflect + Typed,
+        T: FromReflect + DescribeType,
     {
         None,
         Some(T),
@@ -27,8 +27,8 @@ __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]
     enum Result<T, E>
     where
-        T: FromReflect + Typed,
-        E: FromReflect + Typed,
+        T: FromReflect + DescribeType,
+        E: FromReflect + DescribeType,
     {
         Ok(T),
         Err(E),
@@ -39,7 +39,7 @@ __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]
     struct Range<Idx>
     where
-        Idx: FromReflect + Typed,
+        Idx: FromReflect + DescribeType,
     {
         start: Idx,
         end: Idx,
@@ -50,7 +50,7 @@ __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]
     struct RangeFrom<Idx>
     where
-        Idx: FromReflect + Typed,
+        Idx: FromReflect + DescribeType,
     {
         start: Idx,
     }
@@ -65,7 +65,7 @@ __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]
     struct RangeToInclusive<Idx>
     where
-        Idx: FromReflect + Typed,
+        Idx: FromReflect + DescribeType,
     {
         end: Idx,
     }
@@ -75,7 +75,7 @@ __private_derive_reflect_foreign! {
     #[reflect(opt_out(Clone, Debug), crate_name(crate))]
     struct RangeTo<Idx>
     where
-        Idx: FromReflect + Typed,
+        Idx: FromReflect + DescribeType,
     {
         end: Idx,
     }

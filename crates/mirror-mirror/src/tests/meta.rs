@@ -1,6 +1,6 @@
 use crate::type_info::GetMeta;
+use crate::DescribeType;
 use crate::Reflect;
-use crate::Typed;
 
 #[test]
 fn works() {
@@ -8,7 +8,7 @@ fn works() {
     #[reflect(crate_name(crate), meta(foo = "bar", baz = 42))]
     struct Foo;
 
-    let type_info = <Foo as Typed>::type_descriptor();
+    let type_info = <Foo as DescribeType>::type_descriptor();
     let type_info = type_info.get_type().as_struct().unwrap();
 
     assert_eq!(

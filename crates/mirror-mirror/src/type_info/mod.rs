@@ -32,7 +32,7 @@ pub use self::simple_type_name::SimpleTypeName;
 /// Trait for accessing type information.
 ///
 /// Will be implemented by `#[derive(Reflect)]`.
-pub trait Typed: 'static {
+pub trait DescribeType: 'static {
     /// Creates a type descriptor for the current type.
     ///
     /// On targets with the standard library, it's done only once per process, then subsequent
@@ -83,7 +83,7 @@ pub trait Typed: 'static {
 
 /// The root of a type.
 ///
-/// Accessed via the [`Typed`] trait.
+/// Accessed via the [`DescribeType`] trait.
 ///
 /// `mirror-mirror` represents types as (possibly cyclic) graphs since types can contain
 /// themselves. For example `struct Foo(Vec<Foo>)`.
@@ -313,22 +313,22 @@ impl<'a> Type<'a> {
             Type::Array(inner) => Cow::Owned(inner.into_type_descriptor()),
             Type::Map(inner) => Cow::Owned(inner.into_type_descriptor()),
             Type::Scalar(inner) => match inner {
-                ScalarType::usize => <usize as Typed>::type_descriptor(),
-                ScalarType::u8 => <u8 as Typed>::type_descriptor(),
-                ScalarType::u16 => <u16 as Typed>::type_descriptor(),
-                ScalarType::u32 => <u32 as Typed>::type_descriptor(),
-                ScalarType::u64 => <u64 as Typed>::type_descriptor(),
-                ScalarType::u128 => <u128 as Typed>::type_descriptor(),
-                ScalarType::i8 => <i8 as Typed>::type_descriptor(),
-                ScalarType::i16 => <i16 as Typed>::type_descriptor(),
-                ScalarType::i32 => <i32 as Typed>::type_descriptor(),
-                ScalarType::i64 => <i64 as Typed>::type_descriptor(),
-                ScalarType::i128 => <i128 as Typed>::type_descriptor(),
-                ScalarType::bool => <bool as Typed>::type_descriptor(),
-                ScalarType::char => <char as Typed>::type_descriptor(),
-                ScalarType::f32 => <f32 as Typed>::type_descriptor(),
-                ScalarType::f64 => <f64 as Typed>::type_descriptor(),
-                ScalarType::String => <String as Typed>::type_descriptor(),
+                ScalarType::usize => <usize as DescribeType>::type_descriptor(),
+                ScalarType::u8 => <u8 as DescribeType>::type_descriptor(),
+                ScalarType::u16 => <u16 as DescribeType>::type_descriptor(),
+                ScalarType::u32 => <u32 as DescribeType>::type_descriptor(),
+                ScalarType::u64 => <u64 as DescribeType>::type_descriptor(),
+                ScalarType::u128 => <u128 as DescribeType>::type_descriptor(),
+                ScalarType::i8 => <i8 as DescribeType>::type_descriptor(),
+                ScalarType::i16 => <i16 as DescribeType>::type_descriptor(),
+                ScalarType::i32 => <i32 as DescribeType>::type_descriptor(),
+                ScalarType::i64 => <i64 as DescribeType>::type_descriptor(),
+                ScalarType::i128 => <i128 as DescribeType>::type_descriptor(),
+                ScalarType::bool => <bool as DescribeType>::type_descriptor(),
+                ScalarType::char => <char as DescribeType>::type_descriptor(),
+                ScalarType::f32 => <f32 as DescribeType>::type_descriptor(),
+                ScalarType::f64 => <f64 as DescribeType>::type_descriptor(),
+                ScalarType::String => <String as DescribeType>::type_descriptor(),
             },
             Type::Opaque(inner) => Cow::Owned(inner.into_type_descriptor()),
         }
@@ -1243,6 +1243,7 @@ impl<'a> OpaqueType<'a> {
     }
 }
 
+/// A superset of `Type` that can also describe `Variant`s.
 #[derive(Copy, Clone, Debug)]
 pub enum TypeAtPath<'a> {
     Struct(StructType<'a>),

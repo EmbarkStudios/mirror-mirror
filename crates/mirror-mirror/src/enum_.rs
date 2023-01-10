@@ -12,6 +12,7 @@ use crate::tuple::TupleValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::ReflectMut;
@@ -20,7 +21,6 @@ use crate::ReflectRef;
 use crate::Struct;
 use crate::Tuple;
 use crate::TypeDescriptor;
-use crate::Typed;
 use crate::Value;
 
 /// A reflected enum type.
@@ -185,14 +185,14 @@ impl TupleVariantBuilder {
 
 impl Reflect for EnumValue {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl Typed for EnumValue {
+        impl DescribeType for EnumValue {
             fn build(graph: &mut TypeGraph) -> NodeId {
                 graph.get_or_build_node_with::<Self, _>(|graph| {
                     OpaqueNode::new::<Self>(Default::default(), graph)
                 })
             }
         }
-        <Self as Typed>::type_descriptor()
+        <Self as DescribeType>::type_descriptor()
     }
 
     trivial_reflect_methods!();

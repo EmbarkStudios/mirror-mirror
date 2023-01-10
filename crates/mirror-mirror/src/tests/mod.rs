@@ -111,13 +111,13 @@ mod derive_foreign {
 
     use mirror_mirror_macros::*;
 
+    use crate::DescribeType;
     use crate::FromReflect;
-    use crate::Typed;
 
     enum Foo<A, B>
     where
-        A: FromReflect + Typed,
-        B: FromReflect + Typed,
+        A: FromReflect + DescribeType,
+        B: FromReflect + DescribeType,
     {
         Struct { a: A },
         Tuple(B),
@@ -128,8 +128,8 @@ mod derive_foreign {
         #[reflect(opt_out(Clone, Debug), crate_name(crate))]
         enum Foo<A, B>
         where
-            A: FromReflect + Typed,
-            B: FromReflect + Typed,
+            A: FromReflect + DescribeType,
+            B: FromReflect + DescribeType,
         {
             Struct { a: A },
             Tuple(B),
@@ -139,8 +139,8 @@ mod derive_foreign {
 
     struct Bar<A, B>
     where
-        A: FromReflect + Typed,
-        B: FromReflect + Typed,
+        A: FromReflect + DescribeType,
+        B: FromReflect + DescribeType,
     {
         a: A,
         b: B,
@@ -150,8 +150,8 @@ mod derive_foreign {
         #[reflect(opt_out(Clone, Debug), crate_name(crate))]
         struct Bar<A, B>
         where
-            A: FromReflect + Typed,
-            B: FromReflect + Typed,
+            A: FromReflect + DescribeType,
+            B: FromReflect + DescribeType,
         {
             a: A,
             b: B,
@@ -160,15 +160,15 @@ mod derive_foreign {
 
     struct Baz<A, B>(A, B)
     where
-        A: FromReflect + Typed,
-        B: FromReflect + Typed;
+        A: FromReflect + DescribeType,
+        B: FromReflect + DescribeType;
 
     __private_derive_reflect_foreign! {
         #[reflect(opt_out(Clone, Debug), crate_name(crate))]
         struct Baz<A, B>(A, B)
         where
-            A: FromReflect + Typed,
-            B: FromReflect + Typed;
+            A: FromReflect + DescribeType,
+            B: FromReflect + DescribeType;
     }
 
     struct Qux;
