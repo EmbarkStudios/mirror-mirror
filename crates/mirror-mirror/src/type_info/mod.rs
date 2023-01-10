@@ -1201,6 +1201,7 @@ impl<'a> OpaqueType<'a> {
     }
 }
 
+/// A superset of `Type` that can also describe `Variant`s.
 #[derive(Copy, Clone, Debug)]
 pub enum TypeAtPath<'a> {
     Struct(StructType<'a>),
