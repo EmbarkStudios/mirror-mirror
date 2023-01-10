@@ -33,6 +33,11 @@ pub use self::simple_type_name::SimpleTypeName;
 ///
 /// Will be implemented by `#[derive(Reflect)]`.
 pub trait Typed: 'static {
+    /// Creates a type descriptor for the current type.
+    ///
+    /// On targets with the standard library, it's done only once per process, then subsequent
+    /// accesses are "free" because the result is cached. On non-std targets, the type descriptor
+    /// is recomputed and reallocated on each call.
     fn type_descriptor() -> Cow<'static, TypeDescriptor> {
         #[cfg(feature = "std")]
         {
@@ -55,7 +60,7 @@ pub trait Typed: 'static {
             let info = map.entry(type_id).or_insert_with(|| {
                 let mut graph = TypeGraph::default();
                 let id = Self::build(&mut graph);
-                let info = TypeDescriptor::__private_new(id, graph);
+                let info = TypeDescriptor::new(id, graph);
                 Box::leak(Box::new(info))
             });
             Cow::Borrowed(*info)
@@ -67,10 +72,12 @@ pub trait Typed: 'static {
 
             let mut graph = TypeGraph::default();
             let id = Self::build(&mut graph);
-            Cow::Owned(TypeDescriptor::__private_new(id, graph))
+            Cow::Owned(TypeDescriptor::new(id, graph))
         }
     }
 
+    /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
+    /// for the root item.
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
 
@@ -89,8 +96,7 @@ pub struct TypeDescriptor {
 }
 
 impl TypeDescriptor {
-    #[doc(hidden)]
-    pub fn __private_new(root: NodeId, graph: TypeGraph) -> Self {
+    fn new(root: NodeId, graph: TypeGraph) -> Self {
         Self { root, graph }
     }
 
