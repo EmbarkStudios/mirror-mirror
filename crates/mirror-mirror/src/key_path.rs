@@ -560,16 +560,30 @@ impl fmt::Display for KeyPath {
 pub(crate) fn value_to_usize(value: &Value) -> Option<usize> {
     match value {
         Value::usize(n) => Some(*n),
-        Value::u8(n) => Some(*n as usize),
-        Value::u16(n) => Some(*n as usize),
-        Value::u32(n) => Some(*n as usize),
-        Value::u64(n) => Some(*n as usize),
-        Value::u128(n) => Some(*n as usize),
-        Value::i8(n) => Some(*n as usize),
-        Value::i16(n) => Some(*n as usize),
-        Value::i32(n) => Some(*n as usize),
-        Value::i64(n) => Some(*n as usize),
-        Value::i128(n) => Some(*n as usize),
+        Value::u8(n) => Some(usize::from(*n)),
+        Value::u16(n) => Some(usize::from(*n)),
+        Value::u32(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
+        Value::u64(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
+        Value::u128(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
+        Value::i8(n) => Some(usize::try_from(*n).expect("failed to convert number to array index")),
+        Value::i16(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
+        Value::i32(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
+        Value::i64(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
+        Value::i128(n) => {
+            Some(usize::try_from(*n).expect("failed to convert number to array index"))
+        }
         Value::bool(_)
         | Value::char(_)
         | Value::f32(_)
