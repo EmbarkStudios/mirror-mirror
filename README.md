@@ -20,7 +20,7 @@
 
 ## 🚨 Warning 🚨
 
-This library is still experimental and should not be used for anything serious, yet. It is also not yet published to crates.io.
+This library is still experimental and should not be used for anything serious, yet.
 
 ## Contributing
 
