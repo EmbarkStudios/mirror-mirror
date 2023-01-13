@@ -83,7 +83,7 @@ __private_derive_reflect_foreign! {
 
 #[cfg(feature = "glam")]
 mod glam_impls {
-    use glam::{Quat, Vec2, Vec3, Vec4, Mat2, Mat3, Mat4};
+    use glam::{Mat3, Vec2, Vec3};
     use mirror_mirror_macros::__private_derive_reflect_foreign;
 
     __private_derive_reflect_foreign! {
@@ -103,33 +103,11 @@ mod glam_impls {
         }
     }
 
-    __private_derive_reflect_foreign! {
-        #[reflect(crate_name(crate))]
-        pub struct Vec4 {
-            pub x: f32,
-            pub y: f32,
-            pub z: f32,
-            pub w: f32,
-        }
-    }
+    // `Vec4`, `Quat`, and `Mat2` are left out because glam uses bad hacks which changes the struct
+    // definitions for different architectures (simd vs no simd) and cargo features. So we'd have
+    // to use the same hacks in mirror-mirror which I'd like to avoid.
 
-    __private_derive_reflect_foreign! {
-        #[reflect(crate_name(crate))]
-        pub struct Quat {
-            pub x: f32,
-            pub y: f32,
-            pub z: f32,
-            pub w: f32,
-        }
-    }
-
-    __private_derive_reflect_foreign! {
-        #[reflect(crate_name(crate))]
-        pub struct Mat2 {
-            pub x_axis: Vec2,
-            pub y_axis: Vec2,
-        }
-    }
+    // `Mat4` is left out because it contains `Vec4` which we don't support.
 
     __private_derive_reflect_foreign! {
         #[reflect(crate_name(crate))]
@@ -139,22 +117,12 @@ mod glam_impls {
             pub z_axis: Vec3,
         }
     }
-
-    __private_derive_reflect_foreign! {
-        #[reflect(crate_name(crate))]
-        pub struct Mat4 {
-            pub x_axis: Vec4,
-            pub y_axis: Vec4,
-            pub z_axis: Vec4,
-            pub w_axis: Vec4,
-        }
-    }
 }
 
 #[cfg(feature = "macaw")]
 mod macaw_impls {
-    use mirror_mirror_macros::__private_derive_reflect_foreign;
     use macaw::ColorRgba8;
+    use mirror_mirror_macros::__private_derive_reflect_foreign;
 
     __private_derive_reflect_foreign! {
         #[reflect(crate_name(crate))]
