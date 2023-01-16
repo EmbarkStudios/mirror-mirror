@@ -205,11 +205,15 @@
 //! `std` | Enables using the standard library (`core` and `alloc` are always required) | Yes
 //! `speedy` | Enables [`speedy`] support for most types | Yes
 //! `serde` | Enables [`serde`] support for most types | Yes
+//! `glam` | Enables impls for [`glam`] | No
+//! `macaw` | Enables impls for [`macaw`] | No
 //!
 //! [`speedy`]: https://crates.io/crates/speedy
 //! [`serde`]: https://crates.io/crates/serde
 //! [`bevy_reflect`]: https://crates.io/crates/bevy_reflect
 //! [`bevy`]: https://crates.io/crates/bevy
+//! [`glam`]: https://crates.io/crates/glam
+//! [`macaw`]: https://crates.io/crates/macaw
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
@@ -327,7 +331,7 @@ pub mod type_info;
 /// Type erased value types.
 pub mod value;
 
-mod std_impls;
+mod foreign_impls;
 
 #[cfg(feature = "std")]
 #[cfg(test)]
