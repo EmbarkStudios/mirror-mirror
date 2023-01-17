@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- None.
+
+# 0.1.1 (17. January, 2023)
+
 - **added:** Add `Reflect` impls for [`glam`] types ([#85])
 - **added:** Add `Reflect` impls for [`macaw`] types ([#85])
 
