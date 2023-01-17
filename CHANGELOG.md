@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **added:** Add `impl From<Key> for KeyPath` ([#88])
+
+[#88]: https://github.com/EmbarkStudios/mirror-mirror/pull/88
 
 # 0.1.1 (17. January, 2023)
 
