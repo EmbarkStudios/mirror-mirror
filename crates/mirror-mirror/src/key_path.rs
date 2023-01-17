@@ -278,6 +278,14 @@ impl KeyPath {
     }
 }
 
+impl From<Key> for KeyPath {
+    fn from(key: Key) -> Self {
+        let mut key_path = KeyPath::default();
+        key_path.push(key);
+        key_path
+    }
+}
+
 impl Extend<Key> for KeyPath {
     fn extend<T>(&mut self, iter: T)
     where
