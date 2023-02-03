@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use core::any::Any;
 use core::fmt;
@@ -12,26 +11,21 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeDescriptor;
 use crate::Value;
+
+impl<T> DescribeType for Box<T>
+where
+    T: DescribeType,
+{
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        T::build(graph)
+    }
+}
 
 impl<T> Reflect for Box<T>
 where
     T: Reflect + DescribeType,
 {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<T> DescribeType for Box<T>
-        where
-            T: DescribeType,
-        {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                T::build(graph)
-            }
-        }
-
-        <T as DescribeType>::type_descriptor()
-    }
-
     fn as_any(&self) -> &dyn Any {
         <T as Reflect>::as_any(self)
     }

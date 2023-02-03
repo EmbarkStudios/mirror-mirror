@@ -25,16 +25,59 @@ pub(super) fn expand(
 
     let fields = fields.named;
 
+    let describe_type = expand_describe_type(ident, &fields, &attrs, &field_attrs, generics);
     let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
     let from_reflect = (!attrs.from_reflect_opt_out)
         .then(|| expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics));
     let struct_ = expand_struct(ident, &fields, &attrs, &field_attrs, generics);
 
     Ok(quote! {
+        #describe_type
         #reflect
         #from_reflect
         #struct_
     })
+}
+
+fn expand_describe_type(
+    ident: &Ident,
+    fields: &Fields,
+    attrs: &ItemAttrs,
+    field_attrs: &AttrsDatabase<Ident>,
+    generics: &Generics<'_>,
+) -> TokenStream {
+    let code_for_fields = fields
+        .iter()
+        .filter(field_attrs.filter_out_skipped_named())
+        .map(|field| {
+            let name = stringify(&field.ident);
+            let field_ty = &field.ty;
+            let ident = field.ident.as_ref().unwrap();
+            let meta = field_attrs.meta(ident);
+            let docs = field_attrs.docs(ident);
+            quote! {
+                NamedFieldNode::new::<#field_ty>(#name, #meta, #docs, graph)
+            }
+        });
+
+    let meta = attrs.meta();
+    let docs = attrs.docs();
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
+    quote! {
+        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                graph.get_or_build_node_with::<Self, _>(|graph| {
+                    let fields = &[#(#code_for_fields),*];
+                    StructNode::new::<Self>(fields, #meta, #docs)
+                })
+            }
+        }
+    }
 }
 
 fn expand_reflect(
@@ -87,45 +130,6 @@ fn expand_reflect(
         }
     };
 
-    let fn_type_info = {
-        let code_for_fields = fields
-            .iter()
-            .filter(field_attrs.filter_out_skipped_named())
-            .map(|field| {
-                let name = stringify(&field.ident);
-                let field_ty = &field.ty;
-                let ident = field.ident.as_ref().unwrap();
-                let meta = field_attrs.meta(ident);
-                let docs = field_attrs.docs(ident);
-                quote! {
-                    NamedFieldNode::new::<#field_ty>(#name, #meta, #docs, graph)
-                }
-            });
-
-        let meta = attrs.meta();
-        let docs = attrs.docs();
-        let Generics {
-            impl_generics,
-            type_generics,
-            where_clause,
-        } = generics;
-
-        quote! {
-            fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                impl #impl_generics DescribeType for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeGraph) -> NodeId {
-                        graph.get_or_build_node_with::<Self, _>(|graph| {
-                            let fields = &[#(#code_for_fields),*];
-                            StructNode::new::<Self>(fields, #meta, #docs)
-                        })
-                    }
-                }
-
-                <Self as DescribeType>::type_descriptor()
-            }
-        }
-    };
-
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
@@ -153,7 +157,6 @@ fn expand_reflect(
                 self
             }
 
-            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect

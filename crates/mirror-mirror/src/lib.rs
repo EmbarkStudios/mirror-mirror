@@ -264,7 +264,6 @@
 
 extern crate alloc;
 
-use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -369,8 +368,6 @@ pub use self::value::Value;
 
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor>;
-
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -532,10 +529,6 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
-                fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                    <Self as DescribeType>::type_descriptor()
-                }
-
                 trivial_reflect_methods!();
 
                 fn patch(&mut self, value: &dyn Reflect) {
@@ -608,10 +601,6 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        <Self as DescribeType>::type_descriptor()
-    }
-
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {

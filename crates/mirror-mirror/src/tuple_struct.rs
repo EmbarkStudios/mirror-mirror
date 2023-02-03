@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use core::any::Any;
 use core::fmt;
@@ -16,7 +15,6 @@ use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Tuple;
-use crate::TypeDescriptor;
 use crate::Value;
 
 /// A reflected tuple struct type.
@@ -63,18 +61,15 @@ impl TupleStructValue {
     }
 }
 
-impl Reflect for TupleStructValue {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl DescribeType for TupleStructValue {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    OpaqueNode::new::<Self>(Default::default(), graph)
-                })
-            }
-        }
-        <Self as DescribeType>::type_descriptor()
+impl DescribeType for TupleStructValue {
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| {
+            OpaqueNode::new::<Self>(Default::default(), graph)
+        })
     }
+}
 
+impl Reflect for TupleStructValue {
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {

@@ -20,16 +20,105 @@ pub(super) fn expand(
 ) -> syn::Result<TokenStream> {
     let variants = VariantData::try_from_enum(&enum_)?;
 
+    let describe_type = expand_describe_type(ident, &variants, &attrs, generics);
     let reflect = expand_reflect(ident, &variants, &attrs, generics)?;
     let from_reflect = (!attrs.from_reflect_opt_out)
         .then(|| expand_from_reflect(ident, &variants, &attrs, generics));
     let enum_ = expand_enum(ident, &variants, &attrs, generics);
 
     Ok(quote! {
+        #describe_type
         #reflect
         #from_reflect
         #enum_
     })
+}
+
+fn expand_describe_type(
+    ident: &Ident,
+    variants: &[VariantData<'_>],
+    attrs: &ItemAttrs,
+    generics: &Generics<'_>,
+) -> TokenStream {
+    let code_for_variants = variants.iter().filter(filter_out_skipped).map(|variant| {
+        let variant_ident_string = stringify(&variant.ident);
+        let meta = variant.attrs.meta();
+        let docs = variant.attrs.docs();
+
+        match &variant.fields {
+            FieldsData::Named(fields) => {
+                let fields = fields.iter().filter(filter_out_skipped).map(|field| {
+                    let ident = &field.ident;
+                    let field_name = stringify(ident);
+                    let field_ty = &field.ty;
+                    let meta = field.attrs.meta();
+                    let docs = field.attrs.docs();
+                    quote! {
+                        NamedFieldNode::new::<#field_ty>(#field_name, #meta, #docs, graph)
+                    }
+                });
+
+                quote! {
+                    VariantNode::Struct(
+                        StructVariantNode::new(
+                            #variant_ident_string,
+                            &[#(#fields),*],
+                            #meta,
+                            #docs,
+                        )
+                    )
+                }
+            }
+            FieldsData::Unnamed(fields) => {
+                let fields = fields.iter().filter(filter_out_skipped).map(|field| {
+                    let field_ty = &field.ty;
+                    let meta = field.attrs.meta();
+                    let docs = field.attrs.docs();
+                    quote! {
+                        UnnamedFieldNode::new::<#field_ty>(#meta, #docs, graph)
+                    }
+                });
+
+                quote! {
+                    VariantNode::Tuple(
+                        TupleVariantNode::new(
+                            #variant_ident_string,
+                            &[#(#fields),*],
+                            #meta,
+                            #docs,
+                        )
+                    )
+                }
+            }
+            FieldsData::Unit => quote! {
+                VariantNode::Unit(UnitVariantNode::new(
+                    #variant_ident_string,
+                    #meta,
+                    #docs,
+                ))
+            },
+        }
+    });
+
+    let meta = attrs.meta();
+    let docs = attrs.docs();
+
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
+    quote! {
+        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                let variants = &[#(#code_for_variants),*];
+                graph.get_or_build_node_with::<Self, _>(|graph| {
+                    EnumNode::new::<Self>(variants, #meta, #docs)
+                })
+            }
+        }
+    }
 }
 
 fn expand_reflect(
@@ -194,92 +283,6 @@ fn expand_reflect(
         }
     };
 
-    let fn_type_info = {
-        let code_for_variants = variants.iter().filter(filter_out_skipped).map(|variant| {
-            let variant_ident_string = stringify(&variant.ident);
-            let meta = variant.attrs.meta();
-            let docs = variant.attrs.docs();
-
-            match &variant.fields {
-                FieldsData::Named(fields) => {
-                    let fields = fields.iter().filter(filter_out_skipped).map(|field| {
-                        let ident = &field.ident;
-                        let field_name = stringify(ident);
-                        let field_ty = &field.ty;
-                        let meta = field.attrs.meta();
-                        let docs = field.attrs.docs();
-                        quote! {
-                            NamedFieldNode::new::<#field_ty>(#field_name, #meta, #docs, graph)
-                        }
-                    });
-
-                    quote! {
-                        VariantNode::Struct(
-                            StructVariantNode::new(
-                                #variant_ident_string,
-                                &[#(#fields),*],
-                                #meta,
-                                #docs,
-                            )
-                        )
-                    }
-                }
-                FieldsData::Unnamed(fields) => {
-                    let fields = fields.iter().filter(filter_out_skipped).map(|field| {
-                        let field_ty = &field.ty;
-                        let meta = field.attrs.meta();
-                        let docs = field.attrs.docs();
-                        quote! {
-                            UnnamedFieldNode::new::<#field_ty>(#meta, #docs, graph)
-                        }
-                    });
-
-                    quote! {
-                        VariantNode::Tuple(
-                            TupleVariantNode::new(
-                                #variant_ident_string,
-                                &[#(#fields),*],
-                                #meta,
-                                #docs,
-                            )
-                        )
-                    }
-                }
-                FieldsData::Unit => quote! {
-                    VariantNode::Unit(UnitVariantNode::new(
-                        #variant_ident_string,
-                        #meta,
-                        #docs,
-                    ))
-                },
-            }
-        });
-
-        let meta = attrs.meta();
-        let docs = attrs.docs();
-
-        let Generics {
-            impl_generics,
-            type_generics,
-            where_clause,
-        } = generics;
-
-        quote! {
-            fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                impl #impl_generics DescribeType for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeGraph) -> NodeId {
-                        let variants = &[#(#code_for_variants),*];
-                        graph.get_or_build_node_with::<Self, _>(|graph| {
-                            EnumNode::new::<Self>(variants, #meta, #docs)
-                        })
-                    }
-                }
-
-                <Self as DescribeType>::type_descriptor()
-            }
-        }
-    };
-
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
@@ -307,7 +310,6 @@ fn expand_reflect(
                 self
             }
 
-            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect
