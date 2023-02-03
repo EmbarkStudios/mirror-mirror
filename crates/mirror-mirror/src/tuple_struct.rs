@@ -97,9 +97,9 @@ impl Reflect for TupleStructValue {
 
     fn debug(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if f.alternate() {
-            write!(f, "{:#?}", self)
+            write!(f, "{self:#?}")
         } else {
-            write!(f, "{:?}", self)
+            write!(f, "{self:?}")
         }
     }
 

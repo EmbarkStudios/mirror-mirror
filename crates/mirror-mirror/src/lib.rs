@@ -640,9 +640,9 @@ impl Reflect for String {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            write!(f, "{:#?}", self)
+            write!(f, "{self:#?}")
         } else {
-            write!(f, "{:?}", self)
+            write!(f, "{self:?}")
         }
     }
 }
@@ -1197,9 +1197,9 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
         f: &mut core::fmt::Formatter<'_>,
     ) -> fmt::Result {
         if f.alternate() {
-            write!(f, "{:#?}", scalar)
+            write!(f, "{scalar:#?}")
         } else {
-            write!(f, "{:?}", scalar)
+            write!(f, "{scalar:?}")
         }
     }
 

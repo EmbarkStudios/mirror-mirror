@@ -295,9 +295,9 @@ impl Reflect for Value {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            write!(f, "{:#?}", self)
+            write!(f, "{self:#?}")
         } else {
-            write!(f, "{:?}", self)
+            write!(f, "{self:?}")
         }
     }
 }
