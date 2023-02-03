@@ -38,3 +38,22 @@ fn works() {
     // type names don't include lifetimes
     assert_eq!(simple_type_name::<Foo<'static, 10>>(), "Foo<10>");
 }
+
+#[test]
+fn type_inside_unnamed_const() {
+    trait A {
+        type T;
+    }
+
+    struct Foo;
+
+    const _: () = {
+        struct Bar<T>(T);
+
+        impl A for Foo {
+            type T = Bar<String>;
+        }
+    };
+
+    assert_eq!(simple_type_name::<<Foo as A>::T>(), "Bar<String>");
+}

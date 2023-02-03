@@ -1,5 +1,6 @@
 use core::{any::type_name, fmt};
 
+use alloc::borrow::Cow;
 use syn::{
     token::Mut, AngleBracketedGenericArguments, Expr, ExprLit, GenericArgument, Ident, Lit,
     LitBool, LitFloat, LitInt, Path, PathArguments, PathSegment, Type, TypeArray, TypePath,
@@ -75,12 +76,21 @@ pub struct SimpleTypeName {
 
 impl SimpleTypeName {
     pub fn new(type_name: &str) -> Option<Self> {
-        let ty = syn::parse_str::<Type>(type_name).ok()?;
+        const UNNAMED_CONST_PATH: &str = "::_";
+
+        let type_name = if type_name.contains(UNNAMED_CONST_PATH) {
+            Cow::Owned(type_name.replace(UNNAMED_CONST_PATH, ""))
+        } else {
+            Cow::Borrowed(type_name)
+        };
+
+        let ty = syn::parse_str::<Type>(&type_name).ok()?;
         Some(Self { ty })
     }
 
     pub fn new_from_type<T>() -> Self {
-        Self::new(type_name::<T>()).expect("failed to parse type name")
+        let name = type_name::<T>();
+        Self::new(name).unwrap_or_else(|| panic!("failed to parse type name: `{name}`"))
     }
 }
 
