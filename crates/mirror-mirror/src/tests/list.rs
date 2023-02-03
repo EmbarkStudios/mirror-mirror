@@ -28,8 +28,8 @@ fn indexing() {
 #[test]
 fn debug() {
     let list = Vec::from([1, 2, 3]);
-    assert_eq!(format!("{:?}", list.as_reflect()), format!("{:?}", list));
-    assert_eq!(format!("{:#?}", list.as_reflect()), format!("{:#?}", list));
+    assert_eq!(format!("{:?}", list.as_reflect()), format!("{list:?}"));
+    assert_eq!(format!("{:#?}", list.as_reflect()), format!("{list:#?}"));
 }
 
 #[test]
