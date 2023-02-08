@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- None.
+
+# 0.1.3 (08. February, 2023)
+
 - **fixed:** Make `SimpleTypeName` support types defined inside unnamed constants ([#91])
 
 [#91]: https://github.com/EmbarkStudios/mirror-mirror/pull/91
