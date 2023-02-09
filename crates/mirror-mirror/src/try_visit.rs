@@ -2,6 +2,7 @@ use crate::{
     type_info::{OpaqueType, Type, VariantField},
     Reflect, ScalarRef,
 };
+use alloc::string::String;
 
 macro_rules! visit_scalar_fn {
     ($name:ident, $ty:ty) => {
