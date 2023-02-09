@@ -6,6 +6,7 @@ use crate::{
 macro_rules! visit_scalar_fn {
     ($name:ident, $ty:ty) => {
         #[allow(clippy::ptr_arg)]
+        #[inline]
         fn $name(&mut self, value: $ty) -> Result<(), Self::Error> {
             Ok(())
         }
@@ -33,6 +34,7 @@ pub trait TryVisit {
     visit_scalar_fn!(try_visit_f64, f64);
     visit_scalar_fn!(try_visit_string, &String);
 
+    #[inline]
     fn try_visit_opaque(
         &mut self,
         value: &dyn Reflect,
