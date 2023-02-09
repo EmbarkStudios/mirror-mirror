@@ -331,6 +331,8 @@ pub mod type_info;
 /// Type erased value types.
 pub mod value;
 
+pub mod try_visit;
+
 mod foreign_impls;
 
 #[cfg(feature = "std")]
