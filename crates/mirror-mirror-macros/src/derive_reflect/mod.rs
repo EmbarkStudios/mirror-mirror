@@ -96,10 +96,19 @@ fn check_for_known_unsupported_types(item: &DeriveInput) -> syn::Result<()> {
 
     impl<'ast> syn::visit::Visit<'ast> for Visitor {
         fn visit_ident(&mut self, i: &'ast proc_macro2::Ident) {
-            if i == "HashMap" && self.0.is_none() {
+            if self.0.is_some() {
+                return;
+            }
+
+            if i == "HashMap" {
                 self.0 = Some(syn::Error::new_spanned(
                     i,
                     "`#[derive(Reflect)]` doesn't support `HashMap`. Use a `BTreeMap` instead.",
+                ));
+            } else if i == "HashSet" {
+                self.0 = Some(syn::Error::new_spanned(
+                    i,
+                    "`#[derive(Reflect)]` doesn't support `HashSet`. Use a `BTreeSet` instead.",
                 ));
             }
         }
