@@ -277,7 +277,9 @@ use crate::enum_::VariantKind;
 
 macro_rules! trivial_reflect_methods {
     () => {
-        fn type_descriptor(&self) -> alloc::borrow::Cow<'static, $crate::type_info::TypeDescriptor> {
+        fn type_descriptor(
+            &self,
+        ) -> alloc::borrow::Cow<'static, $crate::type_info::TypeDescriptor> {
             <Self as $crate::type_info::DescribeType>::type_descriptor()
         }
 

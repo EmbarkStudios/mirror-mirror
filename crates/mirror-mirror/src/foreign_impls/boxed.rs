@@ -3,7 +3,6 @@ use alloc::boxed::Box;
 use core::any::Any;
 use core::fmt;
 
-use crate::TypeDescriptor;
 use crate::reflect_debug;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
@@ -13,6 +12,7 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
+use crate::TypeDescriptor;
 use crate::Value;
 
 impl<T> DescribeType for Box<T>
