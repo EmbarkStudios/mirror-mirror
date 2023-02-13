@@ -47,7 +47,7 @@ impl fmt::Debug for dyn Struct {
     }
 }
 
-#[derive(Default, Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructValue {

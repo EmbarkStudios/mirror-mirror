@@ -7,6 +7,8 @@ use alloc::vec::Vec;
 use core::any::Any;
 use core::cmp::Ordering;
 use core::fmt;
+use core::hash::Hash;
+use core::hash::Hasher;
 
 use ordered_float::OrderedFloat;
 
@@ -67,8 +69,8 @@ impl FromReflect for Value {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Eq, PartialEq, PartialOrd, Ord)]
-enum OrdEqValue<'a> {
+#[derive(Eq, PartialEq, PartialOrd, Ord, Hash)]
+enum OrdEqHashValue<'a> {
     usize(usize),
     u8(u8),
     u16(u16),
@@ -93,38 +95,38 @@ enum OrdEqValue<'a> {
     Map(&'a BTreeMap<Value, Value>),
 }
 
-impl<'a> From<&'a Value> for OrdEqValue<'a> {
+impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
     fn from(value: &'a Value) -> Self {
         match value {
-            Value::usize(inner) => OrdEqValue::usize(*inner),
-            Value::u8(inner) => OrdEqValue::u8(*inner),
-            Value::u16(inner) => OrdEqValue::u16(*inner),
-            Value::u32(inner) => OrdEqValue::u32(*inner),
-            Value::u64(inner) => OrdEqValue::u64(*inner),
-            Value::u128(inner) => OrdEqValue::u128(*inner),
-            Value::i8(inner) => OrdEqValue::i8(*inner),
-            Value::i16(inner) => OrdEqValue::i16(*inner),
-            Value::i32(inner) => OrdEqValue::i32(*inner),
-            Value::i64(inner) => OrdEqValue::i64(*inner),
-            Value::i128(inner) => OrdEqValue::i128(*inner),
-            Value::bool(inner) => OrdEqValue::bool(*inner),
-            Value::char(inner) => OrdEqValue::char(*inner),
-            Value::f32(inner) => OrdEqValue::f32(OrderedFloat(*inner)),
-            Value::f64(inner) => OrdEqValue::f64(OrderedFloat(*inner)),
-            Value::String(inner) => OrdEqValue::String(inner),
-            Value::StructValue(inner) => OrdEqValue::StructValue(inner),
-            Value::EnumValue(inner) => OrdEqValue::EnumValue(inner),
-            Value::TupleStructValue(inner) => OrdEqValue::TupleStructValue(inner),
-            Value::TupleValue(inner) => OrdEqValue::TupleValue(inner),
-            Value::List(inner) => OrdEqValue::List(inner),
-            Value::Map(inner) => OrdEqValue::Map(inner),
+            Value::usize(inner) => OrdEqHashValue::usize(*inner),
+            Value::u8(inner) => OrdEqHashValue::u8(*inner),
+            Value::u16(inner) => OrdEqHashValue::u16(*inner),
+            Value::u32(inner) => OrdEqHashValue::u32(*inner),
+            Value::u64(inner) => OrdEqHashValue::u64(*inner),
+            Value::u128(inner) => OrdEqHashValue::u128(*inner),
+            Value::i8(inner) => OrdEqHashValue::i8(*inner),
+            Value::i16(inner) => OrdEqHashValue::i16(*inner),
+            Value::i32(inner) => OrdEqHashValue::i32(*inner),
+            Value::i64(inner) => OrdEqHashValue::i64(*inner),
+            Value::i128(inner) => OrdEqHashValue::i128(*inner),
+            Value::bool(inner) => OrdEqHashValue::bool(*inner),
+            Value::char(inner) => OrdEqHashValue::char(*inner),
+            Value::f32(inner) => OrdEqHashValue::f32(OrderedFloat(*inner)),
+            Value::f64(inner) => OrdEqHashValue::f64(OrderedFloat(*inner)),
+            Value::String(inner) => OrdEqHashValue::String(inner),
+            Value::StructValue(inner) => OrdEqHashValue::StructValue(inner),
+            Value::EnumValue(inner) => OrdEqHashValue::EnumValue(inner),
+            Value::TupleStructValue(inner) => OrdEqHashValue::TupleStructValue(inner),
+            Value::TupleValue(inner) => OrdEqHashValue::TupleValue(inner),
+            Value::List(inner) => OrdEqHashValue::List(inner),
+            Value::Map(inner) => OrdEqHashValue::Map(inner),
         }
     }
 }
 
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
-        OrdEqValue::from(self) == OrdEqValue::from(other)
+        OrdEqHashValue::from(self) == OrdEqHashValue::from(other)
     }
 }
 
@@ -138,7 +140,16 @@ impl PartialOrd for Value {
 
 impl Ord for Value {
     fn cmp(&self, other: &Self) -> Ordering {
-        OrdEqValue::from(self).cmp(&OrdEqValue::from(other))
+        OrdEqHashValue::from(self).cmp(&OrdEqHashValue::from(other))
+    }
+}
+
+impl Hash for Value {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        core::mem::discriminant(&OrdEqHashValue::from(self)).hash(state);
     }
 }
 

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **added:** Implement `Hash` to `Value`
 
 # 0.1.3 (08. February, 2023)
 
