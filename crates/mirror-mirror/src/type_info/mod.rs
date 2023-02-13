@@ -641,6 +641,10 @@ impl<'a> StructType<'a> {
         })
     }
 
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
+    }
+
     pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
         let node = self.node.fields.get(name)?;
         Some(NamedField {
@@ -692,6 +696,10 @@ impl<'a> TupleStructType<'a> {
         })
     }
 
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
+    }
+
     pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
         let node = self.node.fields.get(index)?;
         Some(UnnamedField {
@@ -736,6 +744,10 @@ impl<'a> TupleType<'a> {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
     }
 
     pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
@@ -797,6 +809,10 @@ impl<'a> EnumType<'a> {
         })
     }
 
+    pub fn variants_len(self) -> usize {
+        self.node.variants.len()
+    }
+
     pub fn variant(self, name: &str) -> Option<Variant<'a>> {
         self.variants().find(|variant| variant.name() == name)
     }
@@ -849,6 +865,14 @@ impl<'a> Variant<'a> {
                 as Box<dyn Iterator<Item = VariantField<'a>>>,
             Variant::Tuple(inner) => Box::new(inner.field_types().map(VariantField::Unnamed)),
             Variant::Unit(_) => Box::new(core::iter::empty()),
+        }
+    }
+
+    pub fn fields_len(self) -> usize {
+        match self {
+            Variant::Struct(inner) => inner.fields_len(),
+            Variant::Tuple(inner) => inner.fields_len(),
+            Variant::Unit(_) => 0,
         }
     }
 
@@ -967,6 +991,10 @@ impl<'a> StructVariant<'a> {
         })
     }
 
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
+    }
+
     pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
         let node = self.node.fields.get(name)?;
         Some(NamedField {
@@ -1017,6 +1045,10 @@ impl<'a> TupleVariant<'a> {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
     }
 
     pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
