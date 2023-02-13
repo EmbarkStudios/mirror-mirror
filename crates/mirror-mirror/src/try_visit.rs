@@ -162,6 +162,26 @@ mod tests {
         A(BTreeMap<i32, i32>),
     }
 
+    #[derive(Default, Debug)]
+    struct CountsI32sAndStrings {
+        string_count: usize,
+        i32_count: usize,
+    }
+
+    impl TryVisit for CountsI32sAndStrings {
+        type Error = Infallible;
+
+        fn try_visit_string(&mut self, _value: &String) -> Result<(), Self::Error> {
+            self.string_count += 1;
+            Ok(())
+        }
+
+        fn try_visit_i32(&mut self, _value: i32) -> Result<(), Self::Error> {
+            self.i32_count += 1;
+            Ok(())
+        }
+    }
+
     #[test]
     fn works() {
         let foo = Foo {
@@ -170,27 +190,7 @@ mod tests {
             c: Vec::from([Bar::A(BTreeMap::from_iter([(1, 1), (2, 2)]))]),
         };
 
-        #[derive(Default, Debug)]
-        struct Visitor {
-            string_count: usize,
-            i32_count: usize,
-        }
-
-        impl TryVisit for Visitor {
-            type Error = Infallible;
-
-            fn try_visit_string(&mut self, _value: &String) -> Result<(), Self::Error> {
-                self.string_count += 1;
-                Ok(())
-            }
-
-            fn try_visit_i32(&mut self, _value: i32) -> Result<(), Self::Error> {
-                self.i32_count += 1;
-                Ok(())
-            }
-        }
-
-        let mut visitor = Visitor::default();
+        let mut visitor = CountsI32sAndStrings::default();
         try_visit(
             &mut visitor,
             &foo,
@@ -199,6 +199,29 @@ mod tests {
         .unwrap();
 
         assert_eq!(visitor.string_count, 1);
+        assert_eq!(visitor.i32_count, 3);
+    }
+
+    #[test]
+    fn recursive() {
+        #[derive(Debug, Clone, Reflect)]
+        #[reflect(crate_name(crate))]
+        struct Recursive(i32, Vec<Recursive>);
+
+        let value = Recursive(
+            1,
+            Vec::from([Recursive(2, Vec::from([Recursive(3, Vec::new())]))]),
+        );
+
+        let mut visitor = CountsI32sAndStrings::default();
+        try_visit(
+            &mut visitor,
+            &value,
+            <Recursive as DescribeType>::type_descriptor().get_type(),
+        )
+        .unwrap();
+
+        assert_eq!(visitor.string_count, 0);
         assert_eq!(visitor.i32_count, 3);
     }
 }
