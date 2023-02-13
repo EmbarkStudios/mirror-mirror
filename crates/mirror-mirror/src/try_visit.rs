@@ -127,9 +127,11 @@ where
         }
         Type::Map(map_ty) => {
             let map = value.as_map().unwrap();
+            let key_ty = map_ty.key_type();
             let value_ty = map_ty.value_type();
 
-            for (_, value) in map.iter() {
+            for (key, value) in map.iter() {
+                try_visit(visitor, key, key_ty)?;
                 try_visit(visitor, value, value_ty)?;
             }
         }
