@@ -698,6 +698,10 @@ impl<'a> TupleStructType<'a> {
         })
     }
 
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
+    }
+
     pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
         let node = self.node.fields.get(index)?;
         Some(UnnamedField {
@@ -742,6 +746,10 @@ impl<'a> TupleType<'a> {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
     }
 
     pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
@@ -801,6 +809,10 @@ impl<'a> EnumType<'a> {
                 graph: self.graph,
             }),
         })
+    }
+
+    pub fn variants_len(self) -> usize {
+        self.node.variants.len()
     }
 
     pub fn variant(self, name: &str) -> Option<Variant<'a>> {
@@ -971,6 +983,10 @@ impl<'a> StructVariant<'a> {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
     }
 
     pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {

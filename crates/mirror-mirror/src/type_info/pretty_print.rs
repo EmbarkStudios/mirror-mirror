@@ -4,6 +4,7 @@ use core::fmt::{self, Write};
 
 use super::*;
 
+// TODO(david): seal this
 pub trait PrettyPrintRoot {
     fn pretty_print_root(&self) -> RootPrettyPrinter<'_, Self> {
         RootPrettyPrinter { ty: self }
@@ -40,7 +41,7 @@ impl<'a> PrettyPrintRoot for Type<'a> {
             Type::Struct(inner) => inner.pretty_root_fmt(f),
             Type::TupleStruct(inner) => inner.pretty_root_fmt(f),
             Type::Tuple(inner) => inner.pretty_root_fmt(f),
-            Type::Enum(_) => todo!(),
+            Type::Enum(inner) => inner.pretty_root_fmt(f),
             Type::List(_) => todo!(),
             Type::Array(_) => todo!(),
             Type::Map(_) => todo!(),
@@ -113,6 +114,39 @@ impl<'a> PrettyPrintRoot for TupleType<'a> {
     }
 }
 
+impl<'a> PrettyPrintRoot for EnumType<'a> {
+    fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("enum ")?;
+        simple_type_name_fmt(self.type_name(), f)?;
+        f.write_str(" {")?;
+        if self.variants_len() != 0 {
+            f.write_char('\n')?;
+            for variant in self.variants() {
+                match variant {
+                    Variant::Struct(struct_variant) => {
+                        f.write_str(IDENT)?;
+                        f.write_str(struct_variant.name())?;
+                    },
+                    Variant::Tuple(_) => {},
+                    Variant::Unit(_) => {},
+                }
+            }
+
+        //     for field in self.field_types() {
+        //         f.write_str(IDENT)?;
+        //         f.write_str(field.name())?;
+        //         f.write_str(": ")?;
+        //         simple_type_name_fmt(field.get_type().type_name(), f)?;
+        //         f.write_str(",")?;
+        //         f.write_char('\n')?;
+        //     }
+        }
+        f.write_str("}")?;
+        Ok(())
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -158,7 +192,10 @@ mod tests {
         let type_descriptor = <Foo as DescribeType>::type_descriptor();
         let pp = type_descriptor.pretty_print_root();
 
-        assert_eq!(println_and_format!("{pp}"), r#"struct Foo(String, Vec<i32>)"#);
+        assert_eq!(
+            println_and_format!("{pp}"),
+            r#"struct Foo(String, Vec<i32>)"#
+        );
     }
 
     #[test]
@@ -167,5 +204,34 @@ mod tests {
         let pp = type_descriptor.pretty_print_root();
 
         assert_eq!(println_and_format!("{pp}"), r#"(String, Vec<i32>)"#);
+    }
+
+    #[test]
+    fn enum_() {
+        #[derive(Reflect, Clone, Debug)]
+        #[reflect(crate_name(crate))]
+        enum Foo {
+            A(String),
+            A2(),
+            B { b: Vec<i32> },
+            B2 {},
+            C,
+        }
+
+        let type_descriptor = <Foo as DescribeType>::type_descriptor();
+        let pp = type_descriptor.pretty_print_root();
+
+        assert_eq!(
+            println_and_format!("{pp}"),
+            r#"enum Foo {
+    A(String),
+    A2,
+    B {
+        b: Vec<i32>,
+    },
+    B2,
+    C,
+}"#
+        );
     }
 }
