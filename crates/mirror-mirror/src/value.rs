@@ -149,7 +149,7 @@ impl Hash for Value {
     where
         H: Hasher,
     {
-        core::mem::discriminant(&OrdEqHashValue::from(self)).hash(state);
+        OrdEqHashValue::from(self).hash(state);
     }
 }
 
