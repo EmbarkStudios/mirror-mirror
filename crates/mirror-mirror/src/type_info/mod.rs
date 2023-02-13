@@ -459,7 +459,13 @@ mod private {
 
     pub trait Sealed {}
 
+    impl Sealed for TypeDescriptor {}
     impl<'a> Sealed for &'a TypeDescriptor {}
+    impl<'a> Sealed for TupleType<'a> {}
+    impl<'a> Sealed for ListType<'a> {}
+    impl<'a> Sealed for ArrayType<'a> {}
+    impl<'a> Sealed for MapType<'a> {}
+    impl Sealed for ScalarType {}
     impl Sealed for Type<'_> {}
     impl Sealed for StructType<'_> {}
     impl Sealed for TupleStructType<'_> {}

@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `StructVariant`
     - `TupleStructVariant`
 - **added:** Add `EnumType::variants_len` ([#94])
+- **added:** Support pretty printing types ([#95])
 
 [#94]: https://github.com/EmbarkStudios/mirror-mirror/pull/94
+[#95]: https://github.com/EmbarkStudios/mirror-mirror/pull/95
 
 # 0.1.4 (08. February, 2023)
 
