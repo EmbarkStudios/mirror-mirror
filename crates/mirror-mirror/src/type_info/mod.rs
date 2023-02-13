@@ -22,10 +22,12 @@ use crate::Reflect;
 use crate::Value;
 
 pub mod graph;
+pub mod pretty_print;
 
 #[cfg(feature = "std")]
 mod simple_type_name;
 
+pub use self::pretty_print::{PrettyPrintRoot, RootPrettyPrinter};
 #[cfg(feature = "std")]
 pub use self::simple_type_name::SimpleTypeName;
 
@@ -639,6 +641,10 @@ impl<'a> StructType<'a> {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn fields_len(&self) -> usize {
+        self.node.fields.len()
     }
 
     pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
