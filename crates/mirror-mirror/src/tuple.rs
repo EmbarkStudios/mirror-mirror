@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -18,7 +17,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeDescriptor;
 use crate::Value;
 
 /// A reflected tuple type.
@@ -85,18 +83,15 @@ impl Tuple for TupleValue {
     }
 }
 
-impl Reflect for TupleValue {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl DescribeType for TupleValue {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    OpaqueNode::new::<Self>(Default::default(), graph)
-                })
-            }
-        }
-        <Self as DescribeType>::type_descriptor()
+impl DescribeType for TupleValue {
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| {
+            OpaqueNode::new::<Self>(Default::default(), graph)
+        })
     }
+}
 
+impl Reflect for TupleValue {
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {
@@ -174,10 +169,6 @@ macro_rules! impl_tuple {
         where
             $($ident: Reflect + DescribeType + Clone,)*
         {
-            fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                <Self as DescribeType>::type_descriptor()
-            }
-
             trivial_reflect_methods!();
 
             #[allow(unused_assignments)]

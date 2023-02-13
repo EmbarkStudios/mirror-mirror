@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
@@ -182,16 +181,16 @@ macro_rules! for_each_variant {
     };
 }
 
-impl Reflect for Value {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl DescribeType for Value {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    OpaqueNode::new::<Self>(Default::default(), graph)
-                })
-            }
-        }
+impl DescribeType for Value {
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| {
+            OpaqueNode::new::<Self>(Default::default(), graph)
+        })
+    }
+}
 
+impl Reflect for Value {
+    fn type_descriptor(&self) -> alloc::borrow::Cow<'static, TypeDescriptor> {
         <Self as DescribeType>::type_descriptor()
     }
 

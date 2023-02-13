@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use core::any::Any;
@@ -15,7 +14,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeDescriptor;
 use crate::Value;
 
 impl<K, V> Map for BTreeMap<K, V>
@@ -71,25 +69,21 @@ where
     }
 }
 
+impl<K, V> DescribeType for BTreeMap<K, V>
+where
+    K: DescribeType,
+    V: DescribeType,
+{
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
+    }
+}
+
 impl<K, V> Reflect for BTreeMap<K, V>
 where
     K: FromReflect + DescribeType + Ord,
     V: FromReflect + DescribeType,
 {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<K, V> DescribeType for BTreeMap<K, V>
-        where
-            K: DescribeType,
-            V: DescribeType,
-        {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
-            }
-        }
-
-        <Self as DescribeType>::type_descriptor()
-    }
-
     trivial_reflect_methods!();
 
     fn reflect_owned(self: Box<Self>) -> ReflectOwned {

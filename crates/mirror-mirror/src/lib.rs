@@ -277,6 +277,10 @@ use crate::enum_::VariantKind;
 
 macro_rules! trivial_reflect_methods {
     () => {
+        fn type_descriptor(&self) -> alloc::borrow::Cow<'static, $crate::type_info::TypeDescriptor> {
+            <Self as $crate::type_info::DescribeType>::type_descriptor()
+        }
+
         fn as_any(&self) -> &dyn Any {
             self
         }
@@ -532,10 +536,6 @@ macro_rules! impl_for_core_types {
     ($($ty:ident)*) => {
         $(
             impl Reflect for $ty {
-                fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                    <Self as DescribeType>::type_descriptor()
-                }
-
                 trivial_reflect_methods!();
 
                 fn patch(&mut self, value: &dyn Reflect) {
@@ -608,10 +608,6 @@ impl_for_core_types! {
 }
 
 impl Reflect for String {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        <Self as DescribeType>::type_descriptor()
-    }
-
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {
