@@ -201,7 +201,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(visitor.string_count, 1);
-        assert_eq!(visitor.i32_count, 3);
+        assert_eq!(visitor.i32_count, 5);
     }
 
     #[test]
