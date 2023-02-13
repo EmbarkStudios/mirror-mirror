@@ -267,6 +267,18 @@ mod tests {
     }
 
     #[test]
+    fn struct_empty() {
+        #[derive(Reflect, Clone, Debug)]
+        #[reflect(crate_name(crate))]
+        struct Foo {}
+
+        let type_descriptor = <Foo as DescribeType>::type_descriptor();
+        let pp = type_descriptor.pretty_print_root();
+
+        assert_eq!(println_and_format!("{pp}"), r#"struct Foo {}"#);
+    }
+
+    #[test]
     fn tuple_struct() {
         #[derive(Reflect, Clone, Debug)]
         #[reflect(crate_name(crate))]
@@ -279,6 +291,31 @@ mod tests {
             println_and_format!("{pp}"),
             r#"struct Foo(String, Vec<i32>)"#
         );
+    }
+
+    #[test]
+    fn tuple_struct_empty() {
+        #[derive(Reflect, Clone, Debug)]
+        #[reflect(crate_name(crate))]
+        struct Foo();
+
+        let type_descriptor = <Foo as DescribeType>::type_descriptor();
+        let pp = type_descriptor.pretty_print_root();
+
+        assert_eq!(println_and_format!("{pp}"), r#"struct Foo()"#);
+    }
+
+    #[test]
+    fn unit_struct() {
+        #[derive(Reflect, Clone, Debug)]
+        #[reflect(crate_name(crate))]
+        struct Foo;
+
+        let type_descriptor = <Foo as DescribeType>::type_descriptor();
+        let pp = type_descriptor.pretty_print_root();
+
+        // unit structs are treated as empty structs
+        assert_eq!(println_and_format!("{pp}"), r#"struct Foo {}"#);
     }
 
     #[test]
