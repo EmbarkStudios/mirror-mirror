@@ -643,7 +643,7 @@ impl<'a> StructType<'a> {
         })
     }
 
-    pub fn fields_len(&self) -> usize {
+    pub fn fields_len(self) -> usize {
         self.node.fields.len()
     }
 
@@ -870,6 +870,14 @@ impl<'a> Variant<'a> {
         }
     }
 
+    pub fn fields_len(self) -> usize {
+        match self {
+            Variant::Struct(inner) => inner.fields_len(),
+            Variant::Tuple(inner) => inner.fields_len(),
+            Variant::Unit(_) => 0,
+        }
+    }
+
     pub fn field_type(self, name: &str) -> Option<NamedField<'a>> {
         match self {
             Variant::Struct(inner) => inner.field_type(name),
@@ -1039,6 +1047,10 @@ impl<'a> TupleVariant<'a> {
             node,
             graph: self.graph,
         })
+    }
+
+    pub fn fields_len(self) -> usize {
+        self.node.fields.len()
     }
 
     pub fn field_type_at(self, index: usize) -> Option<UnnamedField<'a>> {
