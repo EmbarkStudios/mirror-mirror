@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- **added:** Add visitor API
+- **added:** Add visitor API ([#92])
+- **added:** Add `fields_len` methods to the following types ([#94])
+    - `StructType`
+    - `TupleStructType`
+    - `TupleType`
+    - `Variant`
+    - `StructVariant`
+    - `TupleStructVariant`
+- **added:** Add `EnumType::variants_len` ([#94])
+
+[#92]: https://github.com/EmbarkStudios/mirror-mirror/pull/92
+[#93]: https://github.com/EmbarkStudios/mirror-mirror/pull/93
+[#94]: https://github.com/EmbarkStudios/mirror-mirror/pull/94
+
+# 0.1.4 (08. February, 2023)
+
+- **added:** Implement `Hash` to `Value` ([#93])
+
 
 # 0.1.3 (08. February, 2023)
 
