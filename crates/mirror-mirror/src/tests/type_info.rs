@@ -1,8 +1,13 @@
 use core::any::type_name;
 
+use crate::key_path;
+use crate::key_path::GetPath;
+use crate::tuple_struct::TupleStructValue;
+use crate::type_info::graph::OpaqueNode;
 use crate::type_info::*;
 use crate::FromReflect;
 use crate::Reflect;
+use crate::Value;
 
 #[test]
 fn struct_() {
@@ -167,4 +172,29 @@ fn how_to_handle_generics() {
             .unwrap(),
         ScalarType::bool,
     );
+}
+
+#[test]
+fn opaque_default() {
+    struct Opaque(i32);
+
+    impl DescribeType for Opaque {
+        fn build(graph: &mut graph::TypeGraph) -> graph::NodeId {
+            graph.get_or_build_node_with::<Self, _>(|graph| {
+                OpaqueNode::new::<Self>(Default::default(), graph).default_value(Opaque(1337))
+            })
+        }
+    }
+
+    impl From<Opaque> for Value {
+        fn from(opaque: Opaque) -> Self {
+            let Opaque(n) = opaque;
+            TupleStructValue::new().with_field(n).to_value()
+        }
+    }
+
+    let type_descriptor = Opaque::type_descriptor();
+    let default_value = type_descriptor.default_value().unwrap();
+
+    assert_eq!(default_value.get_at::<i32>(&key_path!(.0)).unwrap(), &1337);
 }

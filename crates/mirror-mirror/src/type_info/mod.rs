@@ -1271,7 +1271,7 @@ impl<'a> OpaqueType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        None
+        self.node.default_value.clone()
     }
 }
 
