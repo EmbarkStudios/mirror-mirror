@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#92]: https://github.com/EmbarkStudios/mirror-mirror/pull/92
 [#94]: https://github.com/EmbarkStudios/mirror-mirror/pull/94
 
-# 0.1.4 (08. February, 2023)
+# 0.1.4 (13. February, 2023)
 
 - **added:** Implement `Hash` to `Value` ([#93])
 
