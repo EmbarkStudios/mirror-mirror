@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- None.
+
+# 0.1.5 (14. February, 2023)
+
 - **added:** Add visitor API ([#92])
 - **added:** Add `fields_len` methods to the following types ([#94])
     - `StructType`
