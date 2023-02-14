@@ -63,7 +63,7 @@ fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Res
     f.write_str(type_name)
 }
 
-const IDENT: &str = "    ";
+const TAB: &str = "    ";
 
 impl<'a> PrettyPrintRoot for StructType<'a> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
