@@ -22,10 +22,12 @@ use crate::Reflect;
 use crate::Value;
 
 pub mod graph;
+pub mod pretty_print;
 
 #[cfg(feature = "std")]
 mod simple_type_name;
 
+pub use self::pretty_print::{PrettyPrintRoot, RootPrettyPrinter};
 #[cfg(feature = "std")]
 pub use self::simple_type_name::SimpleTypeName;
 
@@ -457,7 +459,13 @@ mod private {
 
     pub trait Sealed {}
 
+    impl Sealed for TypeDescriptor {}
     impl<'a> Sealed for &'a TypeDescriptor {}
+    impl<'a> Sealed for TupleType<'a> {}
+    impl<'a> Sealed for ListType<'a> {}
+    impl<'a> Sealed for ArrayType<'a> {}
+    impl<'a> Sealed for MapType<'a> {}
+    impl Sealed for ScalarType {}
     impl Sealed for Type<'_> {}
     impl Sealed for StructType<'_> {}
     impl Sealed for TupleStructType<'_> {}
