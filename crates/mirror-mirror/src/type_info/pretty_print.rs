@@ -73,7 +73,7 @@ impl<'a> PrettyPrintRoot for StructType<'a> {
         if self.fields_len() != 0 {
             f.write_char('\n')?;
             for field in self.field_types() {
-                f.write_str(IDENT)?;
+                f.write_str(TAB)?;
                 f.write_str(field.name())?;
                 f.write_str(": ")?;
                 simple_type_name_fmt(field.get_type().type_name(), f)?;
@@ -128,26 +128,26 @@ impl<'a> PrettyPrintRoot for EnumType<'a> {
             for variant in self.variants() {
                 match variant {
                     Variant::Struct(struct_variant) => {
-                        f.write_str(IDENT)?;
+                        f.write_str(TAB)?;
                         f.write_str(struct_variant.name())?;
                         f.write_str(" {")?;
                         if struct_variant.fields_len() != 0 {
                             f.write_char('\n')?;
                             for field in struct_variant.field_types() {
-                                f.write_str(IDENT)?;
-                                f.write_str(IDENT)?;
+                                f.write_str(TAB)?;
+                                f.write_str(TAB)?;
                                 f.write_str(field.name())?;
                                 f.write_str(": ")?;
                                 simple_type_name_fmt(field.get_type().type_name(), f)?;
                                 f.write_str(",")?;
                                 f.write_char('\n')?;
                             }
-                            f.write_str(IDENT)?;
+                            f.write_str(TAB)?;
                         }
                         f.write_str("},\n")?;
                     }
                     Variant::Tuple(tuple_variant) => {
-                        f.write_str(IDENT)?;
+                        f.write_str(TAB)?;
                         f.write_str(tuple_variant.name())?;
                         f.write_str("(")?;
                         let mut fields = tuple_variant.field_types().peekable();
@@ -160,7 +160,7 @@ impl<'a> PrettyPrintRoot for EnumType<'a> {
                         f.write_str("),\n")?;
                     }
                     Variant::Unit(unit_variant) => {
-                        f.write_str(IDENT)?;
+                        f.write_str(TAB)?;
                         f.write_str(unit_variant.name())?;
                         f.write_str(",\n")?;
                     }
