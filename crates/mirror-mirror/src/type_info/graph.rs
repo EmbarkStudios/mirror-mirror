@@ -508,6 +508,7 @@ scalar_typed! {
 pub struct OpaqueNode {
     pub(super) type_name: String,
     pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl OpaqueNode {
@@ -518,6 +519,12 @@ impl OpaqueNode {
         Self {
             type_name: type_name::<T>().to_owned(),
             metadata: map_metadata(metadata),
+            default_value: None,
         }
+    }
+
+    pub fn default_value(mut self, default_value: impl Into<Value>) -> Self {
+        self.default_value = Some(default_value.into());
+        self
     }
 }
