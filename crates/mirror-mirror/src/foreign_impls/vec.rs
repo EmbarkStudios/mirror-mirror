@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -15,7 +14,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeDescriptor;
 use crate::Value;
 
 impl<T> List for Vec<T>
@@ -78,23 +76,19 @@ where
     }
 }
 
+impl<T> DescribeType for Vec<T>
+where
+    T: DescribeType,
+{
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| ListNode::new::<Self, T>(graph))
+    }
+}
+
 impl<T> Reflect for Vec<T>
 where
     T: FromReflect + DescribeType,
 {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<T> DescribeType for Vec<T>
-        where
-            T: DescribeType,
-        {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| ListNode::new::<Self, T>(graph))
-            }
-        }
-
-        <Self as DescribeType>::type_descriptor()
-    }
-
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {

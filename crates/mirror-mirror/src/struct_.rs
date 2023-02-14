@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
@@ -17,7 +16,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::TypeDescriptor;
 use crate::Value;
 
 /// A reflected struct type.
@@ -73,18 +71,15 @@ impl StructValue {
     }
 }
 
-impl Reflect for StructValue {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl DescribeType for StructValue {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    OpaqueNode::new::<Self>(Default::default(), graph)
-                })
-            }
-        }
-        <Self as DescribeType>::type_descriptor()
+impl DescribeType for StructValue {
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| {
+            OpaqueNode::new::<Self>(Default::default(), graph)
+        })
     }
+}
 
+impl Reflect for StructValue {
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {

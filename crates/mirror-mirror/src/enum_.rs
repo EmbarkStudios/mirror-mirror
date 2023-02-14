@@ -1,4 +1,3 @@
-use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -20,7 +19,6 @@ use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Struct;
 use crate::Tuple;
-use crate::TypeDescriptor;
 use crate::Value;
 
 /// A reflected enum type.
@@ -183,18 +181,15 @@ impl TupleVariantBuilder {
     }
 }
 
-impl Reflect for EnumValue {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl DescribeType for EnumValue {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    OpaqueNode::new::<Self>(Default::default(), graph)
-                })
-            }
-        }
-        <Self as DescribeType>::type_descriptor()
+impl DescribeType for EnumValue {
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| {
+            OpaqueNode::new::<Self>(Default::default(), graph)
+        })
     }
+}
 
+impl Reflect for EnumValue {
     trivial_reflect_methods!();
 
     fn patch(&mut self, value: &dyn Reflect) {

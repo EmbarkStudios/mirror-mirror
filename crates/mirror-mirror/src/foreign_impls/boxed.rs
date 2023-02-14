@@ -15,20 +15,20 @@ use crate::ReflectRef;
 use crate::TypeDescriptor;
 use crate::Value;
 
+impl<T> DescribeType for Box<T>
+where
+    T: DescribeType,
+{
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        T::build(graph)
+    }
+}
+
 impl<T> Reflect for Box<T>
 where
     T: Reflect + DescribeType,
 {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        impl<T> DescribeType for Box<T>
-        where
-            T: DescribeType,
-        {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                T::build(graph)
-            }
-        }
-
         <T as DescribeType>::type_descriptor()
     }
 

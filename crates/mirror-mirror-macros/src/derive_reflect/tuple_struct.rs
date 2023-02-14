@@ -25,16 +25,58 @@ pub(super) fn expand(
 
     let fields = fields.unnamed;
 
+    let describe_type = expand_describe_type(ident, &fields, &attrs, &field_attrs, generics);
     let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
     let from_reflect = (!attrs.from_reflect_opt_out)
         .then(|| expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics));
     let tuple_struct = expand_tuple_struct(ident, &fields, &attrs, &field_attrs, generics);
 
     Ok(quote! {
+        #describe_type
         #reflect
         #from_reflect
         #tuple_struct
     })
+}
+
+fn expand_describe_type(
+    ident: &Ident,
+    fields: &Fields,
+    attrs: &ItemAttrs,
+    field_attrs: &AttrsDatabase<usize>,
+    generics: &Generics<'_>,
+) -> TokenStream {
+    let code_for_fields = fields
+        .iter()
+        .enumerate()
+        .filter(field_attrs.filter_out_skipped_unnamed())
+        .map(|(idx, field)| {
+            let field_ty = &field.ty;
+            let meta = field_attrs.meta(&idx);
+            let docs = field_attrs.docs(&idx);
+            quote! {
+                UnnamedFieldNode::new::<#field_ty>(#meta, #docs, graph)
+            }
+        });
+
+    let meta = attrs.meta();
+    let docs = attrs.docs();
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
+    quote! {
+        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                let fields = &[#(#code_for_fields),*];
+                graph.get_or_build_node_with::<Self, _>(|graph| {
+                    TupleStructNode::new::<Self>(fields, #meta, #docs)
+                })
+            }
+        }
+    }
 }
 
 fn expand_reflect(
@@ -90,41 +132,9 @@ fn expand_reflect(
         }
     };
 
-    let fn_type_info = {
-        let code_for_fields = fields
-            .iter()
-            .enumerate()
-            .filter(field_attrs.filter_out_skipped_unnamed())
-            .map(|(idx, field)| {
-                let field_ty = &field.ty;
-                let meta = field_attrs.meta(&idx);
-                let docs = field_attrs.docs(&idx);
-                quote! {
-                    UnnamedFieldNode::new::<#field_ty>(#meta, #docs, graph)
-                }
-            });
-
-        let meta = attrs.meta();
-        let docs = attrs.docs();
-        let Generics {
-            impl_generics,
-            type_generics,
-            where_clause,
-        } = generics;
-
-        quote! {
-            fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-                impl #impl_generics DescribeType for #ident #type_generics #where_clause {
-                    fn build(graph: &mut TypeGraph) -> NodeId {
-                        let fields = &[#(#code_for_fields),*];
-                        graph.get_or_build_node_with::<Self, _>(|graph| {
-                            TupleStructNode::new::<Self>(fields, #meta, #docs)
-                        })
-                    }
-                }
-
-                <Self as DescribeType>::type_descriptor()
-            }
+    let fn_type_info = quote! {
+        fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
+            <Self as DescribeType>::type_descriptor()
         }
     };
 
