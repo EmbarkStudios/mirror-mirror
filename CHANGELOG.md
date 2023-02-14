@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `TupleStructVariant`
 - **added:** Add `EnumType::variants_len` ([#94])
 - **added:** Support setting a default value for `OpaqueType` ([#97])
+- **added:** Support pretty printing types ([#95])
 
 [#92]: https://github.com/EmbarkStudios/mirror-mirror/pull/92
 [#94]: https://github.com/EmbarkStudios/mirror-mirror/pull/94
+[#95]: https://github.com/EmbarkStudios/mirror-mirror/pull/95
 [#97]: https://github.com/EmbarkStudios/mirror-mirror/pull/97
 
 # 0.1.4 (13. February, 2023)
