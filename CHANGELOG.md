@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- None.
+
+# 0.1.6 (16. February, 2023)
+
 - **fixed:** Fix inconsistent ordering when iterating over fields in struct
   values and struct types. Same for struct variants ([#98])
 
