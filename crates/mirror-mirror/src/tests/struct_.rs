@@ -3,6 +3,7 @@ use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use crate::enum_::VariantField;
 use crate::key_path;
 use crate::key_path::GetTypePath;
 use crate::struct_::StructValue;
@@ -226,4 +227,104 @@ fn accessing_docs_in_type_info() {
     let field = variant_info.field_types().next().unwrap();
     assert_eq!(field.name().unwrap(), "field");
     assert_eq!(field.docs(), &[" Bingo!"]);
+}
+
+// whether we iterate over the fields in a value or the fields in a type we should get the same
+// order
+#[test]
+fn consistent_iteration_order_of_struct_fields() {
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate))]
+    struct Outer {
+        inner: Inner,
+    }
+
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate))]
+    struct Inner {
+        // the order the fields are declared in is important!
+        b: u32,
+        a: u32,
+    }
+
+    let outer = Outer {
+        inner: Inner { a: 1, b: 2 },
+    };
+
+    let value = outer.as_reflect().as_struct().unwrap();
+    let mut by_value = Vec::new();
+    for (outer_field_name, outer_field_value) in value.fields() {
+        by_value.push(outer_field_name);
+        for (inner_field_name, _) in outer_field_value.as_struct().unwrap().fields() {
+            by_value.push(inner_field_name);
+        }
+    }
+
+    let ty = <Outer as DescribeType>::type_descriptor();
+    let ty = ty.as_struct().unwrap();
+    let mut by_type = Vec::new();
+    for outer_field_ty in ty.field_types() {
+        by_type.push(outer_field_ty.name());
+        for inner_field_ty in outer_field_ty.get_type().as_struct().unwrap().field_types() {
+            by_type.push(inner_field_ty.name());
+        }
+    }
+
+    assert_eq!(by_value, by_type);
+}
+
+#[test]
+fn consistent_iteration_order_of_struct_variant_fields() {
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate))]
+    struct Outer {
+        inner: Inner,
+    }
+
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate))]
+    enum Inner {
+        A {
+            // the order the fields are declared in is important!
+            b: u32,
+            a: u32,
+        },
+    }
+
+    let outer = Outer {
+        inner: Inner::A { a: 1, b: 2 },
+    };
+
+    let value = outer.as_reflect().as_struct().unwrap();
+    let mut by_value = Vec::new();
+    for (outer_field_name, outer_field_value) in value.fields() {
+        by_value.push(outer_field_name);
+        for inner_field in outer_field_value.as_enum().unwrap().fields() {
+            match inner_field {
+                VariantField::Struct(inner_field_name, _) => {
+                    by_value.push(inner_field_name);
+                }
+                VariantField::Tuple(_) => unreachable!(),
+            }
+        }
+    }
+
+    let ty = <Outer as DescribeType>::type_descriptor();
+    let ty = ty.as_struct().unwrap();
+    let mut by_type = Vec::new();
+    for outer_field_ty in ty.field_types() {
+        by_type.push(outer_field_ty.name());
+        for inner_field_ty in outer_field_ty
+            .get_type()
+            .as_enum()
+            .unwrap()
+            .variant("A")
+            .unwrap()
+            .field_types()
+        {
+            by_type.push(inner_field_ty.name().unwrap());
+        }
+    }
+
+    assert_eq!(by_value, by_type);
 }

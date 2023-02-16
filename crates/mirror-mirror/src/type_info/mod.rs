@@ -643,9 +643,12 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.values().map(|node| NamedField {
-            node,
-            graph: self.graph,
+        self.node.field_names.iter().map(move |field_name| {
+            let node = self.node.fields.get(field_name).unwrap();
+            NamedField {
+                node,
+                graph: self.graph,
+            }
         })
     }
 
@@ -993,9 +996,12 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.values().map(|node| NamedField {
-            node,
-            graph: self.graph,
+        self.node.field_names.iter().map(|field_name| {
+            let node = self.node.fields.get(field_name).unwrap();
+            NamedField {
+                node,
+                graph: self.graph,
+            }
         })
     }
 
