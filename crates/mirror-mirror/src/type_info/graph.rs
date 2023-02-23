@@ -30,7 +30,7 @@ impl NodeId {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub(super) struct WithId<T> {
     pub(super) id: NodeId,
     inner: T,

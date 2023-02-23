@@ -167,7 +167,7 @@ impl<'a> GetMeta<'a> for &'a TypeDescriptor {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Type<'a> {
     Struct(StructType<'a>),
     TupleStruct(TupleStructType<'a>),
@@ -561,7 +561,7 @@ impl<'a> GetMeta<'a> for OpaqueType<'a> {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScalarType {
@@ -631,7 +631,7 @@ impl ScalarType {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructType<'a> {
     node: WithId<&'a StructNode>,
     graph: &'a TypeGraph,
@@ -689,7 +689,7 @@ impl<'a> StructType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TupleStructType<'a> {
     node: WithId<&'a TupleStructNode>,
     graph: &'a TypeGraph,
@@ -739,7 +739,7 @@ impl<'a> TupleStructType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TupleType<'a> {
     node: WithId<&'a TupleNode>,
     graph: &'a TypeGraph,
@@ -789,7 +789,7 @@ impl<'a> TupleType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EnumType<'a> {
     node: WithId<&'a EnumNode>,
     graph: &'a TypeGraph,
@@ -846,7 +846,7 @@ impl<'a> EnumType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Variant<'a> {
     Struct(StructVariant<'a>),
     Tuple(TupleVariant<'a>),
@@ -941,7 +941,7 @@ impl<'a> GetMeta<'a> for Variant<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum VariantField<'a> {
     Named(NamedField<'a>),
     Unnamed(UnnamedField<'a>),
@@ -979,7 +979,7 @@ impl<'a> GetMeta<'a> for VariantField<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructVariant<'a> {
     node: &'a StructVariantNode,
     enum_node: WithId<&'a EnumNode>,
@@ -1038,7 +1038,7 @@ impl<'a> StructVariant<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TupleVariant<'a> {
     node: &'a TupleVariantNode,
     enum_node: WithId<&'a EnumNode>,
@@ -1089,7 +1089,7 @@ impl<'a> TupleVariant<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnitVariant<'a> {
     node: &'a UnitVariantNode,
     enum_node: WithId<&'a EnumNode>,
@@ -1117,7 +1117,7 @@ impl<'a> UnitVariant<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnnamedField<'a> {
     node: &'a UnnamedFieldNode,
     graph: &'a TypeGraph,
@@ -1133,7 +1133,7 @@ impl<'a> UnnamedField<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NamedField<'a> {
     node: &'a NamedFieldNode,
     graph: &'a TypeGraph,
@@ -1153,7 +1153,7 @@ impl<'a> NamedField<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ArrayType<'a> {
     node: WithId<&'a ArrayNode>,
     graph: &'a TypeGraph,
@@ -1196,7 +1196,7 @@ impl<'a> ArrayType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ListType<'a> {
     node: WithId<&'a ListNode>,
     graph: &'a TypeGraph,
@@ -1227,7 +1227,7 @@ impl<'a> ListType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MapType<'a> {
     node: WithId<&'a MapNode>,
     graph: &'a TypeGraph,
@@ -1262,7 +1262,7 @@ impl<'a> MapType<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct OpaqueType<'a> {
     node: WithId<&'a OpaqueNode>,
     graph: &'a TypeGraph,
@@ -1290,7 +1290,7 @@ impl<'a> OpaqueType<'a> {
 }
 
 /// A superset of `Type` that can also describe `Variant`s.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TypeAtPath<'a> {
     Struct(StructType<'a>),
     TupleStruct(TupleStructType<'a>),
