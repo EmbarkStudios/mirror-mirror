@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - None.
 
+# 0.1.8 (23. February, 2023)
+
+- **added:** Make `Key` and `KeyPath` impl `Hash` ([#103])
+
+[#103]: https://github.com/EmbarkStudios/mirror-mirror/pull/103
+
 # 0.1.7 (23. February, 2023)
 
 - **added:** Implement `PartialEq`, `Eq`, `Hash` for types in `type_info` ([#100] [#101])
