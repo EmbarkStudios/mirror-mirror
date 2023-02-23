@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- **added:** Implement `PartialEq`, `Eq`, `Hash` for types in `type_info` ([#101])
+- None.
 
+# 0.1.7 (23. February, 2023)
+
+- **added:** Implement `PartialEq`, `Eq`, `Hash` for types in `type_info` ([#100] [#101])
+
+[#100]: https://github.com/EmbarkStudios/mirror-mirror/pull/100
 [#101]: https://github.com/EmbarkStudios/mirror-mirror/pull/101
 
 # 0.1.6 (16. February, 2023)
