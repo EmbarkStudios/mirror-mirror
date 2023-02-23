@@ -89,7 +89,7 @@ pub trait DescribeType: 'static {
 ///
 /// `mirror-mirror` represents types as (possibly cyclic) graphs since types can contain
 /// themselves. For example `struct Foo(Vec<Foo>)`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeDescriptor {
