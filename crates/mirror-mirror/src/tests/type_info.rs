@@ -208,7 +208,9 @@ fn basic_eq() {
 
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
-    struct Bar { b: bool }
+    struct Bar {
+        b: bool,
+    }
 
     assert_eq!(
         <Foo as DescribeType>::type_descriptor(),
@@ -232,22 +234,26 @@ fn basic_hash() {
     use std::hash::{BuildHasher, Hasher};
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
-    struct Foo { a: i32 }
+    struct Foo {
+        a: i32,
+    }
 
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
-    struct Bar { b: bool }
+    struct Bar {
+        b: bool,
+    }
 
     let s = RandomState::new();
 
     let mut hasher = s.build_hasher();
     <Foo as DescribeType>::type_descriptor().hash(&mut hasher);
     let foo_hash = hasher.finish();
-    
+
     let mut hasher = s.build_hasher();
     <Bar as DescribeType>::type_descriptor().hash(&mut hasher);
     let bar_hash = hasher.finish();
-    
+
     assert_ne!(foo_hash, bar_hash);
 
     let mut hasher = s.build_hasher();
