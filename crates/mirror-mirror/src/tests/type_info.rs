@@ -1,4 +1,5 @@
 use core::any::type_name;
+use core::hash::Hash;
 
 use crate::key_path;
 use crate::key_path::GetPath;
@@ -197,4 +198,72 @@ fn opaque_default() {
     let default_value = type_descriptor.default_value().unwrap();
 
     assert_eq!(default_value.get_at::<i32>(&key_path!(.0)).unwrap(), &1337);
+}
+
+#[test]
+fn basic_eq() {
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
+    struct Foo(i32);
+
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
+    struct Bar {
+        b: bool,
+    }
+
+    assert_eq!(
+        <Foo as DescribeType>::type_descriptor(),
+        <Foo as DescribeType>::type_descriptor(),
+    );
+
+    assert_eq!(
+        <Bar as DescribeType>::type_descriptor(),
+        <Bar as DescribeType>::type_descriptor(),
+    );
+
+    assert_ne!(
+        <Foo as DescribeType>::type_descriptor(),
+        <Bar as DescribeType>::type_descriptor(),
+    );
+}
+
+#[test]
+fn basic_hash() {
+    use std::collections::hash_map::RandomState;
+    use std::hash::{BuildHasher, Hasher};
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
+    struct Foo {
+        a: i32,
+    }
+
+    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[reflect(crate_name(crate))]
+    struct Bar {
+        b: bool,
+    }
+
+    let s = RandomState::new();
+
+    let mut hasher = s.build_hasher();
+    <Foo as DescribeType>::type_descriptor().hash(&mut hasher);
+    let foo_hash = hasher.finish();
+
+    let mut hasher = s.build_hasher();
+    <Bar as DescribeType>::type_descriptor().hash(&mut hasher);
+    let bar_hash = hasher.finish();
+
+    assert_ne!(foo_hash, bar_hash);
+
+    let mut hasher = s.build_hasher();
+    <Foo as DescribeType>::type_descriptor().hash(&mut hasher);
+    let foo_hash_2 = hasher.finish();
+
+    let mut hasher = s.build_hasher();
+    <Bar as DescribeType>::type_descriptor().hash(&mut hasher);
+    let bar_hash_2 = hasher.finish();
+
+    assert_eq!(foo_hash, foo_hash_2);
+    assert_eq!(bar_hash, bar_hash_2);
 }
