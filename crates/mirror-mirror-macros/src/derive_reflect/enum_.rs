@@ -271,13 +271,20 @@ fn expand_reflect(
             }
         });
 
+        let has_skipped_variant = variants.iter().any(|variant| variant.skip());
+        let catch_all_branch = has_skipped_variant.then(|| {
+            quote! {
+                other => {
+                    panic!("`Reflection::to_value` called on `{:?}` which doesn't suport reflection", other.as_reflect())
+                }
+            }
+        });
+
         quote! {
             fn to_value(&self) -> Value {
                 match self {
                     #(#match_arms)*
-                    other => {
-                        panic!("`Reflection::to_value` called on `{:?}` which doesn't suport reflection", other.as_reflect())
-                    }
+                    #catch_all_branch
                 }
             }
         }
