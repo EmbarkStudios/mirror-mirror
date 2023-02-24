@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **fixed:** In `Reflect::to_value` for enums, only generate a catch all branch
+  if the enum has a variant with `#[reflect(skip)]` ([#105])
+
+[#105]: https://github.com/EmbarkStudios/mirror-mirror/pull/105
 
 # 0.1.8 (23. February, 2023)
 
