@@ -114,6 +114,10 @@ impl TypeDescriptor {
         self.get_type().default_value()
     }
 
+    pub fn has_default_value(&self) -> bool {
+        self.get_type().has_default_value()
+    }
+
     pub fn as_struct(&self) -> Option<StructType<'_>> {
         self.get_type().as_struct()
     }
@@ -302,6 +306,20 @@ impl<'a> Type<'a> {
             Type::Map(inner) => Some(inner.default_value()),
             Type::Scalar(inner) => Some(inner.default_value()),
             Type::Opaque(inner) => inner.default_value(),
+        }
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        match self {
+            Type::Struct(inner) => inner.has_default_value(),
+            Type::TupleStruct(inner) => inner.has_default_value(),
+            Type::Tuple(inner) => inner.has_default_value(),
+            Type::Enum(inner) => inner.has_default_value(),
+            Type::List(inner) => inner.has_default_value(),
+            Type::Array(inner) => inner.has_default_value(),
+            Type::Map(inner) => inner.has_default_value(),
+            Type::Scalar(inner) => inner.has_default_value(),
+            Type::Opaque(inner) => inner.has_default_value(),
         }
     }
 
@@ -629,6 +647,10 @@ impl ScalarType {
             ScalarType::String => String::default().to_value(),
         }
     }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -687,6 +709,11 @@ impl<'a> StructType<'a> {
         }
         Some(value.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -737,6 +764,11 @@ impl<'a> TupleStructType<'a> {
         }
         Some(value.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -786,6 +818,11 @@ impl<'a> TupleType<'a> {
             value.push_field(field.get_type().default_value()?);
         }
         Some(value.to_value())
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
     }
 }
 
@@ -841,8 +878,15 @@ impl<'a> EnumType<'a> {
 
     pub fn default_value(self) -> Option<Value> {
         let mut variants = self.variants();
-        let variant = variants.next()?;
-        variant.default_value()
+        let first_variant = variants.next()?;
+        first_variant.default_value()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        let mut variants = self.variants();
+        variants
+            .next()
+            .map_or(false, |first_variant| first_variant.has_default_value())
     }
 }
 
@@ -919,6 +963,14 @@ impl<'a> Variant<'a> {
             Variant::Struct(variant) => variant.default_value(),
             Variant::Tuple(variant) => variant.default_value(),
             Variant::Unit(variant) => Some(variant.default_value()),
+        }
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        match self {
+            Variant::Struct(variant) => variant.has_default_value(),
+            Variant::Tuple(variant) => variant.has_default_value(),
+            Variant::Unit(variant) => variant.has_default_value(),
         }
     }
 }
@@ -1036,6 +1088,11 @@ impl<'a> StructVariant<'a> {
         }
         Some(value.finish().to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -1087,6 +1144,11 @@ impl<'a> TupleVariant<'a> {
         }
         Some(value.finish().to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -1114,6 +1176,10 @@ impl<'a> UnitVariant<'a> {
 
     pub fn default_value(self) -> Value {
         EnumValue::new_unit_variant(self.name()).to_value()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        true
     }
 }
 
@@ -1194,6 +1260,10 @@ impl<'a> ArrayType<'a> {
         }
         Some(acc.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.element_type().has_default_value()
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -1224,6 +1294,10 @@ impl<'a> ListType<'a> {
 
     pub fn default_value(self) -> Value {
         Vec::<()>::new().to_value()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        true
     }
 }
 
@@ -1260,6 +1334,10 @@ impl<'a> MapType<'a> {
     pub fn default_value(self) -> Value {
         BTreeMap::<(), ()>::new().to_value()
     }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -1286,6 +1364,10 @@ impl<'a> OpaqueType<'a> {
 
     pub fn default_value(self) -> Option<Value> {
         self.node.default_value.clone()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        self.node.default_value.is_some()
     }
 }
 
@@ -1349,6 +1431,21 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::Map(inner) => Some(inner.default_value()),
             TypeAtPath::Scalar(inner) => Some(inner.default_value()),
             TypeAtPath::Opaque(inner) => inner.default_value(),
+        }
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        match self {
+            TypeAtPath::Struct(inner) => inner.has_default_value(),
+            TypeAtPath::TupleStruct(inner) => inner.has_default_value(),
+            TypeAtPath::Tuple(inner) => inner.has_default_value(),
+            TypeAtPath::Enum(inner) => inner.has_default_value(),
+            TypeAtPath::Variant(inner) => inner.has_default_value(),
+            TypeAtPath::List(inner) => inner.has_default_value(),
+            TypeAtPath::Array(inner) => inner.has_default_value(),
+            TypeAtPath::Map(inner) => inner.has_default_value(),
+            TypeAtPath::Scalar(inner) => inner.has_default_value(),
+            TypeAtPath::Opaque(inner) => inner.has_default_value(),
         }
     }
 
