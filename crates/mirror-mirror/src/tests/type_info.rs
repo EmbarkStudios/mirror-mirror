@@ -1,6 +1,8 @@
 use core::any::type_name;
 use core::hash::Hash;
 
+use alloc::collections::BTreeMap;
+
 use crate::key_path;
 use crate::key_path::GetPath;
 use crate::tuple_struct::TupleStructValue;
@@ -195,6 +197,7 @@ fn opaque_default() {
     }
 
     let type_descriptor = Opaque::type_descriptor();
+
     let default_value = type_descriptor.default_value().unwrap();
 
     assert_eq!(default_value.get_at::<i32>(&key_path!(.0)).unwrap(), &1337);
@@ -266,4 +269,35 @@ fn basic_hash() {
 
     assert_eq!(foo_hash, foo_hash_2);
     assert_eq!(bar_hash, bar_hash_2);
+}
+
+#[test]
+fn has_default_value() {
+    #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
+    struct A {
+        a: String,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
+    struct B(String);
+
+    #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
+    enum C {
+        C(i32),
+    }
+
+    assert!(<A as DescribeType>::type_descriptor().has_default_value());
+    assert!(<B as DescribeType>::type_descriptor().has_default_value());
+    assert!(<C as DescribeType>::type_descriptor().has_default_value());
+    assert!(<(i32, String) as DescribeType>::type_descriptor().has_default_value());
+    assert!(<[i32; 3] as DescribeType>::type_descriptor().has_default_value());
+    assert!(<BTreeMap<String, i32> as DescribeType>::type_descriptor().has_default_value());
+    assert!(<i32 as DescribeType>::type_descriptor().has_default_value());
+
+    // value doesn't have a default
+    assert!(!<[Value; 3] as DescribeType>::type_descriptor().has_default_value());
+    assert!(!<Value as DescribeType>::type_descriptor().has_default_value());
 }
