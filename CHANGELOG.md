@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **added:** Add a `has_default_value` method to types in `type_info` ([#104])
+
+[#104]: https://github.com/EmbarkStudios/mirror-mirror/pull/104
 
 # 0.1.8 (23. February, 2023)
 
