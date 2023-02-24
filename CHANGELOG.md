@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- None.
+
+# 0.1.9 (24. February, 2023)
+
 - **added:** Add `StructValue::with_capacity`,
   `TupleStructValue::with_capacity`, and `TupleValue::with_capacity` ([#106])
 - **added:** Add `EnumValue::new_struct_variant_with_capacity` and
