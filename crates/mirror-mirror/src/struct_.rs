@@ -59,6 +59,14 @@ impl StructValue {
         Self::default()
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            field_names: Vec::with_capacity(capacity),
+            // there is no `BTreeMap::with_capacity` :(
+            fields: BTreeMap::new(),
+        }
+    }
+
     pub fn with_field(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
         self.set_field(name, value);
         self
