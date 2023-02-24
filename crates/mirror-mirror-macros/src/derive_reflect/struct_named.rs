@@ -121,9 +121,11 @@ fn expand_reflect(
                 }
             });
 
+        let fields_len = fields.len();
+
         quote! {
             fn to_value(&self) -> Value {
-                let value = StructValue::default();
+                let value = StructValue::with_capacity(#fields_len);
                 #(#code_for_fields)*
                 value.into()
             }

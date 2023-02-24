@@ -235,9 +235,11 @@ fn expand_reflect(
                         }
                     });
 
+                    let fields_len = fields.len();
+
                     quote! {
                         Self::#variant_ident { #(#field_names,)* } => {
-                            let mut value = EnumValue::new_struct_variant(#variant_ident_string);
+                            let mut value = EnumValue::new_struct_variant_with_capacity(#variant_ident_string, #fields_len);
                             #(#set_fields)*
                             value.finish().into()
                         }
@@ -251,9 +253,11 @@ fn expand_reflect(
                         .filter(filter_out_skipped)
                         .map(|field| &field.fake_ident);
 
+                    let fields_len = fields.len();
+
                     quote! {
                         Self::#variant_ident(#(#field_names,)*) => {
-                            let mut value = EnumValue::new_tuple_variant(#variant_ident_string);
+                            let mut value = EnumValue::new_tuple_variant_with_capacity(#variant_ident_string, #fields_len);
                             #(
                                 value.push_tuple_field(#included_fields.to_value());
                             )*

@@ -50,6 +50,12 @@ impl TupleStructValue {
         Self::default()
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            tuple: TupleValue::with_capacity(capacity),
+        }
+    }
+
     pub fn with_field(self, value: impl Into<Value>) -> Self {
         Self {
             tuple: self.tuple.with_field(value),
