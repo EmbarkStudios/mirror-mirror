@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **fixed:** Fully qualify `FromReflect` in generated code ([#107])
+
+[#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
 
 # 0.1.9 (24. February, 2023)
 
