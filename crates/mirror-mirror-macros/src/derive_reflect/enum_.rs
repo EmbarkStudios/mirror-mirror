@@ -186,7 +186,7 @@ fn expand_reflect(
             quote! {
                 fn patch(&mut self, value: &dyn Reflect) {
                     if let Some(enum_) = value.reflect_ref().as_enum() {
-                        if let Some(new) = Self::from_reflect(value) {
+                        if let Some(new) = FromReflect::from_reflect(value) {
                             *self = new;
                         } else {
                             let variant_matches = self.variant_name() == enum_.variant_name();
@@ -204,7 +204,7 @@ fn expand_reflect(
                     if let Some(new) = value.downcast_ref::<Self>() {
                         *self = new.clone();
                     } else if let Some(enum_) = value.reflect_ref().as_enum() {
-                        if let Some(new) = Self::from_reflect(value) {
+                        if let Some(new) = FromReflect::from_reflect(value) {
                             *self = new;
                         } else {
                             let variant_matches = self.variant_name() == enum_.variant_name();
