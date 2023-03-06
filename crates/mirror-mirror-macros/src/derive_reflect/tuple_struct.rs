@@ -134,12 +134,6 @@ fn expand_reflect(
         }
     };
 
-    let fn_type_info = quote! {
-        fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-            <Self as DescribeType>::type_descriptor()
-        }
-    };
-
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
     let Generics {
@@ -166,7 +160,6 @@ fn expand_reflect(
                 self
             }
 
-            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect
