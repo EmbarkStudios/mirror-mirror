@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Unreleased
 
 - **breaking:** Remove `Reflect::type_descriptor` ([#90])
+- **breaking:** Remove `Reflect::type_id` ([#109])
 - **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
+[#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
 
 # 0.1.9 (24. February, 2023)
 
