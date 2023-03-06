@@ -186,7 +186,7 @@ fn expand_reflect(
             quote! {
                 fn patch(&mut self, value: &dyn Reflect) {
                     if let Some(enum_) = value.reflect_ref().as_enum() {
-                        if let Some(new) = Self::from_reflect(value) {
+                        if let Some(new) = FromReflect::from_reflect(value) {
                             *self = new;
                         } else {
                             let variant_matches = self.variant_name() == enum_.variant_name();
@@ -204,7 +204,7 @@ fn expand_reflect(
                     if let Some(new) = value.downcast_ref::<Self>() {
                         *self = new.clone();
                     } else if let Some(enum_) = value.reflect_ref().as_enum() {
-                        if let Some(new) = Self::from_reflect(value) {
+                        if let Some(new) = FromReflect::from_reflect(value) {
                             *self = new;
                         } else {
                             let variant_matches = self.variant_name() == enum_.variant_name();
@@ -235,9 +235,11 @@ fn expand_reflect(
                         }
                     });
 
+                    let fields_len = fields.len();
+
                     quote! {
                         Self::#variant_ident { #(#field_names,)* } => {
-                            let mut value = EnumValue::new_struct_variant(#variant_ident_string);
+                            let mut value = EnumValue::new_struct_variant_with_capacity(#variant_ident_string, #fields_len);
                             #(#set_fields)*
                             value.finish().into()
                         }
@@ -251,9 +253,11 @@ fn expand_reflect(
                         .filter(filter_out_skipped)
                         .map(|field| &field.fake_ident);
 
+                    let fields_len = fields.len();
+
                     quote! {
                         Self::#variant_ident(#(#field_names,)*) => {
-                            let mut value = EnumValue::new_tuple_variant(#variant_ident_string);
+                            let mut value = EnumValue::new_tuple_variant_with_capacity(#variant_ident_string, #fields_len);
                             #(
                                 value.push_tuple_field(#included_fields.to_value());
                             )*
@@ -271,13 +275,20 @@ fn expand_reflect(
             }
         });
 
+        let has_skipped_variant = variants.iter().any(|variant| variant.skip());
+        let catch_all_branch = has_skipped_variant.then(|| {
+            quote! {
+                other => {
+                    panic!("`Reflection::to_value` called on `{:?}` which doesn't suport reflection", other.as_reflect())
+                }
+            }
+        });
+
         quote! {
             fn to_value(&self) -> Value {
                 match self {
                     #(#match_arms)*
-                    other => {
-                        panic!("`Reflection::to_value` called on `{:?}` which doesn't suport reflection", other.as_reflect())
-                    }
+                    #catch_all_branch
                 }
             }
         }

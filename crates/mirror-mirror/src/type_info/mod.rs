@@ -22,10 +22,12 @@ use crate::Reflect;
 use crate::Value;
 
 pub mod graph;
+pub mod pretty_print;
 
 #[cfg(feature = "std")]
 mod simple_type_name;
 
+pub use self::pretty_print::{PrettyPrintRoot, RootPrettyPrinter};
 #[cfg(feature = "std")]
 pub use self::simple_type_name::SimpleTypeName;
 
@@ -87,7 +89,7 @@ pub trait DescribeType: 'static {
 ///
 /// `mirror-mirror` represents types as (possibly cyclic) graphs since types can contain
 /// themselves. For example `struct Foo(Vec<Foo>)`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeDescriptor {
@@ -110,6 +112,10 @@ impl TypeDescriptor {
 
     pub fn default_value(&self) -> Option<Value> {
         self.get_type().default_value()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        self.get_type().has_default_value()
     }
 
     pub fn as_struct(&self) -> Option<StructType<'_>> {
@@ -165,7 +171,7 @@ impl<'a> GetMeta<'a> for &'a TypeDescriptor {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Type<'a> {
     Struct(StructType<'a>),
     TupleStruct(TupleStructType<'a>),
@@ -300,6 +306,20 @@ impl<'a> Type<'a> {
             Type::Map(inner) => Some(inner.default_value()),
             Type::Scalar(inner) => Some(inner.default_value()),
             Type::Opaque(inner) => inner.default_value(),
+        }
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        match self {
+            Type::Struct(inner) => inner.has_default_value(),
+            Type::TupleStruct(inner) => inner.has_default_value(),
+            Type::Tuple(inner) => inner.has_default_value(),
+            Type::Enum(inner) => inner.has_default_value(),
+            Type::List(inner) => inner.has_default_value(),
+            Type::Array(inner) => inner.has_default_value(),
+            Type::Map(inner) => inner.has_default_value(),
+            Type::Scalar(inner) => inner.has_default_value(),
+            Type::Opaque(inner) => inner.has_default_value(),
         }
     }
 
@@ -457,7 +477,13 @@ mod private {
 
     pub trait Sealed {}
 
+    impl Sealed for TypeDescriptor {}
     impl<'a> Sealed for &'a TypeDescriptor {}
+    impl<'a> Sealed for TupleType<'a> {}
+    impl<'a> Sealed for ListType<'a> {}
+    impl<'a> Sealed for ArrayType<'a> {}
+    impl<'a> Sealed for MapType<'a> {}
+    impl Sealed for ScalarType {}
     impl Sealed for Type<'_> {}
     impl Sealed for StructType<'_> {}
     impl Sealed for TupleStructType<'_> {}
@@ -553,7 +579,7 @@ impl<'a> GetMeta<'a> for OpaqueType<'a> {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScalarType {
@@ -621,9 +647,13 @@ impl ScalarType {
             ScalarType::String => String::default().to_value(),
         }
     }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructType<'a> {
     node: WithId<&'a StructNode>,
     graph: &'a TypeGraph,
@@ -635,9 +665,12 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.values().map(|node| NamedField {
-            node,
-            graph: self.graph,
+        self.node.field_names.iter().map(move |field_name| {
+            let node = self.node.fields.get(field_name).unwrap();
+            NamedField {
+                node,
+                graph: self.graph,
+            }
         })
     }
 
@@ -676,9 +709,14 @@ impl<'a> StructType<'a> {
         }
         Some(value.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TupleStructType<'a> {
     node: WithId<&'a TupleStructNode>,
     graph: &'a TypeGraph,
@@ -726,9 +764,14 @@ impl<'a> TupleStructType<'a> {
         }
         Some(value.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TupleType<'a> {
     node: WithId<&'a TupleNode>,
     graph: &'a TypeGraph,
@@ -776,9 +819,14 @@ impl<'a> TupleType<'a> {
         }
         Some(value.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EnumType<'a> {
     node: WithId<&'a EnumNode>,
     graph: &'a TypeGraph,
@@ -830,12 +878,19 @@ impl<'a> EnumType<'a> {
 
     pub fn default_value(self) -> Option<Value> {
         let mut variants = self.variants();
-        let variant = variants.next()?;
-        variant.default_value()
+        let first_variant = variants.next()?;
+        first_variant.default_value()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        let mut variants = self.variants();
+        variants
+            .next()
+            .map_or(false, |first_variant| first_variant.has_default_value())
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Variant<'a> {
     Struct(StructVariant<'a>),
     Tuple(TupleVariant<'a>),
@@ -910,6 +965,14 @@ impl<'a> Variant<'a> {
             Variant::Unit(variant) => Some(variant.default_value()),
         }
     }
+
+    pub fn has_default_value(&self) -> bool {
+        match self {
+            Variant::Struct(variant) => variant.has_default_value(),
+            Variant::Tuple(variant) => variant.has_default_value(),
+            Variant::Unit(variant) => variant.has_default_value(),
+        }
+    }
 }
 
 impl<'a> GetMeta<'a> for Variant<'a> {
@@ -930,7 +993,7 @@ impl<'a> GetMeta<'a> for Variant<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum VariantField<'a> {
     Named(NamedField<'a>),
     Unnamed(UnnamedField<'a>),
@@ -968,7 +1031,7 @@ impl<'a> GetMeta<'a> for VariantField<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StructVariant<'a> {
     node: &'a StructVariantNode,
     enum_node: WithId<&'a EnumNode>,
@@ -985,9 +1048,12 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.values().map(|node| NamedField {
-            node,
-            graph: self.graph,
+        self.node.field_names.iter().map(|field_name| {
+            let node = self.node.fields.get(field_name).unwrap();
+            NamedField {
+                node,
+                graph: self.graph,
+            }
         })
     }
 
@@ -1022,9 +1088,14 @@ impl<'a> StructVariant<'a> {
         }
         Some(value.finish().to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TupleVariant<'a> {
     node: &'a TupleVariantNode,
     enum_node: WithId<&'a EnumNode>,
@@ -1073,9 +1144,14 @@ impl<'a> TupleVariant<'a> {
         }
         Some(value.finish().to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.field_types()
+            .all(|field| field.get_type().has_default_value())
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnitVariant<'a> {
     node: &'a UnitVariantNode,
     enum_node: WithId<&'a EnumNode>,
@@ -1101,9 +1177,13 @@ impl<'a> UnitVariant<'a> {
     pub fn default_value(self) -> Value {
         EnumValue::new_unit_variant(self.name()).to_value()
     }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct UnnamedField<'a> {
     node: &'a UnnamedFieldNode,
     graph: &'a TypeGraph,
@@ -1119,7 +1199,7 @@ impl<'a> UnnamedField<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NamedField<'a> {
     node: &'a NamedFieldNode,
     graph: &'a TypeGraph,
@@ -1139,7 +1219,7 @@ impl<'a> NamedField<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ArrayType<'a> {
     node: WithId<&'a ArrayNode>,
     graph: &'a TypeGraph,
@@ -1180,9 +1260,13 @@ impl<'a> ArrayType<'a> {
         }
         Some(acc.to_value())
     }
+
+    pub fn has_default_value(&self) -> bool {
+        self.element_type().has_default_value()
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ListType<'a> {
     node: WithId<&'a ListNode>,
     graph: &'a TypeGraph,
@@ -1211,9 +1295,13 @@ impl<'a> ListType<'a> {
     pub fn default_value(self) -> Value {
         Vec::<()>::new().to_value()
     }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MapType<'a> {
     node: WithId<&'a MapNode>,
     graph: &'a TypeGraph,
@@ -1246,9 +1334,13 @@ impl<'a> MapType<'a> {
     pub fn default_value(self) -> Value {
         BTreeMap::<(), ()>::new().to_value()
     }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct OpaqueType<'a> {
     node: WithId<&'a OpaqueNode>,
     graph: &'a TypeGraph,
@@ -1271,12 +1363,16 @@ impl<'a> OpaqueType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        None
+        self.node.default_value.clone()
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        self.node.default_value.is_some()
     }
 }
 
 /// A superset of `Type` that can also describe `Variant`s.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TypeAtPath<'a> {
     Struct(StructType<'a>),
     TupleStruct(TupleStructType<'a>),
@@ -1335,6 +1431,21 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::Map(inner) => Some(inner.default_value()),
             TypeAtPath::Scalar(inner) => Some(inner.default_value()),
             TypeAtPath::Opaque(inner) => inner.default_value(),
+        }
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        match self {
+            TypeAtPath::Struct(inner) => inner.has_default_value(),
+            TypeAtPath::TupleStruct(inner) => inner.has_default_value(),
+            TypeAtPath::Tuple(inner) => inner.has_default_value(),
+            TypeAtPath::Enum(inner) => inner.has_default_value(),
+            TypeAtPath::Variant(inner) => inner.has_default_value(),
+            TypeAtPath::List(inner) => inner.has_default_value(),
+            TypeAtPath::Array(inner) => inner.has_default_value(),
+            TypeAtPath::Map(inner) => inner.has_default_value(),
+            TypeAtPath::Scalar(inner) => inner.has_default_value(),
+            TypeAtPath::Opaque(inner) => inner.has_default_value(),
         }
     }
 

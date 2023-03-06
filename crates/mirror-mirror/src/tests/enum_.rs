@@ -2,6 +2,7 @@ use crate::enum_::EnumValue;
 use crate::enum_::VariantKind;
 use crate::get_field::GetField;
 use crate::get_field::GetFieldMut;
+use crate::DescribeType;
 use crate::Enum;
 use crate::FromReflect;
 use crate::Reflect;
@@ -419,4 +420,54 @@ fn from_reflect_with_value() {
         .with_tuple_field(Number::One)
         .finish();
     assert!(Foo::from_reflect(&value).is_some());
+}
+
+#[test]
+fn default_value_for_enum_variant_type() {
+    #[derive(Debug, Clone, Reflect, PartialEq)]
+    #[reflect(crate_name(crate))]
+    pub enum Foo {
+        A,
+        B(i32, String),
+        C { a: f32, b: Option<bool> },
+    }
+
+    let type_ = <Foo as DescribeType>::type_descriptor();
+    let enum_type = type_.as_enum().unwrap();
+
+    assert_eq!(
+        Foo::from_reflect(
+            &enum_type
+                .variant("A")
+                .expect("no variant A")
+                .default_value()
+                .expect("can't make default value for opaque type")
+        )
+        .expect("from_reflect failed"),
+        Foo::A,
+    );
+
+    assert_eq!(
+        Foo::from_reflect(
+            &enum_type
+                .variant("B")
+                .expect("no variant B")
+                .default_value()
+                .expect("can't make default value for opaque type")
+        )
+        .expect("from_reflect failed"),
+        Foo::B(0, "".to_owned()),
+    );
+
+    assert_eq!(
+        Foo::from_reflect(
+            &enum_type
+                .variant("C")
+                .expect("no variant C")
+                .default_value()
+                .expect("can't make default value for opaque type")
+        )
+        .expect("from_reflect failed"),
+        Foo::C { a: 0.0, b: None },
+    );
 }

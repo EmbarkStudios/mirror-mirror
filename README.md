@@ -18,10 +18,6 @@
 [![Build status](https://github.com/EmbarkStudios/physx-rs/workflows/CI/badge.svg)](https://github.com/EmbarkStudios/physx-rs/actions)
 </div>
 
-## 🚨 Warning 🚨
-
-This library is still experimental and should not be used for anything serious, yet.
-
 ## Contributing
 
 [![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4-ff69b4.svg)](CODE_OF_CONDUCT.md)

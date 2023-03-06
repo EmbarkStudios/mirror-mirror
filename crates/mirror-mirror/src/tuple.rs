@@ -50,6 +50,12 @@ impl TupleValue {
         Self::default()
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            fields: Vec::with_capacity(capacity),
+        }
+    }
+
     pub fn with_field(mut self, value: impl Into<Value>) -> Self {
         self.push_field(value);
         self

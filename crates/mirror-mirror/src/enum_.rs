@@ -80,19 +80,33 @@ enum EnumValueKind {
 
 impl EnumValue {
     pub fn new_struct_variant(name: impl Into<String>) -> StructVariantBuilder {
+        Self::new_struct_variant_with_capacity(name, 0)
+    }
+
+    pub fn new_struct_variant_with_capacity(
+        name: impl Into<String>,
+        capacity: usize,
+    ) -> StructVariantBuilder {
         StructVariantBuilder {
             inner: Self {
                 name: name.into(),
-                kind: EnumValueKind::Struct(Default::default()),
+                kind: EnumValueKind::Struct(StructValue::with_capacity(capacity)),
             },
         }
     }
 
     pub fn new_tuple_variant(name: impl Into<String>) -> TupleVariantBuilder {
+        Self::new_tuple_variant_with_capacity(name, 0)
+    }
+
+    pub fn new_tuple_variant_with_capacity(
+        name: impl Into<String>,
+        capacity: usize,
+    ) -> TupleVariantBuilder {
         TupleVariantBuilder {
             inner: Self {
                 name: name.into(),
-                kind: EnumValueKind::Tuple(Default::default()),
+                kind: EnumValueKind::Tuple(TupleValue::with_capacity(capacity)),
             },
         }
     }

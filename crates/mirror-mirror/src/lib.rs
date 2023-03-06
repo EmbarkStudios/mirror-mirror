@@ -1,11 +1,5 @@
 //! General purpose reflection library for Rust.
 //!
-//! # 🚨 Warning 🚨
-//!
-//! This library is still experimental and should not be used for anything serious, yet. Many
-//! things are still undocumented and breaking changes are to be expected, though we do adhere to
-//! semver.
-//!
 //! # Examples
 //!
 //! ## Access a field by its string name and mutate it
