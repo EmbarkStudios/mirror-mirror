@@ -27,7 +27,6 @@ use crate::ReflectRef;
 use crate::ScalarMut;
 use crate::ScalarOwned;
 use crate::ScalarRef;
-use crate::TypeDescriptor;
 
 /// A type erased value type.
 ///
@@ -190,10 +189,6 @@ impl DescribeType for Value {
 }
 
 impl Reflect for Value {
-    fn type_descriptor(&self) -> alloc::borrow::Cow<'static, TypeDescriptor> {
-        <Self as DescribeType>::type_descriptor()
-    }
-
     fn as_any(&self) -> &dyn Any {
         for_each_variant!(self, inner => inner)
     }
