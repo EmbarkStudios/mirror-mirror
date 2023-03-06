@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None
+- **breaking:** Remove `Reflect::type_descriptor` ([#90])
 
 # 0.1.19 (26. February, 2023)
 
@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # 0.1.11 (20. March, 2023)
 
+- **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
 - **change:** Update to syn 2.0 ([#112])
 
@@ -65,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 
+[#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
 
 # 0.1.9 (24. February, 2023)
@@ -135,8 +137,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # 0.1.2 (03. February, 2023)
 
 - **added:** Add `impl From<Key> for KeyPath` ([#88])
+- **breaking:** Remove `Reflect::type_descriptor`. Instead capture the type
+  descriptor explicitly with `<T as DescribeType::type_descriptor()` ([#90])
 
 [#88]: https://github.com/EmbarkStudios/mirror-mirror/pull/88
+[#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 
 # 0.1.1 (17. January, 2023)
 

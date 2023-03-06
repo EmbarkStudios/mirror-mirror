@@ -258,7 +258,6 @@
 
 extern crate alloc;
 
-use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -271,12 +270,6 @@ use crate::enum_::VariantKind;
 
 macro_rules! trivial_reflect_methods {
     () => {
-        fn type_descriptor(
-            &self,
-        ) -> alloc::borrow::Cow<'static, $crate::type_info::TypeDescriptor> {
-            <Self as $crate::type_info::DescribeType>::type_descriptor()
-        }
-
         fn as_any(&self) -> &dyn Any {
             self
         }
@@ -379,8 +372,6 @@ pub(crate) static STATIC_RANDOM_STATE: ahash::RandomState = ahash::RandomState::
 
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor>;
-
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
