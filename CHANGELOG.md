@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **breaking:** Remove `Reflect::type_descriptor`. Instead capture the type
   descriptor explicitly with `<T as DescribeType::type_descriptor()` ([#90])
 - **breaking:** Make `KeyPath::pop` return the popped key ([#110])
+- **breaking:** Remove `Reflect::type_id` ([#109])
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
+[#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
 
 # 0.1.19 (26. February, 2023)
 
