@@ -262,7 +262,6 @@ use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
 use core::any::Any;
-use core::any::TypeId;
 use core::fmt;
 
 use crate::enum_::VariantField;
@@ -384,10 +383,35 @@ pub trait Reflect: Any + Send + 'static {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 
-    fn type_id(&self) -> TypeId {
-        TypeId::of::<Self>()
-    }
-
+    /// Get the type name of the value.
+    ///
+    /// ```
+    /// use mirror_mirror::Reflect;
+    ///
+    /// fn dyn_reflect_type_name(value: &dyn Reflect) -> &str {
+    ///     value.type_name()
+    /// }
+    ///
+    /// assert_eq!(dyn_reflect_type_name(&1_i32), "i32");
+    /// ```
+    ///
+    /// Note that converting something into a [`Value`] will change what this method returns:
+    ///
+    /// ```
+    /// use mirror_mirror::Reflect;
+    ///
+    /// fn dyn_reflect_type_name(value: &dyn Reflect) -> &str {
+    ///     value.type_name()
+    /// }
+    ///
+    /// assert_eq!(
+    ///     dyn_reflect_type_name(&1_i32.to_value()),
+    ///     // the type name is no longer "i32"
+    ///     "mirror_mirror::value::Value",
+    /// );
+    /// ```
+    ///
+    /// If you want to keep the name of the original type use [`DescribeType::type_descriptor`].
     fn type_name(&self) -> &str {
         core::any::type_name::<Self>()
     }

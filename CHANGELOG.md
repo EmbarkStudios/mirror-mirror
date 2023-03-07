@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **breaking:** Remove `Reflect::type_descriptor` ([#90])
 - **breaking:** Make `KeyPath::pop` return the popped key ([#110])
+- **breaking:** Remove `Reflect::type_id` ([#109])
 - **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
-[#111]: https://github.com/EmbarkStudios/mirror-mirror/pull/111
+[#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
+[#111]: https://github.com/EmbarkStudios/mirror-mirror/pull/111
 
 # 0.1.9 (24. February, 2023)
 
