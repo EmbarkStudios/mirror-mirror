@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Unreleased
 
 - **fixed:** Fully qualify `FromReflect` in generated code ([#107])
+- **added:** Implement `Reflect`, and friends, for `Infallible`
 
 [#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
 
