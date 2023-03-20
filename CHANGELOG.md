@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
 - **change:** Update to syn 2.0 ([#112])
 
-[#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
 [#111]: https://github.com/EmbarkStudios/mirror-mirror/pull/111
 [#112]: https://github.com/EmbarkStudios/mirror-mirror/pull/112
+
+# 0.1.10 (03. March, 2023)
+
+- **fixed:** Fully qualify `FromReflect` in generated code ([#107])
+
+[#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
 
 # 0.1.9 (24. February, 2023)
 
