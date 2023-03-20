@@ -15,7 +15,7 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0.47"
 quote = "1.0.21"
-syn = { version = "1.0.102", features = ["full", "visit"] }
+syn = { version = "2.0.2", features = ["full", "parsing", "visit"] }
 
 [dev-dependencies]
 mirror-mirror = { path = "../mirror-mirror", version = "0.1", default-features = false }
