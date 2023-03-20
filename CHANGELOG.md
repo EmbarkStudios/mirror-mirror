@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+- None.
+
+# 0.1.11 (20. March, 2023)
+
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
 - **change:** Update to syn 2.0 ([#112])
 
