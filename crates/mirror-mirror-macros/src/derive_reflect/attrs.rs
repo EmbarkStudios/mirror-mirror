@@ -11,7 +11,6 @@ use syn::FieldsNamed;
 use syn::FieldsUnnamed;
 use syn::Lit;
 use syn::LitStr;
-use syn::Meta;
 use syn::Token;
 use syn::UseTree;
 
@@ -53,7 +52,7 @@ impl ItemAttrs {
 
         let mut reflect_attrs = attrs
             .iter()
-            .filter(|attr| attr.path.is_ident("reflect"))
+            .filter(|attr| attr.meta.path().is_ident("reflect"))
             .peekable();
 
         let Some(attr) = reflect_attrs.next() else { return Ok(Self::new(docs)) };
@@ -175,12 +174,12 @@ impl ItemAttrs {
 fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
     attrs
         .iter()
-        .filter(|attr| attr.path.is_ident("doc"))
+        .filter(|attr| attr.meta.path().is_ident("doc"))
         .filter_map(|attr| {
-            let meta = attr.parse_meta().ok()?;
-            let Meta::NameValue(pair) = meta else { return None };
-            let Lit::Str(lit_str) = pair.lit else { return None };
-            Some(lit_str)
+            let name_value = attr.meta.require_name_value().ok()?;
+            let Expr::Lit(lit_expr) = &name_value.value else { return None };
+            let Lit::Str(lit_str) = &lit_expr.lit else { return None };
+            Some(lit_str.clone())
         })
         .collect::<Vec<_>>()
 }
@@ -294,7 +293,7 @@ impl InnerAttrs {
 
         let mut reflect_attrs = attrs
             .iter()
-            .filter(|attr| attr.path.is_ident("reflect"))
+            .filter(|attr| attr.meta.path().is_ident("reflect"))
             .peekable();
 
         let Some(attr) = reflect_attrs.next() else { return Ok(Self::new(docs)) };
