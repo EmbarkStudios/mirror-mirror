@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - None.
 
+# 0.1.12 (21. March, 2023)
+
+- **change:** Update to syn 2.0 ([#113])
+
+[#113]: https://github.com/EmbarkStudios/mirror-mirror/pull/113
+
 # 0.1.11 (20. March, 2023)
 
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
