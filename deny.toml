@@ -8,8 +8,6 @@ deny = [
 ]
 
 skip = [
-    # speedy-derive
-    { name = "syn" }
 ]
 
 [sources]
