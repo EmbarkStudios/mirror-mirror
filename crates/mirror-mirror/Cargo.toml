@@ -25,7 +25,7 @@ mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.4" }
 once_cell = { version = "1.16", features = ["alloc", "race", "critical-section"], default-features = false }
 ordered-float = { version = "3.4.0", default-features = false }
 serde = { version = "1.0.158", default-features = false, features = ["derive", "alloc"], optional = true }
-speedy = { version = "0.8.6", optional = true }
+speedy = { version = "0.8.5", optional = true }
 syn = { version = "2.0", features = ["full", "parsing"], optional = true }
 glam = { version = "0.22", optional = true }
 macaw = { version = "0.18", optional = true }
