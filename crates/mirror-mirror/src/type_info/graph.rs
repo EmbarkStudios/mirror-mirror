@@ -11,8 +11,6 @@ use core::ops::Deref;
 use super::*;
 use crate::Value;
 
-static HASHER_SEED: (u64, u64, u64, u64) = (0x86c11a44c63f4f2f ,0xaf04d821054d02b3, 0x98f0a276c462acc1, 0xe2d6368e09c9c079 );
-
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
@@ -27,9 +25,7 @@ impl NodeId {
         use core::hash::Hash;
         use core::hash::Hasher;
 
-        let random = ahash::RandomState::with_seeds(HASHER_SEED.0, HASHER_SEED.1, HASHER_SEED.2, HASHER_SEED.3);
-        let mut hasher = random.build_hasher();
-
+        let mut hasher = RANDOM_STATE.build_hasher();
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
     }

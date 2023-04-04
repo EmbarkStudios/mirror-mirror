@@ -367,6 +367,10 @@ pub use self::type_info::TypeDescriptor;
 #[doc(inline)]
 pub use self::value::Value;
 
+
+pub (crate) static STATIC_RANDOM_STATE: ahash::RandomState = ahash::RandomState::with_seeds(0x86c11a44c63f4f2f ,0xaf04d821054d02b3, 0x98f0a276c462acc1, 0xe2d6368e09c9c079);
+
+
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
     fn type_descriptor(&self) -> Cow<'static, TypeDescriptor>;
