@@ -10,6 +10,9 @@ use core::ops::Deref;
 use super::*;
 use crate::Value;
 
+// we don't care about security or dos attacks at all we just want a consistent hash
+const NODE_ID_HASHER: ahash::RandomState = ahash::RandomState::with_seeds(0, 0, 0, 0);
+
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
@@ -21,9 +24,7 @@ impl NodeId {
     where
         T: 'static,
     {
-        // we don't care about security or dos attacks at all we just want a consistent hash
-        let non_random_state = ahash::RandomState::with_seeds(0, 0, 0, 0);
-        Self(non_random_state.hash_one(TypeId::of::<T>()))
+        Self(NODE_ID_HASHER.hash_one(TypeId::of::<T>()))
     }
 }
 
