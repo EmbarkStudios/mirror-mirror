@@ -5,10 +5,13 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::type_name;
 use core::any::TypeId;
+use core::hash::BuildHasher;
 use core::ops::Deref;
 
 use super::*;
 use crate::Value;
+
+static HASHER_SEED: (u64, u64, u64, u64) = (23452345,569569, 344587659, 834993765);
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
@@ -24,7 +27,9 @@ impl NodeId {
         use core::hash::Hash;
         use core::hash::Hasher;
 
-        let mut hasher = ahash::AHasher::default();
+        let random = ahash::RandomState::with_seeds(HASHER_SEED.0, HASHER_SEED.1, HASHER_SEED.2, HASHER_SEED.3);
+        let mut hasher = random.build_hasher();
+
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
     }
