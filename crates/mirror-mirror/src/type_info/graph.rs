@@ -21,12 +21,9 @@ impl NodeId {
     where
         T: 'static,
     {
-        use core::hash::Hash;
-        use core::hash::Hasher;
-
-        let mut hasher = ahash::AHasher::default();
-        TypeId::of::<T>().hash(&mut hasher);
-        Self(hasher.finish())
+        // we don't care about security or dos attacks at all we just want a consistent hash
+        let non_random_state = ahash::RandomState::with_seeds(0, 0, 0, 0);
+        Self(non_random_state.hash_one(TypeId::of::<T>()))
     }
 }
 
