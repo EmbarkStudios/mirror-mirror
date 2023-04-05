@@ -9,6 +9,7 @@ use core::hash::BuildHasher;
 use core::ops::Deref;
 
 use super::*;
+use crate::STATIC_RANDOM_STATE;
 use crate::Value;
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
@@ -25,7 +26,7 @@ impl NodeId {
         use core::hash::Hash;
         use core::hash::Hasher;
 
-        let mut hasher = RANDOM_STATE.build_hasher();
+        let mut hasher = STATIC_RANDOM_STATE.build_hasher();
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
     }

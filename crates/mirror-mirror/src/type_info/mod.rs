@@ -54,7 +54,7 @@ pub trait DescribeType: 'static {
             let type_id = TypeId::of::<Self>();
 
             let lock = INFO.get_or_init(|| {
-                Box::from(RwLock::new(HashMap::with_hasher(STATIC_RANDOM_STATE))) // use seeded random state
+                Box::from(RwLock::new(HashMap::with_hasher(STATIC_RANDOM_STATE.clone()))) // use seeded random state
             });
             if let Some(info) = lock.read().unwrap().get(&type_id) {
                 return Cow::Borrowed(info);
