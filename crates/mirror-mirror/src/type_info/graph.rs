@@ -9,8 +9,8 @@ use core::hash::BuildHasher;
 use core::ops::Deref;
 
 use super::*;
-use crate::STATIC_RANDOM_STATE;
 use crate::Value;
+use crate::STATIC_RANDOM_STATE;
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]

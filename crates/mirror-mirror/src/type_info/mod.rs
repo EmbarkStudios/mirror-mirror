@@ -49,12 +49,16 @@ pub trait DescribeType: 'static {
 
             // a map required for generic types to have different type descriptors such as
             // `Vec<i32>` and `Vec<bool>`
-            static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>> = OnceBox::new();
+            static INFO: OnceBox<
+                RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>,
+            > = OnceBox::new();
 
             let type_id = TypeId::of::<Self>();
 
             let lock = INFO.get_or_init(|| {
-                Box::from(RwLock::new(HashMap::with_hasher(STATIC_RANDOM_STATE.clone()))) // use seeded random state
+                Box::from(RwLock::new(HashMap::with_hasher(
+                    STATIC_RANDOM_STATE.clone(),
+                ))) // use seeded random state
             });
             if let Some(info) = lock.read().unwrap().get(&type_id) {
                 return Cow::Borrowed(info);
