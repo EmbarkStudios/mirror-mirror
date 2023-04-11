@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **change:** Make use of deterministic hashes for `NodeId` and `TypeDescriptor` ([#115])
+
+[#115]: https://github.com/EmbarkStudios/mirror-mirror/pull/115
 
 # 0.1.13 (29. March, 2023)
 
