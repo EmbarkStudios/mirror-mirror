@@ -809,6 +809,8 @@ impl Clone for ReflectOwned {
 /// An owned reflected scalar type.
 #[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ScalarOwned {
     usize(usize),
     u8(u8),
