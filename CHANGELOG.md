@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **added:** Implement serialization traits for `ScalarOwned`
 
 # 0.1.14 (11. April, 2023)
 
