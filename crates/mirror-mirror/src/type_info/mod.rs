@@ -24,11 +24,12 @@ use crate::Value;
 pub mod graph;
 pub mod pretty_print;
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 mod simple_type_name;
 
 pub use self::pretty_print::{PrettyPrintRoot, RootPrettyPrinter};
-#[cfg(feature = "std")]
+
+#[cfg(feature = "simple_type_name")]
 pub use self::simple_type_name::SimpleTypeName;
 
 /// Trait for accessing type information.
@@ -37,51 +38,36 @@ pub use self::simple_type_name::SimpleTypeName;
 pub trait DescribeType: 'static {
     /// Creates a type descriptor for the current type.
     ///
-    /// On targets with the standard library, it's done only once per process, then subsequent
-    /// accesses are "free" because the result is cached. On non-std targets, the type descriptor
-    /// is recomputed and reallocated on each call.
+    /// It's done only once per process, then subsequent accesses are "free" because the result is cached.
     fn type_descriptor() -> Cow<'static, TypeDescriptor> {
-        #[cfg(feature = "std")]
-        {
-            use crate::__private::*;
-            use std::collections::HashMap;
-            use std::sync::RwLock;
+        use crate::__private::*;
+        use std::collections::HashMap;
+        use std::sync::RwLock;
 
-            // a map required for generic types to have different type descriptors such as
-            // `Vec<i32>` and `Vec<bool>`
-            static INFO: OnceBox<
-                RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>,
-            > = OnceBox::new();
+        // a map required for generic types to have different type descriptors such as
+        // `Vec<i32>` and `Vec<bool>`
+        static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>> =
+            OnceBox::new();
 
-            let type_id = TypeId::of::<Self>();
+        let type_id = TypeId::of::<Self>();
 
-            let lock = INFO.get_or_init(|| {
-                Box::from(RwLock::new(HashMap::with_hasher(
-                    STATIC_RANDOM_STATE.clone(),
-                ))) // use seeded random state
-            });
-            if let Some(info) = lock.read().unwrap().get(&type_id) {
-                return Cow::Borrowed(info);
-            }
-
-            let mut map = lock.write().unwrap();
-            let info = map.entry(type_id).or_insert_with(|| {
-                let mut graph = TypeGraph::default();
-                let id = Self::build(&mut graph);
-                let info = TypeDescriptor::new(id, graph);
-                Box::leak(Box::new(info))
-            });
-            Cow::Borrowed(*info)
+        let lock = INFO.get_or_init(|| {
+            Box::from(RwLock::new(HashMap::with_hasher(
+                STATIC_RANDOM_STATE.clone(),
+            ))) // use seeded random state
+        });
+        if let Some(info) = lock.read().unwrap().get(&type_id) {
+            return Cow::Borrowed(info);
         }
 
-        #[cfg(not(feature = "std"))]
-        {
-            use crate::__private::*;
-
+        let mut map = lock.write().unwrap();
+        let info = map.entry(type_id).or_insert_with(|| {
             let mut graph = TypeGraph::default();
             let id = Self::build(&mut graph);
-            Cow::Owned(TypeDescriptor::new(id, graph))
-        }
+            let info = TypeDescriptor::new(id, graph);
+            Box::leak(Box::new(info))
+        });
+        Cow::Borrowed(*info)
     }
 
     /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`

@@ -49,7 +49,7 @@ impl<'a> PrettyPrintRoot for Type<'a> {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     if let Some(name) = super::SimpleTypeName::new(type_name) {
         write!(f, "{name}")
@@ -58,7 +58,7 @@ fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Res
     }
 }
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(feature = "simple_type_name"))]
 fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     f.write_str(type_name)
 }

@@ -113,6 +113,7 @@ where
             .iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
+        // TODO: should we split Value::UnorderedMap and Value::OrderedMap?
         Value::Map(data)
     }
 
@@ -132,7 +133,7 @@ where
     V: FromReflect + DescribeType,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let map = reflect.as_reflect().as_map()?;
+        let map = reflect.as_map()?;
         let mut out = BTreeMap::new();
         for (key, value) in map.iter() {
             out.insert(K::from_reflect(key)?, V::from_reflect(value)?);

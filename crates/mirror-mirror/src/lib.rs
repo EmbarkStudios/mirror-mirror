@@ -209,7 +209,6 @@
 //! [`glam`]: https://crates.io/crates/glam
 //! [`macaw`]: https://crates.io/crates/macaw
 
-#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     clippy::all,
     clippy::dbg_macro,
@@ -327,7 +326,7 @@ pub mod try_visit;
 
 mod foreign_impls;
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 #[cfg(test)]
 mod tests;
 
@@ -346,6 +345,8 @@ pub use self::get_field::GetFieldMut;
 pub use self::list::List;
 #[doc(inline)]
 pub use self::map::Map;
+#[doc(inline)]
+pub use self::map::UnorderedMap;
 #[doc(inline)]
 pub use self::struct_::Struct;
 #[doc(inline)]

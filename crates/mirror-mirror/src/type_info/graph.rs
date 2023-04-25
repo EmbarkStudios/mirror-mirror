@@ -6,26 +6,31 @@ use alloc::vec::Vec;
 use core::any::type_name;
 use core::any::TypeId;
 use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::hash::Hasher;
 use core::ops::Deref;
 
 use super::*;
+use crate::map::UnorderedMap;
 use crate::Value;
-use crate::STATIC_RANDOM_STATE;
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
-#[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Ord, Eq, Debug)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NodeId(u64);
+
+impl Hash for NodeId {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_u64(self.0);
+    }
+}
 
 impl NodeId {
     fn new<T>() -> Self
     where
         T: 'static,
     {
-        use core::hash::Hash;
-        use core::hash::Hasher;
-
         let mut hasher = STATIC_RANDOM_STATE.build_hasher();
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
@@ -52,17 +57,53 @@ impl<T> Deref for WithId<T> {
     }
 }
 
+/// A hasher that does no hashing because we already have a unique u64 identifier
+#[derive(Clone, Copy)]
+pub(crate) struct NoHashHasher(u64);
+
+impl Default for NoHashHasher {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
+impl Hasher for NoHashHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, _: &[u8]) {
+        panic!("Only write_u64 should be called exactly once when using NoHashHasher! This is a bug, please report it.")
+    }
+
+    fn write_u64(&mut self, v: u64) {
+        self.0 = v;
+    }
+}
+
+#[derive(Default, Clone, Copy)]
+pub(crate) struct BuildNoHashHasher;
+
+impl BuildHasher for BuildNoHashHasher {
+    type Hasher = NoHashHasher;
+
+    #[inline(always)]
+    fn build_hasher(&self) -> Self::Hasher {
+        NoHashHasher(0)
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeGraph {
-    pub(super) map: BTreeMap<NodeId, Option<TypeNode>>,
+    pub(super) map: UnorderedMap<NodeId, Option<TypeNode>, BuildNoHashHasher>,
 }
 
 impl TypeGraph {
     pub(super) fn get(&self, id: NodeId) -> &TypeNode {
         const ERROR: &str = "no node found in graph. This is a bug. Please open an issue.";
-        self.map.get(&id).expect(ERROR).as_ref().expect(ERROR)
+        self.map.inner.get(&id).expect(ERROR).as_ref().expect(ERROR)
     }
 
     pub fn get_or_build_node_with<T, I>(&mut self, f: impl FnOnce(&mut Self) -> I) -> NodeId
@@ -71,16 +112,16 @@ impl TypeGraph {
         T: DescribeType,
     {
         let id = NodeId::new::<T>();
-        match self.map.get(&id) {
+        match self.map.inner.get(&id) {
             // the data is already there
             Some(Some(_)) => id,
             // someone else is currently inserting the data
             Some(None) => id,
             // the data isn't there yet
             None => {
-                self.map.insert(id, None);
+                self.map.inner.insert(id, None);
                 let info = f(self).into();
-                self.map.insert(id, Some(info));
+                self.map.inner.insert(id, Some(info));
                 id
             }
         }

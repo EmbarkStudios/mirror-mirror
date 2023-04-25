@@ -11,6 +11,7 @@ use mirror_mirror_macros::__private_derive_reflect_foreign;
 mod array;
 mod boxed;
 mod btree_map;
+mod hash_map;
 mod vec;
 mod via_scalar;
 

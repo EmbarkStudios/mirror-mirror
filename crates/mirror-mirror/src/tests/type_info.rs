@@ -245,6 +245,8 @@ fn basic_hash() {
     #[reflect(crate_name(crate))]
     struct Bar {
         b: bool,
+        foo: Foo,
+        c: Vec<u32>,
     }
 
     let s = RandomState::new();
@@ -269,6 +271,34 @@ fn basic_hash() {
 
     assert_eq!(foo_hash, foo_hash_2);
     assert_eq!(bar_hash, bar_hash_2);
+}
+
+#[test]
+fn basic_static_hash() {
+    use crate::STATIC_RANDOM_STATE;
+    #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
+    struct Foo {
+        a: i32,
+    }
+
+    #[derive(Reflect, Clone, Debug)]
+    #[reflect(crate_name(crate))]
+    struct Bar {
+        b: bool,
+        foo: Foo,
+        c: Vec<u32>,
+    }
+
+    let foo_desc = <Foo as DescribeType>::type_descriptor().into_owned();
+    let foo_hash = STATIC_RANDOM_STATE.hash_one(&foo_desc);
+
+    assert_eq!(foo_hash, 14796555530845321673); // precomputed hash of Foo descriptor
+
+    let bar_desc = <Bar as DescribeType>::type_descriptor().into_owned();
+    let bar_hash = STATIC_RANDOM_STATE.hash_one(&bar_desc);
+
+    assert_eq!(bar_hash, 15836097436289724428); // precomputed hash of Bar descriptor
 }
 
 #[test]
