@@ -27,13 +27,15 @@ use crate::STATIC_RANDOM_STATE;
 
 /// A key-to-value map that does not have a specified order of contained elements.
 ///
-/// This is a wrapper around [`std::collections::HashMap`] which implements `PartialEq`, `Eq`, and `Hash`
-/// such that two maps are equal and hash to the same value if they have the same `(k, v)` element pairs.
+/// This is a wrapper around [`std::collections::HashMap`] which implements various traits in ways that fit
+/// our use cases better than the choices `std` made.
 ///
-/// However, the `Hash` implementation is not fully cryptographically secure.
+/// Implements `PartialEq`, `Eq`, and `Hash` such that two maps are equal and hash to the same value if they have
+/// the same `(k, v)` element pairs. However, the `Hash` implementation is not fully cryptographically secure.
 ///
-/// Note that this *does* implement `Ord` so that it can be used in the [`Value`] enum, *but* the implementation
-/// is to allocate a `Vec` containing all the `(k, v)` element pairs for both maps, sort them by `k`, and then do [lexographical] ordering between them,
+/// Implements `Ord` so that it can be used in the [`Value`] enum, *but* the implementation
+/// is to allocate a `Vec` containing all the `(k, v)` element pairs for both maps,
+/// sort them by `k`, and then do [lexographical] ordering between them,
 /// which is very slow and it's not recommended to use this functionality if at all possible.
 ///
 /// Implements `serde::Serialize` and `serde::Deserialize` by serializing as a sequence of `(k, v)` pairs, rather
