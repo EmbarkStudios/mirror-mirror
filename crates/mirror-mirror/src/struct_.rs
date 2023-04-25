@@ -1,5 +1,4 @@
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -16,6 +15,7 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
+use crate::UnorderedMap;
 use crate::Value;
 
 /// A reflected struct type.
@@ -50,8 +50,7 @@ impl fmt::Debug for dyn Struct {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructValue {
     field_names: Vec<String>,
-    // use a `BTreeMap` because `HashMap` isn't `serde::Serialize`
-    fields: BTreeMap<String, Value>,
+    fields: UnorderedMap<String, Value>,
 }
 
 impl StructValue {
@@ -62,8 +61,7 @@ impl StructValue {
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             field_names: Vec::with_capacity(capacity),
-            // there is no `BTreeMap::with_capacity` :(
-            fields: BTreeMap::new(),
+            fields: UnorderedMap::with_capacity(capacity),
         }
     }
 
