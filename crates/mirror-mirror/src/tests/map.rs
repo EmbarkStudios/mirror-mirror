@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use alloc::collections::BTreeMap;
 
+use tame_containers::UnorderedMap;
+
 use crate::key_path;
 use crate::key_path::GetPath;
 use crate::DescribeType;
@@ -9,7 +11,6 @@ use crate::GetField;
 use crate::GetFieldMut;
 use crate::Map;
 use crate::Reflect;
-use crate::UnorderedMap;
 
 #[test]
 fn works_btreemap() {

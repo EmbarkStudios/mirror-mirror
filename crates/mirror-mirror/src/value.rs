@@ -9,9 +9,9 @@ use core::hash::Hash;
 use core::hash::Hasher;
 
 use ordered_float::OrderedFloat;
+use tame_containers::UnorderedMap;
 
 use crate::enum_::EnumValue;
-use crate::map::UnorderedMap;
 use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;

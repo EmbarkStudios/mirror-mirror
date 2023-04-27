@@ -1,6 +1,3 @@
-use alloc::boxed::Box;
-
-use core::any::Any;
 use core::borrow::Borrow;
 use core::cmp::Ordering;
 use core::fmt;
@@ -9,19 +6,6 @@ use core::hash::Hash;
 use core::hash::Hasher;
 
 use std::collections::HashMap;
-
-use crate::iter::PairIterMut;
-use crate::type_info::graph::MapNode;
-use crate::type_info::graph::NodeId;
-use crate::type_info::graph::TypeGraph;
-use crate::DescribeType;
-use crate::FromReflect;
-use crate::Map;
-use crate::Reflect;
-use crate::ReflectMut;
-use crate::ReflectOwned;
-use crate::ReflectRef;
-use crate::Value;
 
 use crate::STATIC_RANDOM_STATE;
 
@@ -205,7 +189,7 @@ where
     pub fn try_reserve(
         &mut self,
         additional: usize,
-    ) -> Result<(), alloc::collections::TryReserveError> {
+    ) -> Result<(), std::collections::TryReserveError> {
         self.inner.try_reserve(additional)
     }
 
@@ -510,151 +494,5 @@ where
         writer: &mut T,
     ) -> Result<(), <C as speedy::Context>::Error> {
         HashMap::<K, V, S>::write_to(&self.inner, writer)
-    }
-}
-
-impl<K, V, S> Reflect for UnorderedMap<K, V, S>
-where
-    K: FromReflect + DescribeType + Eq + Hash,
-    V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
-{
-    trivial_reflect_methods!();
-
-    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
-        ReflectOwned::Map(self)
-    }
-
-    fn reflect_ref(&self) -> ReflectRef<'_> {
-        ReflectRef::Map(self)
-    }
-
-    fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        ReflectMut::Map(self)
-    }
-
-    fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(map) = value.reflect_ref().as_map() {
-            for (key, new_value) in map.iter() {
-                if let Some(value) = Map::get_mut(self, key) {
-                    value.patch(new_value);
-                }
-            }
-        }
-    }
-
-    fn to_value(&self) -> Value {
-        let data = self
-            .iter()
-            .map(|(key, value)| (key.to_value(), value.to_value()))
-            .collect();
-        Value::Map(data)
-    }
-
-    fn clone_reflect(&self) -> Box<dyn Reflect> {
-        let value = self.to_value();
-        Box::new(Self::from_reflect(&value).unwrap())
-    }
-
-    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_map().entries(Map::iter(self)).finish()
-    }
-}
-
-impl<K, V, S> FromReflect for UnorderedMap<K, V, S>
-where
-    K: FromReflect + DescribeType + Eq + Hash,
-    V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
-{
-    fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let map = reflect.as_map()?;
-        let len = map.len();
-        let mut out = UnorderedMap::with_capacity_and_hasher(len, S::default());
-        for (key, value) in map.iter() {
-            out.inner
-                .insert(K::from_reflect(key)?, V::from_reflect(value)?);
-        }
-        Some(out)
-    }
-}
-
-impl<K, V> From<UnorderedMap<K, V>> for Value
-where
-    K: Reflect,
-    V: Reflect,
-{
-    fn from(map: UnorderedMap<K, V>) -> Self {
-        let map = map
-            .inner
-            .into_iter()
-            .map(|(key, value)| (key.to_value(), value.to_value()))
-            .collect();
-        Value::Map(map)
-    }
-}
-
-impl<K, V, S> Map for UnorderedMap<K, V, S>
-where
-    K: FromReflect + DescribeType + Hash + Eq,
-    V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
-{
-    fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
-        let key = K::from_reflect(key)?;
-        let value = self.inner.get(&key)?;
-        Some(value.as_reflect())
-    }
-
-    fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect> {
-        let key = K::from_reflect(key)?;
-        let value = self.inner.get_mut(&key)?;
-        Some(value.as_reflect_mut())
-    }
-
-    fn insert(&mut self, key: &dyn Reflect, value: &dyn Reflect) -> Option<Box<dyn Reflect>> {
-        let key = K::from_reflect(key)?;
-        let value = V::from_reflect(value)?;
-        let previous = self.inner.insert(key, value)?;
-        Some(Box::new(previous))
-    }
-
-    fn remove(&mut self, key: &dyn Reflect) -> Option<Box<dyn Reflect>> {
-        let key = K::from_reflect(key)?;
-        let previous = self.inner.remove(&key)?;
-        Some(Box::new(previous))
-    }
-
-    fn len(&self) -> usize {
-        self.inner.len()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.inner.is_empty()
-    }
-
-    fn iter(&self) -> crate::map::Iter<'_> {
-        let iter = self
-            .iter()
-            .map(|(key, value)| (key.as_reflect(), value.as_reflect()));
-        Box::new(iter)
-    }
-
-    fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect> {
-        let iter = self
-            .iter_mut()
-            .map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
-        Box::new(iter)
-    }
-}
-
-impl<K, V, S> DescribeType for UnorderedMap<K, V, S>
-where
-    K: DescribeType,
-    V: DescribeType,
-    S: 'static,
-{
-    fn build(graph: &mut TypeGraph) -> NodeId {
-        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
     }
 }

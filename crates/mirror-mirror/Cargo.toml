@@ -14,14 +14,13 @@ keywords = ["reflection"]
 [features]
 default = ["speedy", "serde", "simple_type_name"]
 simple_type_name = ["dep:syn"]
-speedy = ["dep:speedy"]
-serde = ["dep:serde"]
+speedy = ["dep:speedy", "tame-containers/speedy"]
+serde = ["dep:serde", "tame-containers/serde"]
 glam = ["dep:glam"]
 macaw = ["dep:macaw"]
 
 [dependencies]
 ahash = { version = "0.8.2", default-features = false, features = ["runtime-rng"] }
-indexmap = "1.9.3"
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.4" }
 once_cell = { version = "1.16", features = ["alloc", "race", "critical-section"], default-features = false }
 ordered-float = { version = "3.4.0", default-features = false }
@@ -30,6 +29,7 @@ speedy = { version = "0.8.5", optional = true }
 syn = { version = "2.0", features = ["full", "parsing"], optional = true }
 glam = { version = "0.22", optional = true }
 macaw = { version = "0.18", optional = true }
+tame-containers = { path = "../tame-containers", default-features = false }
 
 [package.metadata.docs.rs]
 all-features = true

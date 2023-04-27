@@ -5,16 +5,12 @@ use alloc::boxed::Box;
 use crate::iter::PairIterMut;
 use crate::Reflect;
 
-mod unordered_map;
-pub use unordered_map::UnorderedMap;
-
-mod ordered_map;
-pub use ordered_map::OrderedMap;
-
 /// A reflected key-to-value map type.
 ///
 /// Maps are guaranteed to not have duplicate entries for the same key, but there is
 /// *not* a guaranteed of a stable ordering of the `(key, value)` elements in the map.
+/// However, for underlying map types that have an ordering, that ordering can be assumed
+/// to be respected.
 ///
 /// This is implemented for the std [`BTreeMap`], [`HashMap`], as well as for our own
 /// [`UnorderedMap`], [`OrderedMap`] and [`Value`]s which are maps.
@@ -22,6 +18,8 @@ pub use ordered_map::OrderedMap;
 /// [`BTreeMap`]: alloc::collections::BTreeMap
 /// [`HashMap`]: std::collections::HashMap
 /// [`Value`]: crate::Value
+/// [`OrderedMap`]: tame_containers::OrderedMap
+/// [`UnorderedMap`]: tame_containers::UnorderedMap
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;
 
@@ -36,11 +34,13 @@ pub trait Map: Reflect {
     fn is_empty(&self) -> bool;
 
     /// Get an iterator over the `(k, v)` element pairs in the map. Note that the iteration order is *not*
-    /// guaranteed to be stable.
+    /// guaranteed to be stable, though if the underlying implementor type does have a defined order then
+    /// that can be assumed to be respected.
     fn iter(&self) -> Iter<'_>;
 
     /// Get an iterator over the `(k, v)` element pairs in the map with mutable values. Note that the iteration order is *not*
-    /// guaranteed to be stable.
+    /// guaranteed to be stable, though if the underlying implementor type does have a defined order then
+    /// that can be assumed to be respected.
     fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect>;
 }
 

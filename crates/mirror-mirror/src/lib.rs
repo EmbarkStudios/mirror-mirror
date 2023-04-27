@@ -346,8 +346,6 @@ pub use self::list::List;
 #[doc(inline)]
 pub use self::map::Map;
 #[doc(inline)]
-pub use self::map::UnorderedMap;
-#[doc(inline)]
 pub use self::struct_::Struct;
 #[doc(inline)]
 pub use self::tuple::Tuple;

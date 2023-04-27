@@ -10,8 +10,9 @@ use core::hash::Hash;
 use core::hash::Hasher;
 use core::ops::Deref;
 
+use tame_containers::UnorderedMap;
+
 use super::*;
-use crate::map::UnorderedMap;
 use crate::Value;
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
@@ -104,7 +105,7 @@ pub struct TypeGraph {
 impl TypeGraph {
     pub(super) fn get(&self, id: NodeId) -> &TypeNode {
         const ERROR: &str = "no node found in graph. This is a bug. Please open an issue.";
-        self.map.inner.get(&id).expect(ERROR).as_ref().expect(ERROR)
+        self.map.get(&id).expect(ERROR).as_ref().expect(ERROR)
     }
 
     pub fn get_or_build_node_with<T, I>(&mut self, f: impl FnOnce(&mut Self) -> I) -> NodeId
@@ -113,16 +114,16 @@ impl TypeGraph {
         T: DescribeType,
     {
         let id = NodeId::new::<T>();
-        match self.map.inner.get(&id) {
+        match self.map.get(&id) {
             // the data is already there
             Some(Some(_)) => id,
             // someone else is currently inserting the data
             Some(None) => id,
             // the data isn't there yet
             None => {
-                self.map.inner.insert(id, None);
+                self.map.insert(id, None);
                 let info = f(self).into();
-                self.map.inner.insert(id, Some(info));
+                self.map.insert(id, Some(info));
                 id
             }
         }

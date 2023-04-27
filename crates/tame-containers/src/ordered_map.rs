@@ -1,7 +1,5 @@
-use alloc::boxed::Box;
 use indexmap::Equivalent;
 
-use core::any::Any;
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::BuildHasher;
@@ -10,19 +8,6 @@ use core::hash::Hasher;
 use core::ops::RangeBounds;
 
 use indexmap::IndexMap;
-
-use crate::iter::PairIterMut;
-use crate::type_info::graph::MapNode;
-use crate::type_info::graph::NodeId;
-use crate::type_info::graph::TypeGraph;
-use crate::DescribeType;
-use crate::FromReflect;
-use crate::Map;
-use crate::Reflect;
-use crate::ReflectMut;
-use crate::ReflectOwned;
-use crate::ReflectRef;
-use crate::Value;
 
 /// A key-to-value map that has a specified order of contained elements.
 /// 
@@ -434,40 +419,56 @@ impl<K, V, S> OrderedMap<K, V, S> {
         self.inner.get_index(index)
     }
 
+    /// See [`IndexMap::get_index_mut`]
     #[inline]
     pub fn get_index_mut(&mut self, index: usize) -> Option<(&mut K, &mut V)> {
         self.inner.get_index_mut(index)
     }
 
+    /// See [`IndexMap::first`]
     #[inline]
     pub fn first(&self) -> Option<(&K, &V)> {
         self.inner.first()
     }
 
+    /// See [`IndexMap::first_mut`]
+    #[inline]
     pub fn first_mut(&mut self) -> Option<(&K, &mut V)> {
         self.inner.first_mut()
     }
 
+    /// See [`IndexMap::last`]
+    #[inline]
     pub fn last(&self) -> Option<(&K, &V)> {
         self.inner.last()
     }
 
+    /// See [`IndexMap::last_mut`]
+    #[inline]
     pub fn last_mut(&mut self) -> Option<(&K, &mut V)> {
         self.inner.last_mut()
     }
 
+    /// See [`IndexMap::swap_remove_index`]
+    #[inline]
     pub fn swap_remove_index(&mut self, index: usize) -> Option<(K, V)> {
         self.inner.swap_remove_index(index)
     }
 
+    /// See [`IndexMap::shift_remove_index`]
+    #[inline]
     pub fn shift_remove_index(&mut self, index: usize) -> Option<(K, V)> {
         self.inner.shift_remove_index(index)
     }
 
+    /// See [`IndexMap::move_index`]
+    #[inline]
     pub fn move_index(&mut self, from: usize, to: usize) {
         self.inner.move_index(from, to)
     }
 
+    /// See [`IndexMap::swap_indices`]
+    #[inline]
     pub fn swap_indices(&mut self, a: usize, b: usize) {
         self.inner.swap_indices(a, b)
     }
@@ -726,151 +727,5 @@ where
             value.write_to(writer)?;
         }
         Ok(())
-    }
-}
-
-impl<K, V, S> Reflect for OrderedMap<K, V, S>
-where
-    K: FromReflect + DescribeType + Eq + Hash,
-    V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
-{
-    trivial_reflect_methods!();
-
-    fn reflect_owned(self: Box<Self>) -> ReflectOwned {
-        ReflectOwned::Map(self)
-    }
-
-    fn reflect_ref(&self) -> ReflectRef<'_> {
-        ReflectRef::Map(self)
-    }
-
-    fn reflect_mut(&mut self) -> ReflectMut<'_> {
-        ReflectMut::Map(self)
-    }
-
-    fn patch(&mut self, value: &dyn Reflect) {
-        if let Some(map) = value.reflect_ref().as_map() {
-            for (key, new_value) in map.iter() {
-                if let Some(value) = Map::get_mut(self, key) {
-                    value.patch(new_value);
-                }
-            }
-        }
-    }
-
-    fn to_value(&self) -> Value {
-        let data = self
-            .iter()
-            .map(|(key, value)| (key.to_value(), value.to_value()))
-            .collect();
-        Value::Map(data)
-    }
-
-    fn clone_reflect(&self) -> Box<dyn Reflect> {
-        let value = self.to_value();
-        Box::new(Self::from_reflect(&value).unwrap())
-    }
-
-    fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_map().entries(Map::iter(self)).finish()
-    }
-}
-
-impl<K, V, S> FromReflect for OrderedMap<K, V, S>
-where
-    K: FromReflect + DescribeType + Eq + Hash,
-    V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
-{
-    fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let map = reflect.as_map()?;
-        let len = map.len();
-        let mut out = OrderedMap::with_capacity_and_hasher(len, S::default());
-        for (key, value) in map.iter() {
-            out.inner
-                .insert(K::from_reflect(key)?, V::from_reflect(value)?);
-        }
-        Some(out)
-    }
-}
-
-impl<K, V> From<OrderedMap<K, V>> for Value
-where
-    K: Reflect,
-    V: Reflect,
-{
-    fn from(map: OrderedMap<K, V>) -> Self {
-        let map = map
-            .inner
-            .into_iter()
-            .map(|(key, value)| (key.to_value(), value.to_value()))
-            .collect();
-        Value::Map(map)
-    }
-}
-
-impl<K, V, S> Map for OrderedMap<K, V, S>
-where
-    K: FromReflect + DescribeType + Hash + Eq,
-    V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
-{
-    fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
-        let key = K::from_reflect(key)?;
-        let value = self.inner.get(&key)?;
-        Some(value.as_reflect())
-    }
-
-    fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect> {
-        let key = K::from_reflect(key)?;
-        let value = self.inner.get_mut(&key)?;
-        Some(value.as_reflect_mut())
-    }
-
-    fn insert(&mut self, key: &dyn Reflect, value: &dyn Reflect) -> Option<Box<dyn Reflect>> {
-        let key = K::from_reflect(key)?;
-        let value = V::from_reflect(value)?;
-        let previous = self.inner.insert(key, value)?;
-        Some(Box::new(previous))
-    }
-
-    fn remove(&mut self, key: &dyn Reflect) -> Option<Box<dyn Reflect>> {
-        let key = K::from_reflect(key)?;
-        let previous = self.inner.remove(&key)?;
-        Some(Box::new(previous))
-    }
-
-    fn len(&self) -> usize {
-        self.inner.len()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.inner.is_empty()
-    }
-
-    fn iter(&self) -> crate::map::Iter<'_> {
-        let iter = self
-            .iter()
-            .map(|(key, value)| (key.as_reflect(), value.as_reflect()));
-        Box::new(iter)
-    }
-
-    fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect> {
-        let iter = self
-            .iter_mut()
-            .map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
-        Box::new(iter)
-    }
-}
-
-impl<K, V, S> DescribeType for OrderedMap<K, V, S>
-where
-    K: DescribeType,
-    V: DescribeType,
-    S: 'static,
-{
-    fn build(graph: &mut TypeGraph) -> NodeId {
-        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
     }
 }

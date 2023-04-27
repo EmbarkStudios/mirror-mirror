@@ -5,6 +5,8 @@ use core::any::Any;
 use core::fmt;
 use core::iter::FusedIterator;
 
+use tame_containers::UnorderedMap;
+
 use crate::iter::PairIterMut;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
@@ -15,7 +17,6 @@ use crate::Reflect;
 use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
-use crate::UnorderedMap;
 use crate::Value;
 
 /// A reflected struct type.

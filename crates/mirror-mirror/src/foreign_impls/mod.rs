@@ -12,6 +12,7 @@ mod array;
 mod boxed;
 mod btree_map;
 mod hash_map;
+mod tame_containers;
 mod vec;
 mod via_scalar;
 
