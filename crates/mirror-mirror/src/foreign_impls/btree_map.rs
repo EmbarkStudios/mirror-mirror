@@ -114,7 +114,7 @@ where
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
         // TODO: should we split Value::UnorderedMap and Value::OrderedMap?
-        Value::Map(data)
+        Value::OrderedMap(data)
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -152,6 +152,6 @@ where
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::Map(map)
+        Value::OrderedMap(map)
     }
 }

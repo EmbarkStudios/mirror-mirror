@@ -95,11 +95,17 @@ impl BuildHasher for BuildNoHashHasher {
     }
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeGraph {
     pub(super) map: UnorderedMap<NodeId, Option<TypeNode>, BuildNoHashHasher>,
+}
+
+impl Hash for TypeGraph {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.map.hash(state);
+    }
 }
 
 impl TypeGraph {

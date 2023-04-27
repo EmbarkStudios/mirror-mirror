@@ -10,6 +10,7 @@ use core::hash::Hasher;
 
 use ordered_float::OrderedFloat;
 use tame_containers::UnorderedMap;
+use tame_containers::OrderedMap;
 
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;
@@ -57,7 +58,8 @@ pub enum Value {
     TupleStructValue(TupleStructValue),
     TupleValue(TupleValue),
     List(Vec<Value>),
-    Map(UnorderedMap<Value, Value>),
+    UnorderedMap(UnorderedMap<Value, Value>),
+    OrderedMap(OrderedMap<Value, Value>),
 }
 
 impl FromReflect for Value {
@@ -90,7 +92,8 @@ enum OrdEqHashValue<'a> {
     TupleStructValue(&'a TupleStructValue),
     TupleValue(&'a TupleValue),
     List(&'a [Value]),
-    Map(&'a UnorderedMap<Value, Value>),
+    UnorderedMap(&'a UnorderedMap<Value, Value>),
+    OrderedMap(&'a OrderedMap<Value, Value>),
 }
 
 impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
@@ -117,7 +120,8 @@ impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
             Value::TupleStructValue(inner) => OrdEqHashValue::TupleStructValue(inner),
             Value::TupleValue(inner) => OrdEqHashValue::TupleValue(inner),
             Value::List(inner) => OrdEqHashValue::List(inner),
-            Value::Map(inner) => OrdEqHashValue::Map(inner),
+            Value::UnorderedMap(inner) => OrdEqHashValue::UnorderedMap(inner),
+            Value::OrderedMap(inner) => OrdEqHashValue::OrderedMap(inner),
         }
     }
 }
@@ -175,7 +179,8 @@ macro_rules! for_each_variant {
             Value::EnumValue($inner) => $expr,
             Value::TupleValue($inner) => $expr,
             Value::List($inner) => $expr,
-            Value::Map($inner) => $expr,
+            Value::UnorderedMap($inner) => $expr,
+            Value::OrderedMap($inner) => $expr,
         }
     };
 }
@@ -228,7 +233,8 @@ impl Reflect for Value {
             Value::TupleStructValue(inner) => ReflectOwned::TupleStruct(Box::new(inner)),
             Value::TupleValue(inner) => ReflectOwned::Tuple(Box::new(inner)),
             Value::List(inner) => ReflectOwned::List(Box::new(inner)),
-            Value::Map(inner) => ReflectOwned::Map(Box::new(inner)),
+            Value::UnorderedMap(inner) => ReflectOwned::Map(Box::new(inner)),
+            Value::OrderedMap(inner) => ReflectOwned::Map(Box::new(inner)),
         }
     }
 
@@ -255,7 +261,8 @@ impl Reflect for Value {
             Value::TupleStructValue(inner) => ReflectRef::TupleStruct(inner),
             Value::TupleValue(inner) => ReflectRef::Tuple(inner),
             Value::List(inner) => ReflectRef::List(inner),
-            Value::Map(inner) => ReflectRef::Map(inner),
+            Value::UnorderedMap(inner) => ReflectRef::Map(inner),
+            Value::OrderedMap(inner) => ReflectRef::Map(inner),
         }
     }
 
@@ -282,7 +289,8 @@ impl Reflect for Value {
             Value::TupleStructValue(inner) => ReflectMut::TupleStruct(inner),
             Value::TupleValue(inner) => ReflectMut::Tuple(inner),
             Value::List(inner) => ReflectMut::List(inner),
-            Value::Map(inner) => ReflectMut::Map(inner),
+            Value::UnorderedMap(inner) => ReflectMut::Map(inner),
+            Value::OrderedMap(inner) => ReflectMut::Map(inner),
         }
     }
 

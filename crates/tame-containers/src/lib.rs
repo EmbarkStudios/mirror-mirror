@@ -67,7 +67,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
-/// Provides a super-fast, general purpose, key-value map with **no** defined order of elements
+/// Provides a fast, general purpose, key-value map with **no** defined order of elements
 pub mod unordered_map;
 #[doc(inline)]
 pub use unordered_map::UnorderedMap;
