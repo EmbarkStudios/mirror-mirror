@@ -8,13 +8,16 @@ use crate::Reflect;
 mod unordered_map;
 pub use unordered_map::UnorderedMap;
 
+mod ordered_map;
+pub use ordered_map::OrderedMap;
+
 /// A reflected key-to-value map type.
 ///
 /// Maps are guaranteed to not have duplicate entries for the same key, but there is
 /// *not* a guaranteed of a stable ordering of the `(key, value)` elements in the map.
 ///
 /// This is implemented for the std [`BTreeMap`], [`HashMap`], as well as for our own
-/// [`UnorderedMap`] and [`Value`]s which are maps (stored as [`UnorderedMap`] internally).
+/// [`UnorderedMap`], [`OrderedMap`] and [`Value`]s which are maps.
 ///
 /// [`BTreeMap`]: alloc::collections::BTreeMap
 /// [`HashMap`]: std::collections::HashMap

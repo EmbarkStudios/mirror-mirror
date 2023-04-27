@@ -28,13 +28,15 @@ use crate::STATIC_RANDOM_STATE;
 /// A key-to-value map that does not have a specified order of contained elements.
 ///
 /// This is a wrapper around [`std::collections::HashMap`] which implements various traits in ways that fit
-/// our use cases better than the choices `std` made.
+/// our use cases better than the choices `std` made. If you really need to access the wrapped [`HashMap`],
+/// you can do so with the `inner`, `inner_mut`, and `into_inner` methods. However, be careful as using these
+/// has different trait implementation semantics as mentioned below.
 ///
 /// Implements `PartialEq`, `Eq`, and `Hash` such that two maps are equal and hash to the same value if they have
 /// the same `(k, v)` element pairs. However, the `Hash` implementation is not fully cryptographically secure.
 ///
-/// Implements `Ord` so that it can be used in the [`Value`] enum, *but* the implementation
-/// is to allocate a `Vec` containing all the `(k, v)` element pairs for both maps,
+/// Implements `Ord` so that it can be used in the [`Value`] enum, *but* the implementation requires that for maps
+/// of the same length, we allocate a `Vec` containing all the `(k, v)` element pairs for both maps,
 /// sort them by `k`, and then do [lexographical] ordering between them,
 /// which is very slow and it's not recommended to use this functionality if at all possible.
 ///
@@ -155,6 +157,24 @@ impl<K, V, S> UnorderedMap<K, V, S> {
     #[inline]
     pub fn hasher(&self) -> &S {
         self.inner.hasher()
+    }
+
+    /// Access the wrapped [`HashMap`].
+    #[inline]
+    pub fn inner(&self) -> &HashMap<K, V, S> {
+        &self.inner
+    }
+
+    /// Access the wrapped [`HashMap`] mutably.
+    #[inline]
+    pub fn inner_mut(&mut self) -> &mut HashMap<K, V, S> {
+        &mut self.inner
+    }
+
+    /// Extract the wrapped [`HashMap`].
+    #[inline]
+    pub fn into_inner(self) -> HashMap<K, V, S> {
+        self.inner
     }
 }
 
@@ -280,7 +300,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("UnorderedMap")
-            .field("map", &self.inner)
+            .field("inner", &self.inner)
             .finish()
     }
 }
@@ -324,6 +344,12 @@ where
     S: BuildHasher,
 {
     fn cmp(&self, other: &UnorderedMap<K, V, S>) -> Ordering {
+        // first compare lengths, if equal, we have to sort and do lexographical ordering...
+        match self.len().cmp(&other.len()) {
+            Ordering::Less => return Ordering::Less,
+            Ordering::Greater => return Ordering::Greater,
+            Ordering::Equal => ()
+        }
         let mut self_seq = self.inner.iter().collect::<Vec<_>>();
         self_seq.sort_by_key(|(k, _v)| *k);
         let mut other_seq = other.inner.iter().collect::<Vec<_>>();
@@ -363,6 +389,30 @@ where
         Self {
             inner: HashMap::<K, V, S>::from_iter(iter),
         }
+    }
+}
+
+impl<K, V, S> IntoIterator for UnorderedMap<K, V, S> {
+    type Item = (K, V);
+    type IntoIter = std::collections::hash_map::IntoIter<K, V>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
+    }
+}
+
+impl<'a, K, V, S> IntoIterator for &'a UnorderedMap<K, V, S> {
+    type Item = (&'a K, &'a V);
+    type IntoIter = std::collections::hash_map::Iter<'a, K, V>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter()
+    }
+}
+
+impl<'a, K, V, S> IntoIterator for &'a mut UnorderedMap<K, V, S> {
+    type Item = (&'a K, &'a mut V);
+    type IntoIter = std::collections::hash_map::IterMut<'a, K, V>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter_mut()
     }
 }
 

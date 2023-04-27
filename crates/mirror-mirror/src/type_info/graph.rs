@@ -57,7 +57,8 @@ impl<T> Deref for WithId<T> {
     }
 }
 
-/// A hasher that does no hashing because we already have a unique u64 identifier
+/// A hasher that does no hashing because we already have a u64 hash that should be
+/// just as well distributed.
 #[derive(Clone, Copy)]
 pub(crate) struct NoHashHasher(u64);
 
