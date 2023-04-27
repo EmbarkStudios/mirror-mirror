@@ -10,7 +10,7 @@ use core::ops::RangeBounds;
 use indexmap::IndexMap;
 
 /// A key-to-value map that has a specified order of contained elements.
-/// 
+///
 /// The order is *not* automatically maintained, thus you can move element order as you please, or sort
 /// with the various sorting functions.
 ///
@@ -266,7 +266,7 @@ where
     }
 
     /// See [`IndexMap::remove`]
-    /// 
+    ///
     /// **NOTE:** This is equivalent to `.swap_remove(key)`, if you need to
     /// preserve the order of the keys in the map, use `.shift_remove_entry(key)`
     /// instead.
@@ -308,7 +308,7 @@ where
     {
         self.inner.swap_remove_entry(key)
     }
-    
+
     /// See [`IndexMap::swap_remove_full`]
     #[inline]
     pub fn swap_remove_full<Q: ?Sized>(&mut self, key: &Q) -> Option<(usize, K, V)>
@@ -335,7 +335,7 @@ where
     {
         self.inner.shift_remove_entry(key)
     }
-    
+
     /// See [`IndexMap::shift_remove_full`]
     #[inline]
     pub fn shift_remove_full<Q: ?Sized>(&mut self, key: &Q) -> Option<(usize, K, V)>
@@ -344,13 +344,13 @@ where
     {
         self.inner.shift_remove_full(key)
     }
-    
+
     /// See [`IndexMap::pop`]
     #[inline]
     pub fn pop(&mut self) -> Option<(K, V)> {
         self.inner.pop()
     }
-    
+
     /// See [`IndexMap::sort_keys`]
     #[inline]
     pub fn sort_keys(&mut self)
@@ -530,7 +530,10 @@ where
         }
         // lexographical equality, meaning all elements must be in the same order and be equal.
         // short circuit as soon as there's disagreement.
-        self.inner.iter().zip(other.inner.iter()).all(|(self_elt, other_elt)| self_elt == other_elt)
+        self.inner
+            .iter()
+            .zip(other.inner.iter())
+            .all(|(self_elt, other_elt)| self_elt == other_elt)
     }
 }
 
@@ -565,7 +568,7 @@ where
         match self.len().cmp(&other.len()) {
             Ordering::Less => return Ordering::Less,
             Ordering::Greater => return Ordering::Greater,
-            Ordering::Equal => ()
+            Ordering::Equal => (),
         }
         self.iter().cmp(other.iter())
     }

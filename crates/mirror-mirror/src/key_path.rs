@@ -589,7 +589,7 @@ pub(crate) fn value_to_usize(value: &Value) -> Option<usize> {
         | Value::TupleValue(_)
         | Value::List(_)
         | Value::UnorderedMap(_) => None,
-        | Value::OrderedMap(_) => None,
+        Value::OrderedMap(_) => None,
     }
 }
 

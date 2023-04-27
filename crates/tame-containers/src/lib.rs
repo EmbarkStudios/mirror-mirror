@@ -1,7 +1,7 @@
 //! Tame versions of existing containers including trait implementations focused on game development usecases.
 //!
 //! ## Provided Collections
-//! 
+//!
 //! - [`UnorderedMap`], useful when you want a very fast general-purpose key-value map with no order and
 //! generous trait implementations
 //! - [`OrderedMap`], useful when you want a key-value map including a set order of `(k, v)` element pairs

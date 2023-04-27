@@ -9,8 +9,8 @@ use core::hash::Hash;
 use core::hash::Hasher;
 
 use ordered_float::OrderedFloat;
-use tame_containers::UnorderedMap;
 use tame_containers::OrderedMap;
+use tame_containers::UnorderedMap;
 
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;

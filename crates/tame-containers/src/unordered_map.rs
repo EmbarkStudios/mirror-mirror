@@ -332,7 +332,7 @@ where
         match self.len().cmp(&other.len()) {
             Ordering::Less => return Ordering::Less,
             Ordering::Greater => return Ordering::Greater,
-            Ordering::Equal => ()
+            Ordering::Equal => (),
         }
         let mut self_seq = self.inner.iter().collect::<Vec<_>>();
         self_seq.sort_by_key(|(k, _v)| *k);
