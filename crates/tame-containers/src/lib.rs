@@ -54,9 +54,13 @@
     future_incompatible,
     nonstandard_style,
     missing_debug_implementations,
-    missing_docs
 )]
-#![deny(unreachable_pub, private_in_public)]
+#![deny(
+    missing_docs,
+    unreachable_pub,
+    private_in_public,
+    rustdoc::broken_intra_doc_links
+)]
 #![allow(
     elided_lifetimes_in_paths,
     clippy::type_complexity,

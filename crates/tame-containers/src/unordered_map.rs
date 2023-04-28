@@ -19,7 +19,7 @@ use crate::STATIC_RANDOM_STATE;
 /// Implements `PartialEq`, `Eq`, and `Hash` such that two maps are equal and hash to the same value if they have
 /// the same `(k, v)` element pairs. However, the `Hash` implementation is not fully cryptographically secure.
 ///
-/// Implements `Ord` so that it can be used in the [`Value`] enum, *but* the implementation requires that for maps
+/// Implements `Ord`, *but* the implementation requires that for maps
 /// of the same length, we allocate a `Vec` containing all the `(k, v)` element pairs for both maps,
 /// sort them by `k`, and then do [lexographical] ordering between them,
 /// which is very slow and it's not recommended to use this functionality if at all possible.
