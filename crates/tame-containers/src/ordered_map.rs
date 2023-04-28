@@ -9,6 +9,17 @@ use core::ops::RangeBounds;
 
 use indexmap::IndexMap;
 
+pub use indexmap::map::Keys;
+pub use indexmap::map::IntoKeys;
+pub use indexmap::map::Values;
+pub use indexmap::map::ValuesMut;
+pub use indexmap::map::IntoValues;
+pub use indexmap::map::Iter;
+pub use indexmap::map::IterMut;
+pub use indexmap::map::IntoIter;
+pub use indexmap::map::Drain;
+pub use indexmap::map::Entry;
+
 /// A key-to-value map that has a specified order of contained elements.
 ///
 /// The order is *not* automatically maintained, thus you can move element order as you please, or sort
@@ -70,43 +81,43 @@ impl<K, V, S> OrderedMap<K, V, S> {
 
     /// See [`IndexMap::keys`]
     #[inline]
-    pub fn keys(&self) -> indexmap::map::Keys<'_, K, V> {
+    pub fn keys(&self) -> Keys<'_, K, V> {
         self.inner.keys()
     }
 
     /// See [`IndexMap::into_keys`]
     #[inline]
-    pub fn into_keys(self) -> indexmap::map::IntoKeys<K, V> {
+    pub fn into_keys(self) -> IntoKeys<K, V> {
         self.inner.into_keys()
     }
 
     /// See [`IndexMap::values`]
     #[inline]
-    pub fn values(&self) -> indexmap::map::Values<'_, K, V> {
+    pub fn values(&self) -> Values<'_, K, V> {
         self.inner.values()
     }
 
     /// See [`IndexMap::values_mut`]
     #[inline]
-    pub fn values_mut(&mut self) -> indexmap::map::ValuesMut<'_, K, V> {
+    pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
         self.inner.values_mut()
     }
 
     /// See [`IndexMap::into_values`]
     #[inline]
-    pub fn into_values(self) -> indexmap::map::IntoValues<K, V> {
+    pub fn into_values(self) -> IntoValues<K, V> {
         self.inner.into_values()
     }
 
     /// See [`IndexMap::iter`]
     #[inline]
-    pub fn iter(&self) -> indexmap::map::Iter<'_, K, V> {
+    pub fn iter(&self) -> Iter<'_, K, V> {
         self.inner.iter()
     }
 
     /// See [`IndexMap::iter_mut`]
     #[inline]
-    pub fn iter_mut(&mut self) -> indexmap::map::IterMut<'_, K, V> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         self.inner.iter_mut()
     }
 
@@ -118,7 +129,7 @@ impl<K, V, S> OrderedMap<K, V, S> {
 
     /// See [`IndexMap::drain`]
     #[inline]
-    pub fn drain<R>(&mut self, range: R) -> indexmap::map::Drain<'_, K, V>
+    pub fn drain<R>(&mut self, range: R) -> Drain<'_, K, V>
     where
         R: RangeBounds<usize>,
     {
@@ -189,7 +200,7 @@ where
 
     /// See [`IndexMap::entry`]
     #[inline]
-    pub fn entry(&mut self, key: K) -> indexmap::map::Entry<'_, K, V> {
+    pub fn entry(&mut self, key: K) -> Entry<'_, K, V> {
         self.inner.entry(key)
     }
 
@@ -371,7 +382,7 @@ where
 
     /// See [`IndexMap::sorted_by`]
     #[inline]
-    pub fn sorted_by<F>(self, cmp: F) -> indexmap::map::IntoIter<K, V>
+    pub fn sorted_by<F>(self, cmp: F) -> IntoIter<K, V>
     where
         F: FnMut(&K, &V, &K, &V) -> Ordering,
     {
@@ -398,7 +409,7 @@ where
 
     /// See [`IndexMap::sorted_unstable_by`]
     #[inline]
-    pub fn sorted_unstable_by<F>(self, cmp: F) -> indexmap::map::IntoIter<K, V>
+    pub fn sorted_unstable_by<F>(self, cmp: F) -> IntoIter<K, V>
     where
         F: FnMut(&K, &V, &K, &V) -> Ordering,
     {

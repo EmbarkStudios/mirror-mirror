@@ -7,6 +7,17 @@ use core::hash::Hasher;
 
 use std::collections::HashMap;
 
+pub use std::collections::hash_map::Keys;
+pub use std::collections::hash_map::IntoKeys;
+pub use std::collections::hash_map::Values;
+pub use std::collections::hash_map::ValuesMut;
+pub use std::collections::hash_map::IntoValues;
+pub use std::collections::hash_map::Iter;
+pub use std::collections::hash_map::IterMut;
+pub use std::collections::hash_map::IntoIter;
+pub use std::collections::hash_map::Drain;
+pub use std::collections::hash_map::Entry;
+
 use crate::STATIC_RANDOM_STATE;
 
 /// A key-to-value map that does not have a specified order of contained elements.
@@ -70,43 +81,43 @@ impl<K, V, S> UnorderedMap<K, V, S> {
 
     /// See [`HashMap::keys`]
     #[inline]
-    pub fn keys(&self) -> std::collections::hash_map::Keys<'_, K, V> {
+    pub fn keys(&self) -> Keys<'_, K, V> {
         self.inner.keys()
     }
 
     /// See [`HashMap::into_keys`]
     #[inline]
-    pub fn into_keys(self) -> std::collections::hash_map::IntoKeys<K, V> {
+    pub fn into_keys(self) -> IntoKeys<K, V> {
         self.inner.into_keys()
     }
 
     /// See [`HashMap::values`]
     #[inline]
-    pub fn values(&self) -> std::collections::hash_map::Values<'_, K, V> {
+    pub fn values(&self) -> Values<'_, K, V> {
         self.inner.values()
     }
 
     /// See [`HashMap::values_mut`]
     #[inline]
-    pub fn values_mut(&mut self) -> std::collections::hash_map::ValuesMut<'_, K, V> {
+    pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
         self.inner.values_mut()
     }
 
     /// See [`HashMap::into_values`]
     #[inline]
-    pub fn into_values(self) -> std::collections::hash_map::IntoValues<K, V> {
+    pub fn into_values(self) -> IntoValues<K, V> {
         self.inner.into_values()
     }
 
     /// See [`HashMap::iter`]
     #[inline]
-    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, K, V> {
+    pub fn iter(&self) -> Iter<'_, K, V> {
         self.inner.iter()
     }
 
     /// See [`HashMap::iter_mut`]
     #[inline]
-    pub fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, K, V> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         self.inner.iter_mut()
     }
 
@@ -118,7 +129,7 @@ impl<K, V, S> UnorderedMap<K, V, S> {
 
     /// See [`HashMap::drain`]
     #[inline]
-    pub fn drain(&mut self) -> std::collections::hash_map::Drain<'_, K, V> {
+    pub fn drain(&mut self) -> Drain<'_, K, V> {
         self.inner.drain()
     }
 
@@ -195,7 +206,7 @@ where
 
     /// See [`HashMap::entry`]
     #[inline]
-    pub fn entry(&mut self, key: K) -> std::collections::hash_map::Entry<'_, K, V> {
+    pub fn entry(&mut self, key: K) -> Entry<'_, K, V> {
         self.inner.entry(key)
     }
 

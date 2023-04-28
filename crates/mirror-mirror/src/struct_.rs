@@ -1,11 +1,9 @@
 use alloc::boxed::Box;
 use alloc::string::String;
-use alloc::vec::Vec;
 use core::any::Any;
 use core::fmt;
-use core::iter::FusedIterator;
 
-use tame_containers::UnorderedMap;
+use tame_containers::OrderedMap;
 
 use crate::iter::PairIterMut;
 use crate::type_info::graph::NodeId;
@@ -18,6 +16,9 @@ use crate::ReflectMut;
 use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Value;
+
+pub type FieldsIter<'a> = Box<dyn Iterator<Item = (&'a str, &'a dyn Reflect)> + 'a>;
+pub type FieldsIterMut<'a> = Box<dyn Iterator<Item = (&'a str, &'a mut dyn Reflect)> + 'a>;
 
 /// A reflected struct type.
 ///
@@ -33,9 +34,9 @@ pub trait Struct: Reflect {
 
     fn name_at(&self, index: usize) -> Option<&str>;
 
-    fn fields(&self) -> Iter<'_>;
+    fn fields(&self) -> FieldsIter<'_>;
 
-    fn fields_mut(&mut self) -> PairIterMut<'_>;
+    fn fields_mut(&mut self) -> FieldsIterMut<'_>;
 
     fn fields_len(&self) -> usize;
 }
@@ -50,8 +51,7 @@ impl fmt::Debug for dyn Struct {
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructValue {
-    field_names: Vec<String>,
-    fields: UnorderedMap<String, Value>,
+    fields: OrderedMap<String, Value>,
 }
 
 impl StructValue {
@@ -61,8 +61,7 @@ impl StructValue {
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            field_names: Vec::with_capacity(capacity),
-            fields: UnorderedMap::with_capacity(capacity),
+            fields: OrderedMap::with_capacity(capacity),
         }
     }
 
@@ -73,7 +72,6 @@ impl StructValue {
 
     pub fn set_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
         let name = name.into();
-        self.field_names.push(name.clone());
         self.fields.insert(name, value.into());
     }
 }
@@ -137,8 +135,12 @@ impl Struct for StructValue {
         Some(self.fields.get_mut(name)?)
     }
 
-    fn fields(&self) -> Iter<'_> {
-        Iter::new(self)
+    fn fields(&self) -> FieldsIter<'_> {
+        let iter = self
+            .fields
+            .iter()
+            .map(|(key, value)| (&**key, value.as_reflect()));
+        Box::new(iter)
     }
 
     fn fields_mut(&mut self) -> PairIterMut<'_> {
@@ -150,21 +152,22 @@ impl Struct for StructValue {
     }
 
     fn fields_len(&self) -> usize {
-        self.field_names.len()
+        self.fields.len()
     }
 
     fn field_at(&self, index: usize) -> Option<&dyn Reflect> {
-        let key = self.field_names.get(index)?;
-        Some(self.fields.get(key)?)
+        let (_name, value) = self.fields.get_index(index)?;
+        Some(value)
     }
 
     fn name_at(&self, index: usize) -> Option<&str> {
-        self.field_names.get(index).map(|s| &**s)
+        let (name, _value) = self.fields.get_index(index)?;
+        Some(name.as_str())
     }
 
     fn field_at_mut(&mut self, index: usize) -> Option<&mut dyn Reflect> {
-        let key = self.field_names.get(index)?;
-        Some(self.fields.get_mut(key)?)
+        let (_name, value) = self.fields.get_index_mut(index)?;
+        Some(value)
     }
 }
 
@@ -189,41 +192,7 @@ where
     where
         T: IntoIterator<Item = (S, V)>,
     {
-        let mut out = Self::default();
-        for (name, value) in iter {
-            out.set_field(name, value.to_value());
-        }
-        out
+        let fields = OrderedMap::from_iter(iter.into_iter().map(|(k, v)| (k.into(), v.to_value())));
+        Self { fields }
     }
 }
-
-#[derive(Debug)]
-pub struct Iter<'a> {
-    struct_: &'a dyn Struct,
-    index: usize,
-}
-
-impl<'a> Iter<'a> {
-    pub fn new(struct_: &'a dyn Struct) -> Self {
-        Self { struct_, index: 0 }
-    }
-}
-
-impl<'a> Iterator for Iter<'a> {
-    type Item = (&'a str, &'a dyn Reflect);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let name = self.struct_.name_at(self.index)?;
-        let value = self.struct_.field_at(self.index)?;
-        self.index += 1;
-        Some((name, value))
-    }
-}
-
-impl<'a> ExactSizeIterator for Iter<'a> {
-    fn len(&self) -> usize {
-        self.struct_.fields_len()
-    }
-}
-
-impl<'a> FusedIterator for Iter<'a> {}
