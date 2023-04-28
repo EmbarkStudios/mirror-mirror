@@ -2,7 +2,6 @@ use core::iter::Peekable;
 
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -657,8 +656,7 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.field_names.iter().map(move |field_name| {
-            let node = self.node.fields.get(field_name).unwrap();
+        self.node.fields.iter().map(|(_, node)| {
             NamedField {
                 node,
                 graph: self.graph,
@@ -679,8 +677,11 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
-        let name = self.node.field_names.get(index)?;
-        self.field_type(name)
+        let node = self.node.fields.get_index(index)?.1;
+        Some(NamedField {
+            node,
+            graph: self.graph,
+        })
     }
 
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
@@ -1040,8 +1041,7 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.field_names.iter().map(|field_name| {
-            let node = self.node.fields.get(field_name).unwrap();
+        self.node.fields.iter().map(|(_, node)| {
             NamedField {
                 node,
                 graph: self.graph,
@@ -1062,8 +1062,11 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
-        let name = self.node.field_names.get(index)?;
-        self.field_type(name)
+        let node = self.node.fields.get_index(index)?.1;
+        Some(NamedField {
+            node,
+            graph: self.graph,
+        })
     }
 
     pub fn enum_type(self) -> EnumType<'a> {
@@ -1324,7 +1327,7 @@ impl<'a> MapType<'a> {
     }
 
     pub fn default_value(self) -> Value {
-        BTreeMap::<(), ()>::new().to_value()
+        Value::OrderedMap(Default::default())
     }
 
     pub fn has_default_value(&self) -> bool {

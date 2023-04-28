@@ -3,6 +3,7 @@ use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
+use tame_containers::OrderedMap;
 use core::any::type_name;
 use core::any::TypeId;
 use core::hash::BuildHasher;
@@ -176,9 +177,8 @@ impl_from! { Opaque(OpaqueNode) }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructNode {
     pub(super) type_name: String,
-    pub(super) fields: BTreeMap<String, NamedFieldNode>,
-    pub(super) field_names: Box<[String]>,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) fields: OrderedMap<String, NamedFieldNode>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -197,14 +197,13 @@ impl StructNode {
                 .iter()
                 .map(|field| (field.name.clone(), field.clone()))
                 .collect(),
-            field_names: fields.iter().map(|field| field.name.clone()).collect(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
     }
 }
 
-fn map_metadata(metadata: BTreeMap<&'static str, Value>) -> BTreeMap<String, Value> {
+fn map_metadata(metadata: BTreeMap<&'static str, Value>) -> OrderedMap<String, Value> {
     metadata
         .into_iter()
         .map(|(key, value)| (key.to_owned(), value))
@@ -221,7 +220,7 @@ fn map_docs(docs: &[&'static str]) -> Box<[String]> {
 pub struct TupleStructNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -249,7 +248,7 @@ impl TupleStructNode {
 pub struct EnumNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -285,9 +284,8 @@ pub enum VariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructVariantNode {
     pub(super) name: String,
-    pub(super) fields: BTreeMap<String, NamedFieldNode>,
-    pub(super) field_names: Box<[String]>,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) fields: OrderedMap<String, NamedFieldNode>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -304,7 +302,6 @@ impl StructVariantNode {
                 .iter()
                 .map(|field| (field.name.clone(), field.clone()))
                 .collect(),
-            field_names: fields.iter().map(|field| field.name.clone()).collect(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
         }
@@ -317,7 +314,7 @@ impl StructVariantNode {
 pub struct TupleVariantNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -342,7 +339,7 @@ impl TupleVariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitVariantNode {
     pub(super) name: String,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -366,7 +363,7 @@ impl UnitVariantNode {
 pub struct TupleNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -394,7 +391,7 @@ impl TupleNode {
 pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: NodeId,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -422,7 +419,7 @@ impl NamedFieldNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnnamedFieldNode {
     pub(super) id: NodeId,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -558,7 +555,7 @@ scalar_typed! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpaqueNode {
     pub(super) type_name: String,
-    pub(super) metadata: BTreeMap<String, Value>,
+    pub(super) metadata: OrderedMap<String, Value>,
     pub(super) default_value: Option<Value>,
 }
 
