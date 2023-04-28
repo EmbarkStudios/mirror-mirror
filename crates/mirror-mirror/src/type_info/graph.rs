@@ -2,13 +2,13 @@ use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
-use tame_containers::OrderedMap;
 use core::any::type_name;
 use core::any::TypeId;
 use core::hash::BuildHasher;
 use core::hash::Hash;
 use core::hash::Hasher;
 use core::ops::Deref;
+use tame_containers::OrderedMap;
 
 use tame_containers::UnorderedMap;
 

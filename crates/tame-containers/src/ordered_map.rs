@@ -9,16 +9,16 @@ use core::ops::RangeBounds;
 
 use indexmap::IndexMap;
 
-pub use indexmap::map::Keys;
+pub use indexmap::map::Drain;
+pub use indexmap::map::Entry;
+pub use indexmap::map::IntoIter;
 pub use indexmap::map::IntoKeys;
-pub use indexmap::map::Values;
-pub use indexmap::map::ValuesMut;
 pub use indexmap::map::IntoValues;
 pub use indexmap::map::Iter;
 pub use indexmap::map::IterMut;
-pub use indexmap::map::IntoIter;
-pub use indexmap::map::Drain;
-pub use indexmap::map::Entry;
+pub use indexmap::map::Keys;
+pub use indexmap::map::Values;
+pub use indexmap::map::ValuesMut;
 
 /// A key-to-value map that has a specified order of contained elements.
 ///

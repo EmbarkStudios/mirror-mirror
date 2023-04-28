@@ -449,7 +449,6 @@ fn expand_struct(
         }
     };
 
-
     let Generics {
         impl_generics,
         type_generics,

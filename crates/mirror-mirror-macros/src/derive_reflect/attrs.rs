@@ -1,6 +1,5 @@
 use core::hash::Hash;
 
-use tame_containers::OrderedMap;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -14,6 +13,7 @@ use syn::Lit;
 use syn::LitStr;
 use syn::Token;
 use syn::UseTree;
+use tame_containers::OrderedMap;
 
 mod kw {
     syn::custom_keyword!(Debug);

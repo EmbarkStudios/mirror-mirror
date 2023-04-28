@@ -53,7 +53,7 @@
     rust_2018_idioms,
     future_incompatible,
     nonstandard_style,
-    missing_debug_implementations,
+    missing_debug_implementations
 )]
 #![deny(
     missing_docs,

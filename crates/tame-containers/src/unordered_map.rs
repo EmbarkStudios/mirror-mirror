@@ -7,16 +7,16 @@ use core::hash::Hasher;
 
 use std::collections::HashMap;
 
-pub use std::collections::hash_map::Keys;
+pub use std::collections::hash_map::Drain;
+pub use std::collections::hash_map::Entry;
+pub use std::collections::hash_map::IntoIter;
 pub use std::collections::hash_map::IntoKeys;
-pub use std::collections::hash_map::Values;
-pub use std::collections::hash_map::ValuesMut;
 pub use std::collections::hash_map::IntoValues;
 pub use std::collections::hash_map::Iter;
 pub use std::collections::hash_map::IterMut;
-pub use std::collections::hash_map::IntoIter;
-pub use std::collections::hash_map::Drain;
-pub use std::collections::hash_map::Entry;
+pub use std::collections::hash_map::Keys;
+pub use std::collections::hash_map::Values;
+pub use std::collections::hash_map::ValuesMut;
 
 use crate::STATIC_RANDOM_STATE;
 

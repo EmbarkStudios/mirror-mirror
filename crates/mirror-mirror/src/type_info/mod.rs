@@ -656,11 +656,9 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.iter().map(|(_, node)| {
-            NamedField {
-                node,
-                graph: self.graph,
-            }
+        self.node.fields.iter().map(|(_, node)| NamedField {
+            node,
+            graph: self.graph,
         })
     }
 
@@ -1041,11 +1039,9 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.fields.iter().map(|(_, node)| {
-            NamedField {
-                node,
-                graph: self.graph,
-            }
+        self.node.fields.iter().map(|(_, node)| NamedField {
+            node,
+            graph: self.graph,
         })
     }
 
