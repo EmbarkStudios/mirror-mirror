@@ -186,7 +186,6 @@
 //! - Add meta data to types which becomes part of the type information.
 //! - [Key paths][mod@key_path] for querying value and type information.
 //! - No dependencies on [`bevy`] specific crates.
-//! - `#![no_std]` support.
 //!
 //! # Feature flags
 //!
@@ -196,7 +195,6 @@
 //!
 //! Name | Description | Default?
 //! ---|---|---
-//! `std` | Enables using the standard library (`core` and `alloc` are always required) | Yes
 //! `speedy` | Enables [`speedy`] support for most types | Yes
 //! `serde` | Enables [`serde`] support for most types | Yes
 //! `glam` | Enables impls for [`glam`] | No
