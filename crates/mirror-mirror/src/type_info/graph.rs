@@ -32,9 +32,8 @@ impl NodeId {
     where
         T: 'static,
     {
-        let mut hasher = STATIC_RANDOM_STATE.build_hasher();
-        TypeId::of::<T>().hash(&mut hasher);
-        Self(hasher.finish())
+        let hash = STATIC_RANDOM_STATE.hash_one(TypeId::of::<T>());
+        Self(hash)
     }
 }
 
@@ -114,15 +113,23 @@ impl TypeGraph {
         T: DescribeType,
     {
         let id = NodeId::new::<T>();
+        // because we recursively build the graph by passing the graph itself to the build function for this node
+        // before the node is fully built (and therefore before the fully built node is inserted into the map),
+        // if we have any nested types that repeat, we'd usually get an infinite recursion. to stop that, we insert a
+        // marker of `None` to indicate that such a node is already in the process of being built (within the current call stack),
+        // thus we can just return early and not try to build it again.
         match self.map.get(&id) {
-            // the data is already there
+            // node already exists
             Some(Some(_)) => id,
-            // someone else is currently inserting the data
+            // node is in the process of being built in current call stack
             Some(None) => id,
-            // the data isn't there yet
+            // first time this node has been probed, we are responsible for building
             None => {
+                // first insert marker saying we are building this
                 self.map.insert(id, None);
+                // recursively build including any child nodes
                 let info = f(self).into();
+                // insert fully built root node
                 self.map.insert(id, Some(info));
                 id
             }

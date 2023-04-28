@@ -255,6 +255,16 @@ where
     {
         self.inner.remove(k)
     }
+
+    /// See [`HashMap::contains_key`]
+    #[inline]
+    pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
+        self.inner.contains_key(key)
+    }
 }
 
 impl<K, V, S> Clone for UnorderedMap<K, V, S>
