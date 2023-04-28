@@ -60,14 +60,8 @@ impl<T> Deref for WithId<T> {
 
 /// A hasher that does no hashing because we already have a u64 hash that should be
 /// just as well distributed.
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 pub(crate) struct NoHashHasher(u64);
-
-impl Default for NoHashHasher {
-    fn default() -> Self {
-        Self(0)
-    }
-}
 
 impl Hasher for NoHashHasher {
     fn finish(&self) -> u64 {
