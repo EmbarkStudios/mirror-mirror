@@ -1,6 +1,5 @@
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 use tame_containers::OrderedMap;
@@ -185,7 +184,7 @@ pub struct StructNode {
 impl StructNode {
     pub fn new<T>(
         fields: &[NamedFieldNode],
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -203,7 +202,7 @@ impl StructNode {
     }
 }
 
-fn map_metadata(metadata: BTreeMap<&'static str, Value>) -> OrderedMap<String, Value> {
+fn map_metadata(metadata: OrderedMap<&'static str, Value>) -> OrderedMap<String, Value> {
     metadata
         .into_iter()
         .map(|(key, value)| (key.to_owned(), value))
@@ -227,7 +226,7 @@ pub struct TupleStructNode {
 impl TupleStructNode {
     pub fn new<T>(
         fields: &[UnnamedFieldNode],
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -255,7 +254,7 @@ pub struct EnumNode {
 impl EnumNode {
     pub fn new<T>(
         variants: &[VariantNode],
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -293,7 +292,7 @@ impl StructVariantNode {
     pub fn new(
         name: &'static str,
         fields: &[NamedFieldNode],
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -322,7 +321,7 @@ impl TupleVariantNode {
     pub fn new(
         name: &'static str,
         fields: &[UnnamedFieldNode],
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -346,7 +345,7 @@ pub struct UnitVariantNode {
 impl UnitVariantNode {
     pub fn new(
         name: &'static str,
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -370,7 +369,7 @@ pub struct TupleNode {
 impl TupleNode {
     pub fn new<T>(
         fields: &[UnnamedFieldNode],
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -398,7 +397,7 @@ pub struct NamedFieldNode {
 impl NamedFieldNode {
     pub fn new<T>(
         name: &'static str,
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
         graph: &mut TypeGraph,
     ) -> Self
@@ -425,7 +424,7 @@ pub struct UnnamedFieldNode {
 
 impl UnnamedFieldNode {
     pub fn new<T>(
-        metadata: BTreeMap<&'static str, Value>,
+        metadata: OrderedMap<&'static str, Value>,
         docs: &[&'static str],
         graph: &mut TypeGraph,
     ) -> Self
@@ -560,7 +559,7 @@ pub struct OpaqueNode {
 }
 
 impl OpaqueNode {
-    pub fn new<T>(metadata: BTreeMap<&'static str, Value>, _graph: &mut TypeGraph) -> Self
+    pub fn new<T>(metadata: OrderedMap<&'static str, Value>, _graph: &mut TypeGraph) -> Self
     where
         T: DescribeType,
     {

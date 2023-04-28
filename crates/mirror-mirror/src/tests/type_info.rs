@@ -273,7 +273,8 @@ fn basic_hash() {
     assert_eq!(bar_hash, bar_hash_2);
 }
 
-// we should guarantee deterministic hash of `TypeDescriptor` stays static across compatible versions
+// we should guarantee deterministic hash of `TypeDescriptor` stays static across compatible versions.
+// if we need to update this test, then we also likely need to release a new semver breaking version
 #[test]
 fn basic_static_hash() {
     use crate::STATIC_RANDOM_STATE;
@@ -294,12 +295,12 @@ fn basic_static_hash() {
     let foo_desc = <Foo as DescribeType>::type_descriptor().into_owned();
     let foo_hash = STATIC_RANDOM_STATE.hash_one(&foo_desc);
 
-    assert_eq!(foo_hash, 15927918080687087789); // precomputed hash of Foo descriptor
+    assert_eq!(foo_hash, 2782098737032956938); // precomputed hash of Foo descriptor
 
     let bar_desc = <Bar as DescribeType>::type_descriptor().into_owned();
     let bar_hash = STATIC_RANDOM_STATE.hash_one(&bar_desc);
 
-    assert_eq!(bar_hash, 474975299421315318); // precomputed hash of Bar descriptor
+    assert_eq!(bar_hash, 3542944026927454911); // precomputed hash of Bar descriptor
 }
 
 #[test]

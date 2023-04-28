@@ -12,7 +12,7 @@ description = "Containers specialized for ergonomic gamedev usecases"
 keywords = ["containers"]
 
 [features]
-default = ["speedy", "serde"]
+default = []
 speedy = ["dep:speedy"]
 serde = ["dep:serde"]
 

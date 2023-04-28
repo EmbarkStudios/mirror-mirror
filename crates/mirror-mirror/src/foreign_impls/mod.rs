@@ -94,7 +94,7 @@ impl DescribeType for Infallible {
     fn build(graph: &mut TypeGraph) -> NodeId {
         let variants = &[];
         graph.get_or_build_node_with::<Self, _>(|_graph| {
-            EnumNode::new::<Self>(variants, BTreeMap::from([]), &[])
+            EnumNode::new::<Self>(variants, OrderedMap::from([]), &[])
         })
     }
 }

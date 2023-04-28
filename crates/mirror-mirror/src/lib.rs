@@ -1304,12 +1304,12 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
 #[doc(hidden)]
 pub mod __private {
     pub use alloc::borrow::Cow;
-    pub use alloc::collections::BTreeMap;
     pub use core::any::Any;
     pub use core::any::TypeId;
     pub use core::fmt;
 
     pub use once_cell::race::OnceBox;
+    pub use tame_containers::OrderedMap;
 
     pub use self::enum_::*;
     pub use self::key_path::*;
