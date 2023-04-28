@@ -295,11 +295,13 @@ fn basic_static_hash() {
     let foo_desc = <Foo as DescribeType>::type_descriptor().into_owned();
     let foo_hash = STATIC_RANDOM_STATE.hash_one(&foo_desc);
 
+    eprintln!("{:#?}", foo_desc);
     assert_eq!(foo_hash, 2782098737032956938); // precomputed hash of Foo descriptor
 
     let bar_desc = <Bar as DescribeType>::type_descriptor().into_owned();
     let bar_hash = STATIC_RANDOM_STATE.hash_one(&bar_desc);
 
+    eprintln!("{:#?}", bar_desc);
     assert_eq!(bar_hash, 3542944026927454911); // precomputed hash of Bar descriptor
 }
 

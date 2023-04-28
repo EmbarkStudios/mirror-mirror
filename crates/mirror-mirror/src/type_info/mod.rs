@@ -43,8 +43,7 @@ pub trait DescribeType: 'static {
         use std::collections::HashMap;
         use std::sync::RwLock;
 
-        // a map required for generic types to have different type descriptors such as
-        // `Vec<i32>` and `Vec<bool>`
+        // amortizing creation of type descriptors so that each process only needs to compute a type descriptor for each type once
         static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>> =
             OnceBox::new();
 
