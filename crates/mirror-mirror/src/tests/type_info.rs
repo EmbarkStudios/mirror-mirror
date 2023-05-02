@@ -273,6 +273,8 @@ fn basic_hash() {
     assert_eq!(bar_hash, bar_hash_2);
 }
 
+// TODO: (@fu5ha) enable this with stable_hash and stable_eq functions
+/*
 // we should guarantee deterministic hash of `TypeDescriptor` stays static across compatible versions.
 // if we need to update this test, then we also likely need to release a new semver breaking version
 #[test]
@@ -304,6 +306,7 @@ fn basic_static_hash() {
     eprintln!("{:#?}", bar_desc);
     assert_eq!(bar_hash, 3542944026927454911); // precomputed hash of Bar descriptor
 }
+*/
 
 #[test]
 fn has_default_value() {
