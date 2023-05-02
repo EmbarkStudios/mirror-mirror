@@ -114,10 +114,6 @@ impl Reflect for Infallible {
         match *self {}
     }
 
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-        <Self as DescribeType>::type_descriptor()
-    }
-
     fn patch(&mut self, _value: &dyn Reflect) {
         match *self {}
     }

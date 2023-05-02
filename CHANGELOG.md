@@ -63,6 +63,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # 0.1.11 (20. March, 2023)
 
 - **fixed:** Fully qualify `FromReflect` in generated code ([#107])
+- **added:** Implement serialization traits for `ScalarOwned`
+
+# 0.1.14 (11. April, 2023)
+
+- **change:** Make use of deterministic hashes for `NodeId` and `TypeDescriptor` ([#115])
+
+[#115]: https://github.com/EmbarkStudios/mirror-mirror/pull/115
+
+# 0.1.13 (29. March, 2023)
+
+- **fixed:** Require less strict `speedy` version ([#114])
+
+[#114]: https://github.com/EmbarkStudios/mirror-mirror/pull/114
+
+# 0.1.12 (21. March, 2023)
+
+- **change:** Update to syn 2.0 ([#113])
+
+[#113]: https://github.com/EmbarkStudios/mirror-mirror/pull/113
+
+# 0.1.11 (20. March, 2023)
+
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
 - **change:** Update to syn 2.0 ([#112])
 
