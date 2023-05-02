@@ -5,10 +5,12 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::type_name;
 use core::any::TypeId;
+use core::hash::BuildHasher;
 use core::ops::Deref;
 
 use super::*;
 use crate::Value;
+use crate::STATIC_RANDOM_STATE;
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Ord, Eq, Debug)]
@@ -24,7 +26,7 @@ impl NodeId {
         use core::hash::Hash;
         use core::hash::Hasher;
 
-        let mut hasher = ahash::AHasher::default();
+        let mut hasher = STATIC_RANDOM_STATE.build_hasher();
         TypeId::of::<T>().hash(&mut hasher);
         Self(hasher.finish())
     }
