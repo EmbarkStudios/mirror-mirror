@@ -73,12 +73,15 @@ pub trait DescribeType: 'static {
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
 
-/// The root of a type.
+/// A descriptor of a type including all sub-types.
 ///
 /// Accessed via the [`DescribeType`] trait.
 ///
 /// `mirror-mirror` represents types as (possibly cyclic) graphs since types can contain
 /// themselves. For example `struct Foo(Vec<Foo>)`.
+///
+/// Note that the trait-implemented `PartialEq`, `Eq`, and `Hash` implementations are *not* stable
+/// across different binary builds!
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

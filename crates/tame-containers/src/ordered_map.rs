@@ -22,6 +22,11 @@ pub use indexmap::map::ValuesMut;
 
 /// A key-to-value map that has a specified order of contained elements.
 ///
+/// It is a good choice to use this map if you need to lookup elements by index, maintain a stable order,
+/// or iterate over the contained elements more frequently than looking them up by key even if you don't care about order.
+/// If you plan to lookup elements by key much more frequently than iterating the contained elements, and you do not care about
+/// order, then think about using [`UnorderedMap`] instead.
+///
 /// The order is *not* automatically maintained, thus you can move element order as you please, or sort
 /// with the various sorting functions.
 ///
@@ -39,6 +44,7 @@ pub use indexmap::map::ValuesMut;
 /// than as a native map object. This is for better compatibility with JSON, which only allows strings as key for
 /// native JSON maps.
 ///
+/// [`UnorderedMap`]: crate::UnorderedMap
 /// [lexographical]: core::cmp::Ord#lexographical-comparison
 pub struct OrderedMap<K, V, S = ahash::RandomState> {
     pub(crate) inner: IndexMap<K, V, S>,
@@ -137,6 +143,13 @@ impl<K, V, S> OrderedMap<K, V, S> {
     }
 
     /// See [`IndexMap::clear`]
+    ///
+    /// Note that this method does not shrink the underlying allocation (keeps capacity the same) and is `O(capacity)`.
+    /// Thus repeated calls to `clear` on a map that is far under-occupied may be unexpectedly expensive. Consider using
+    /// [`clear_and_shrink`] or [`clear_and_shrink_to`] to shrink the underlying allocation when appropriate when clearing.
+    ///
+    /// [`clear_and_shrink`]: OrderedMap::clear_and_shrink
+    /// [`clear_and_shrink_to`]: OrderedMap::clear_and_shrink_to
     #[inline]
     pub fn clear(&mut self) {
         self.inner.clear()
@@ -196,6 +209,41 @@ where
     #[inline]
     pub fn reserve(&mut self, additional: usize) {
         self.inner.reserve(additional)
+    }
+
+    /// See [`IndexMap::shrink_to_fit`]
+    #[inline]
+    pub fn shrink_to_fit(&mut self) {
+        self.inner.shrink_to_fit();
+    }
+
+    /// See [`IndexMap::shrink_to`]
+    #[inline]
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.inner.shrink_to(min_capacity);
+    }
+
+    /// Clears and shrinks the capacity of the map on a basic heuristic. If you have a more specific heuristic, see [`clear_and_shrink_to`].
+    ///
+    /// If the map previously had > 128 element capacity, shrinks to whichever is larger between 128 and 110% of the previous length of the map
+    /// in an effort to reduce reallocation for repeated use-and-clear on similar numbers of items. If the map had <= 128 element capacity, no shrink happens.
+    ///
+    /// [`clear_and_shrink_to`]: OrderedMap::clear_and_shrink_to
+    #[inline]
+    pub fn clear_and_shrink(&mut self) {
+        if self.capacity() > 128 {
+            let new_cap = 128usize.max((self.len() as f64 * 1.1) as usize);
+            self.clear_and_shrink_to(new_cap);
+        } else {
+            self.clear();
+        }
+    }
+
+    /// Clears and shrinks the capacity of the map to the given capacity.
+    #[inline]
+    pub fn clear_and_shrink_to(&mut self, capacity: usize) {
+        self.clear();
+        self.shrink_to(capacity);
     }
 
     /// See [`IndexMap::entry`]

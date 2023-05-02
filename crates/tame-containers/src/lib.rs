@@ -3,9 +3,10 @@
 //! ## Provided Collections
 //!
 //! - [`UnorderedMap`], useful when you want a very fast general-purpose key-value map with no order and
-//! generous trait implementations
-//! - [`OrderedMap`], useful when you want a key-value map including a set order of `(k, v)` element pairs
-//! that is also very fast and has generous trait implementations
+//! generous trait implementations, and you plan to do random access lookup by key more frequently than iteration
+//! of the contained elements.
+//! - [`OrderedMap`], useful when you want a key-value map including a set order of element pairs, or when
+//! you plan to iterate over the contained elements more frequently than you do random access lookup by key.
 //!
 //! # Feature flags
 //!
