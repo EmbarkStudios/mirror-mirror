@@ -153,8 +153,8 @@ impl<K, V, S> UnorderedMap<K, V, S> {
     /// Thus repeated calls to `clear` on a map that is far under-occupied may be unexpectedly expensive. Consider using
     /// [`clear_and_shrink`] or [`clear_and_shrink_to`] to shrink the underlying allocation when appropriate when clearing.
     ///
-    /// [`clear_and_shrink`]: OrderedMap::clear_and_shrink
-    /// [`clear_and_shrink_to`]: OrderedMap::clear_and_shrink_to
+    /// [`clear_and_shrink`]: UnorderedMap::clear_and_shrink
+    /// [`clear_and_shrink_to`]: UnorderedMap::clear_and_shrink_to
     #[inline]
     pub fn clear(&mut self) {
         self.inner.clear()

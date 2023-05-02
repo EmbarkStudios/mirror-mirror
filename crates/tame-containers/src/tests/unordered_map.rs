@@ -70,9 +70,9 @@ fn hash_order_independent() {
         ("a", Foo("value 0", 0)),
     ]);
 
-    let a_hash = STATIC_RANDOM_STATE.hash_one(&a_map);
-    let b_hash = STATIC_RANDOM_STATE.hash_one(&b_map);
-    let c_hash = STATIC_RANDOM_STATE.hash_one(&c_map);
+    let a_hash = STATIC_RANDOM_STATE.hash_one(a_map);
+    let b_hash = STATIC_RANDOM_STATE.hash_one(b_map);
+    let c_hash = STATIC_RANDOM_STATE.hash_one(c_map);
 
     assert_eq!(a_hash, c_hash);
     assert_eq!(b_hash, c_hash);
