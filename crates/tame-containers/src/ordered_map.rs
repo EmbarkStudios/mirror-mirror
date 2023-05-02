@@ -224,10 +224,10 @@ where
     }
 
     /// Clears the map, removing all key-value pairs.
-    /// 
+    ///
     /// Note that this shrinks the capacity of the map based on a basic heuristic. See [`clear_and_shrink`] for more details, which this
     /// method redirects to internally.
-    /// 
+    ///
     /// [`clear_and_shrink`]: OrderedMap::clear_and_shrink
     #[inline]
     pub fn clear(&mut self) {
