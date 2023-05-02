@@ -1,3 +1,5 @@
+#![allow(clippy::wildcard_in_or_patterns)]
+
 use core::{any::type_name, fmt};
 
 use alloc::borrow::Cow;
@@ -156,12 +158,10 @@ impl<'a, 'b> WriteAst<Expr> for TypeWriter<'a, 'b> {
             Expr::Lit(inner) => self.write(inner),
             Expr::Array(_)
             | Expr::Assign(_)
-            | Expr::AssignOp(_)
             | Expr::Async(_)
             | Expr::Await(_)
             | Expr::Binary(_)
             | Expr::Block(_)
-            | Expr::Box(_)
             | Expr::Break(_)
             | Expr::Call(_)
             | Expr::Cast(_)
@@ -187,12 +187,13 @@ impl<'a, 'b> WriteAst<Expr> for TypeWriter<'a, 'b> {
             | Expr::Try(_)
             | Expr::TryBlock(_)
             | Expr::Tuple(_)
-            | Expr::Type(_)
             | Expr::Unary(_)
             | Expr::Unsafe(_)
             | Expr::Verbatim(_)
             | Expr::While(_)
             | Expr::Yield(_)
+            | Expr::Const(_)
+            | Expr::Infer(_)
             | _ => Err(fmt::Error),
         }
     }
@@ -212,7 +213,7 @@ impl<'a, 'b> WriteAst<Lit> for TypeWriter<'a, 'b> {
             Lit::Int(inner) => self.write(inner),
             Lit::Bool(inner) => self.write(inner),
             Lit::Float(inner) => self.write(inner),
-            Lit::Str(_) | Lit::ByteStr(_) | Lit::Byte(_) | Lit::Char(_) | Lit::Verbatim(_) => {
+            Lit::Str(_) | Lit::ByteStr(_) | Lit::Byte(_) | Lit::Char(_) | Lit::Verbatim(_) | _ => {
                 Err(fmt::Error)
             }
         }
@@ -313,8 +314,10 @@ impl<'a, 'b> WriteAst<GenericArgument> for TypeWriter<'a, 'b> {
             GenericArgument::Type(inner) => self.write(inner),
             GenericArgument::Const(inner) => self.write(inner),
             GenericArgument::Lifetime(_)
-            | GenericArgument::Binding(_)
-            | GenericArgument::Constraint(_) => Err(fmt::Error),
+            | GenericArgument::AssocType(_)
+            | GenericArgument::AssocConst(_)
+            | GenericArgument::Constraint(_)
+            | _ => Err(fmt::Error),
         }
     }
 }
