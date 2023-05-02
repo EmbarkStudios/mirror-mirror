@@ -14,6 +14,7 @@ use tame_containers::UnorderedMap;
 
 use super::*;
 use crate::Value;
+use crate::STATIC_RANDOM_STATE;
 
 /// A `TypeGraph`'s node that refers to a specific type via its `TypeId'.
 #[derive(Clone, Copy, PartialEq, PartialOrd, Ord, Eq, Debug)]
