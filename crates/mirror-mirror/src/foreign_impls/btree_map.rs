@@ -113,7 +113,6 @@ where
             .iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        // TODO: should we split Value::UnorderedMap and Value::OrderedMap?
         Value::OrderedMap(data)
     }
 
