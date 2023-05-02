@@ -150,13 +150,13 @@ impl<K, V, S> UnorderedMap<K, V, S> {
     /// See [`HashMap::clear`]
     ///
     /// Note that this method does not shrink the underlying allocation (keeps capacity the same) and is `O(capacity)`.
-    /// Thus repeated calls to `clear` on a map that is far under-occupied may be unexpectedly expensive. Consider using
+    /// Thus repeated calls to `clear_no_shrink` on a map that is far under-occupied may be unexpectedly expensive. Consider using
     /// [`clear_and_shrink`] or [`clear_and_shrink_to`] to shrink the underlying allocation when appropriate when clearing.
     ///
     /// [`clear_and_shrink`]: UnorderedMap::clear_and_shrink
     /// [`clear_and_shrink_to`]: UnorderedMap::clear_and_shrink_to
     #[inline]
-    pub fn clear(&mut self) {
+    pub fn clear_no_shrink(&mut self) {
         self.inner.clear()
     }
 
@@ -228,6 +228,17 @@ where
         self.inner.shrink_to(min_capacity);
     }
 
+    /// Clears the map, removing all key-value pairs.
+    /// 
+    /// Note that this shrinks the capacity of the map based on a basic heuristic. See [`clear_and_shrink`] for more details, which this
+    /// method redirects to internally.
+    /// 
+    /// [`clear_and_shrink`]: UnorderedMap::clear_and_shrink
+    #[inline]
+    pub fn clear(&mut self) {
+        self.clear_and_shrink()
+    }
+
     /// Clears and shrinks the capacity of the map on a basic heuristic. If you have a more specific heuristic, see [`clear_and_shrink_to`].
     ///
     /// If the map previously had > 128 element capacity, shrinks to whichever is larger between 128 and 110% of the previous length of the map
@@ -240,14 +251,14 @@ where
             let new_cap = 128usize.max((self.len() as f64 * 1.1) as usize);
             self.clear_and_shrink_to(new_cap);
         } else {
-            self.clear();
+            self.clear_no_shrink();
         }
     }
 
     /// Clears and shrinks the capacity of the map to the given capacity.
     #[inline]
     pub fn clear_and_shrink_to(&mut self, capacity: usize) {
-        self.clear();
+        self.clear_no_shrink();
         self.shrink_to(capacity);
     }
 
