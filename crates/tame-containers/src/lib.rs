@@ -2,11 +2,17 @@
 //!
 //! ## Provided Collections
 //!
-//! - [`UnorderedMap`], useful when you want a very fast general-purpose key-value map with no order and
-//! generous trait implementations, and you plan to do random access lookup by key more frequently than iteration
-//! of the contained elements.
+//! - [`UnorderedMap`], useful when you want a general-purpose key-value map, you plan to do random access
+//! lookup by key more frequently than iteration of the contained elements, and you don't care about order of
+//! those elements.
 //! - [`OrderedMap`], useful when you want a key-value map including a set order of element pairs, or when
 //! you plan to iterate over the contained elements more frequently than you do random access lookup by key.
+//! - [`LinearMap`], useful when you want a collection that behaves as a key-value map but you will only ever have
+//! up to a few tens of elements. For small numbers of elements and small size of contained key/value types, this
+//! will likely be faster and take up less memory than other map types, but its random access operations have O(len)
+//! complexity rather than O(1) as with hash-based maps.
+//! - [`LinearSet`], useful in the same situation as [`LinearMap`] but when you're operating on a set of values rather
+//! than a map.
 //!
 //! # Feature flags
 //!
@@ -68,7 +74,6 @@
     // because speedy
     clippy::not_unsafe_ptr_arg_deref,
 )]
-#![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
@@ -81,6 +86,16 @@ pub use unordered_map::UnorderedMap;
 pub mod ordered_map;
 #[doc(inline)]
 pub use ordered_map::OrderedMap;
+
+/// A key-value map specialized for small numbers of elements, implemented by searching linearly in a vector.
+pub mod linear_map;
+#[doc(inline)]
+pub use linear_map::LinearMap;
+
+/// A set specialized for small numbers of elements, implemented by searching linearly in a vector.
+pub mod linear_set;
+#[doc(inline)]
+pub use linear_set::LinearSet;
 
 #[cfg(test)]
 mod tests;

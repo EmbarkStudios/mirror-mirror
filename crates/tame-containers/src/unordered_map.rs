@@ -414,9 +414,9 @@ where
             Ordering::Equal => (),
         }
         let mut self_seq = self.inner.iter().collect::<Vec<_>>();
-        self_seq.sort_by_key(|(k, _v)| *k);
+        self_seq.sort_unstable_by_key(|(k, _v)| *k); // unstable ok because no keys should be equal
         let mut other_seq = other.inner.iter().collect::<Vec<_>>();
-        other_seq.sort_by_key(|(k, _v)| *k);
+        other_seq.sort_unstable_by_key(|(k, _v)| *k);
         self_seq.into_iter().cmp(other_seq)
     }
 }
