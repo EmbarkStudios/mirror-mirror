@@ -195,6 +195,7 @@
 //!
 //! Name | Description | Default?
 //! ---|---|---
+//! `simple_type_name` | Enables support for intelligently simplifying type names when printing | Yes
 //! `speedy` | Enables [`speedy`] support for most types | Yes
 //! `serde` | Enables [`serde`] support for most types | Yes
 //! `glam` | Enables impls for [`glam`] | No
