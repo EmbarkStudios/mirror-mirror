@@ -18,7 +18,7 @@ use crate::STATIC_RANDOM_STATE;
 /// It is a good choice to use this set if you plan to do insertion, removal, and lookup significantly
 /// more often than iteration of the contained elements. If you will iterate the elements often (even if you don't
 /// specifically care about their order), think about using an [`OrderedSet`] instead. If you plan to have a small
-/// number of elements (up to a few dozen) and those elements are fast to compare and/or small, consider `LinearSet` instead.
+/// number of elements (up to a few dozen) and those elements are fast to compare and/or small, consider [`LinearSet`] instead.
 ///
 /// This is a wrapper around [`std::collections::HashSet`] which implements various traits in ways that fit
 /// our use cases better than the choices `std` made. If you really need to access the wrapped [`HashSet`],
@@ -34,6 +34,7 @@ use crate::STATIC_RANDOM_STATE;
 /// which is very slow and it's not recommended to use this functionality if at all possible.
 ///
 /// [`OrderedSet`]: crate::OrderedSet
+/// [`LinearSet`]: crate::LinearSet
 /// [lexographical]: core::cmp::Ord#lexographical-comparison
 pub struct UnorderedSet<T, S = ahash::RandomState> {
     pub(crate) inner: HashSet<T, S>,

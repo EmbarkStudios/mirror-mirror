@@ -23,7 +23,7 @@
 //! 
 //! Number of elements | Access pattern | Need defined order | Choose
 //! ---|---|---
-//! Less than ~128 | Any | Any | `LinearMap`/`LinearSet`
+//! Less than ~128 | Any | Any | [`LinearMap`]/[`LinearSet`]
 //! More than ~128 | More Random Access | No | [`UnorderedMap`]/[`UnorderedSet`]
 //! More than ~128 | More Iteration | No | [`OrderedMap`]/[`OrderedSet`]
 //! More than ~128 | Any | Yes | [`OrderedMap`]/[`OrderedSet`]

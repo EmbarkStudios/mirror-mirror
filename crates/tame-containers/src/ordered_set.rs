@@ -22,7 +22,7 @@ pub use indexmap::set::Union;
 /// or iterate over the contained elements more frequently than looking them up using random access (insertion or removal),
 /// even if you don't care about order. If you plan to lookup elements much more frequently than iterating the contained
 /// elements, and you do not care about order, then think about using [`UnorderedSet`] instead. If you plan to have a small
-/// number of elements (up to a few dozen) and those elements are fast to compare and/or small, consider `LinearSet` instead.
+/// number of elements (up to a few dozen) and those elements are fast to compare and/or small, consider [`LinearSet`] instead.
 ///
 /// The order is *not* automatically maintained, thus you can move element order as you please, or sort
 /// with the various sorting functions.
@@ -38,6 +38,7 @@ pub use indexmap::set::Union;
 /// Implements `Ord` with [lexographical] ordering between element pairs.
 ///
 /// [`UnorderedSet`]: crate::UnorderedSet
+/// [`LinearSet`]: crate::LinearSet
 /// [lexographical]: core::cmp::Ord#lexographical-comparison
 pub struct OrderedSet<T, S = ahash::RandomState> {
     pub(crate) inner: IndexSet<T, S>,
