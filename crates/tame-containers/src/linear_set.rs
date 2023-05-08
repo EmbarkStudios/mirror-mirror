@@ -541,20 +541,18 @@ where
         self.map.shift_remove(value).is_some()
     }
 
-    /// Sort the map’s key-value pairs by the default ordering of the keys.
+    /// Sort the set's elements by their [`Ord`] ordering.
     /// 
     /// Since we are guaranteed to have no equal elements, we can use unstable sort by default.
     #[inline]
-    pub fn sort_keys(&mut self)
+    pub fn sort(&mut self)
     where
         T: Ord,
     {
         self.map.sort_keys();
     }
 
-    /// Sort the map’s key-value pairs by the given comparison function
-    /// 
-    /// Since we are guaranteed to have no equal elements, we can use unstable sort by default.
+    /// Sort the set's elements by the given comparison function
     #[inline]
     pub fn sort_by<F>(&mut self, mut cmp: F)
     where
@@ -563,6 +561,15 @@ where
         self.map.sort_by(|t1, _, t2, _| cmp(t1, t2))
     }
 
+    /// Sort the set's elements by the given comparison function with an unstable
+    /// sorting function (the order of equal-evaluated elements is not guaranteed to be the same).
+    #[inline]
+    pub fn sort_unstable_by<F>(&mut self, mut cmp: F)
+    where
+        F: FnMut(&T, &T) -> Ordering,
+    {
+        self.map.sort_unstable_by(|t1, _, t2, _| cmp(t1, t2))
+    }
 }
 
 impl<T> PartialEq for LinearSet<T>

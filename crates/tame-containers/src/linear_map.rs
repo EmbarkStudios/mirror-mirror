@@ -369,15 +369,23 @@ impl<K: Eq, V> LinearMap<K, V> {
         self.storage.sort_unstable_by(|(k1, _), (k2, _)| k1.cmp(k2));
     }
 
-    /// Sort the map’s key-value pairs by the given comparison function
-    /// 
-    /// Since we are guaranteed to have no equal elements, we can use unstable sort by default.
+    /// Sort the map’s key-value pairs by the given comparison function.
     #[inline]
     pub fn sort_by<F>(&mut self, mut cmp: F)
     where
         F: FnMut(&K, &V, &K, &V) -> Ordering,
     {
         self.storage.sort_by(|(k1, v1), (k2, v2)| cmp(k1, v1, k2, v2))
+    }
+
+    /// Sort the map’s key-value pairs by the given comparison function with an
+    /// unstable sorting function.
+    #[inline]
+    pub fn sort_unstable_by<F>(&mut self, mut cmp: F)
+    where
+        F: FnMut(&K, &V, &K, &V) -> Ordering,
+    {
+        self.storage.sort_unstable_by(|(k1, v1), (k2, v2)| cmp(k1, v1, k2, v2))
     }
 
     /// Reverses the order of the contained elements in the vector storage
