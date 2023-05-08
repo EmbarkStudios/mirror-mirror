@@ -377,7 +377,7 @@ impl<K: Eq, V> LinearMap<K, V> {
     where
         F: FnMut(&K, &V, &K, &V) -> Ordering,
     {
-        self.storage.sort_unstable_by(|(k1, v1), (k2, v2)| cmp(k1, v1, k2, v2))
+        self.storage.sort_by(|(k1, v1), (k2, v2)| cmp(k1, v1, k2, v2))
     }
 
     /// Reverses the order of the contained elements in the vector storage
