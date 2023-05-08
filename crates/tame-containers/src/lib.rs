@@ -16,6 +16,17 @@
 //! than a map.
 //! - [`UnorderedSet`], useful when you want set-like operations, will do more random access than iteration,
 //! and will fill with a medium to high number of elements.
+//! - [`OrderedSet`], useful when you want set-like operations and need a defined order of elements, or you
+//! plan to iterate over the contained elements more frequently than do random access lookup on them.
+//! 
+//! ## Usage table
+//! 
+//! Number of elements | Access pattern | Need defined order | Choose
+//! ---|---|---
+//! Less than ~128 | Any | Any | `LinearMap`/`LinearSet`
+//! More than ~128 | More Random Access | No | [`UnorderedMap`]/[`UnorderedSet`]
+//! More than ~128 | More Iteration | No | [`OrderedMap`]/[`OrderedSet`]
+//! More than ~128 | Any | Yes | [`OrderedMap`]/[`OrderedSet`]
 //! 
 //! # Feature flags
 //!
@@ -94,6 +105,11 @@ pub use unordered_set::UnorderedSet;
 pub mod ordered_map;
 #[doc(inline)]
 pub use ordered_map::OrderedMap;
+
+/// Provides a fast, general purpose, deduplicated set type **with* a defined order of elements.
+pub mod ordered_set;
+#[doc(inline)]
+pub use ordered_set::OrderedSet;
 
 /// A key-value map specialized for small numbers of elements, implemented by searching linearly in a vector.
 pub mod linear_map;
