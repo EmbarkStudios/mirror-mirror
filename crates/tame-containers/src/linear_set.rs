@@ -18,8 +18,8 @@ use super::linear_map::{Keys, LinearMap};
 /// # Ordering
 /// 
 /// Ordering of elements is well-defined but may be unexpected due to the use of
-/// [`swap_remove`][Vec::swap_remove] in the implementation of [`LinearMap::remove`].
-/// If you want to maintain order on removal, see [`LinearMap::shift_remove`], but note
+/// [`swap_remove`][Vec::swap_remove] in the implementation of [`LinearSet::remove`].
+/// If you want to maintain order on removal, see [`LinearSet::shift_remove`], but note
 /// its additional time complexity. You can also use one of the sorting functions to
 /// change the order after doing arbitrary insertion and removals.
 ///
@@ -99,7 +99,7 @@ impl<T: Eq> LinearSet<T> {
     }
 
     /// Creates an empty LinearSet with space for at least `n` elements in
-    /// the map.
+    /// the set.
     ///
     /// # Examples
     ///
@@ -351,7 +351,7 @@ where
     /// 
     /// Unlike the hashtable-based sets provided by this crate, keeps the
     /// whole allocated memory for reuse and does not shrink by default since
-    /// this map is not designed to ever have a high number of elements and clearing
+    /// this set is not designed to ever have a high number of elements and clearing
     /// the underlying vector storage is O(1).
     ///
     /// # Examples
