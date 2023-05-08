@@ -2,18 +2,21 @@
 //!
 //! ## Provided Collections
 //!
+//! - [`LinearMap`], useful when you want a collection that behaves as a key-value map but you will only ever have
+//! up to a few tens of elements. For small numbers of elements and small size of contained key/value types, this
+//! will likely be faster and take up less memory than other map types, but its random access operations have O(len)
+//! complexity rather than O(1) as with hash-based maps.
 //! - [`UnorderedMap`], useful when you want a general-purpose key-value map, you plan to do random access
 //! lookup by key more frequently than iteration of the contained elements, and you don't care about order of
 //! those elements.
 //! - [`OrderedMap`], useful when you want a key-value map including a set order of element pairs, or when
 //! you plan to iterate over the contained elements more frequently than you do random access lookup by key.
-//! - [`LinearMap`], useful when you want a collection that behaves as a key-value map but you will only ever have
-//! up to a few tens of elements. For small numbers of elements and small size of contained key/value types, this
-//! will likely be faster and take up less memory than other map types, but its random access operations have O(len)
-//! complexity rather than O(1) as with hash-based maps.
+//! 
 //! - [`LinearSet`], useful in the same situation as [`LinearMap`] but when you're operating on a set of values rather
 //! than a map.
-//!
+//! - [`UnorderedSet`], useful when you want set-like operations, will do more random access than iteration,
+//! and will fill with a medium to high number of elements.
+//! 
 //! # Feature flags
 //!
 //! `tame-containers` uses a set of [feature flags] to optionally reduce the number of dependencies.
@@ -81,6 +84,11 @@
 pub mod unordered_map;
 #[doc(inline)]
 pub use unordered_map::UnorderedMap;
+
+/// Provides a fast, general purpose, deduplicated set type with **no** defined order of elements
+pub mod unordered_set;
+#[doc(inline)]
+pub use unordered_set::UnorderedSet;
 
 /// Provides a fast, general purpose, key-value map **with** a defined order of elements.
 pub mod ordered_map;
