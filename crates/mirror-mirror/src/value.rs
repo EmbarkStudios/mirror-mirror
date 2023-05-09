@@ -8,8 +8,8 @@ use core::fmt;
 use core::hash::Hash;
 use core::hash::Hasher;
 
-use ordered_float::OrderedFloat;
 use kollect::LinearMap;
+use ordered_float::OrderedFloat;
 
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;

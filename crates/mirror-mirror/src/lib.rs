@@ -1307,8 +1307,8 @@ pub mod __private {
     pub use core::any::TypeId;
     pub use core::fmt;
 
-    pub use once_cell::race::OnceBox;
     pub use kollect::LinearMap;
+    pub use once_cell::race::OnceBox;
 
     pub use self::enum_::*;
     pub use self::key_path::*;

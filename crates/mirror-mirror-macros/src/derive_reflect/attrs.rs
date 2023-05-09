@@ -1,5 +1,6 @@
 use core::hash::Hash;
 
+use kollect::LinearMap;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -13,7 +14,6 @@ use syn::Lit;
 use syn::LitStr;
 use syn::Token;
 use syn::UseTree;
-use kollect::LinearMap;
 
 mod kw {
     syn::custom_keyword!(Debug);
