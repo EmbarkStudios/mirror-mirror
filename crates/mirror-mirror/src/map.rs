@@ -18,8 +18,8 @@ use crate::Reflect;
 /// [`BTreeMap`]: alloc::collections::BTreeMap
 /// [`HashMap`]: std::collections::HashMap
 /// [`Value`]: crate::Value
-/// [`OrderedMap`]: tame_containers::OrderedMap
-/// [`UnorderedMap`]: tame_containers::UnorderedMap
+/// [`OrderedMap`]: kollect::OrderedMap
+/// [`UnorderedMap`]: kollect::UnorderedMap
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;
 

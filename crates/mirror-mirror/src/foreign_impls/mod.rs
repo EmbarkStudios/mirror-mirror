@@ -12,7 +12,7 @@ mod array;
 mod boxed;
 mod btree_map;
 mod hash_map;
-mod tame_containers;
+mod kollect;
 mod vec;
 mod via_scalar;
 
@@ -94,7 +94,7 @@ impl DescribeType for Infallible {
     fn build(graph: &mut TypeGraph) -> NodeId {
         let variants = &[];
         graph.get_or_build_node_with::<Self, _>(|_graph| {
-            EnumNode::new::<Self>(variants, OrderedMap::from([]), &[])
+            EnumNode::new::<Self>(variants, LinearMap::from([]), &[])
         })
     }
 }

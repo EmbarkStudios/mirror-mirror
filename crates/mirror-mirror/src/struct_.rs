@@ -3,7 +3,7 @@ use alloc::string::String;
 use core::any::Any;
 use core::fmt;
 
-use tame_containers::OrderedMap;
+use kollect::LinearMap;
 
 use crate::iter::PairIterMut;
 use crate::type_info::graph::NodeId;
@@ -51,7 +51,7 @@ impl fmt::Debug for dyn Struct {
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructValue {
-    fields: OrderedMap<String, Value>,
+    fields: LinearMap<String, Value>,
 }
 
 impl StructValue {
@@ -61,7 +61,7 @@ impl StructValue {
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            fields: OrderedMap::with_capacity(capacity),
+            fields: LinearMap::with_capacity(capacity),
         }
     }
 
@@ -192,7 +192,7 @@ where
     where
         T: IntoIterator<Item = (S, V)>,
     {
-        let fields = OrderedMap::from_iter(iter.into_iter().map(|(k, v)| (k.into(), v.to_value())));
+        let fields = LinearMap::from_iter(iter.into_iter().map(|(k, v)| (k.into(), v.to_value())));
         Self { fields }
     }
 }

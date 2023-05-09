@@ -677,7 +677,7 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
-        let node = self.node.fields.get_index(index)?.1;
+        let node = &self.node.fields.get_index(index)?.1;
         Some(NamedField {
             node,
             graph: self.graph,
@@ -1060,7 +1060,7 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
-        let node = self.node.fields.get_index(index)?.1;
+        let node = &self.node.fields.get_index(index)?.1;
         Some(NamedField {
             node,
             graph: self.graph,
@@ -1325,7 +1325,7 @@ impl<'a> MapType<'a> {
     }
 
     pub fn default_value(self) -> Value {
-        Value::OrderedMap(Default::default())
+        Value::Map(Default::default())
     }
 
     pub fn has_default_value(&self) -> bool {

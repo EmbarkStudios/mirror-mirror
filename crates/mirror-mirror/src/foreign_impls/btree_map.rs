@@ -113,7 +113,7 @@ where
             .iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::OrderedMap(data)
+        Value::Map(data)
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -151,6 +151,6 @@ where
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::OrderedMap(map)
+        Value::Map(map)
     }
 }

@@ -1,11 +1,9 @@
-use alloc::boxed::Box;
-
 use core::any::Any;
 use core::fmt;
 use core::hash::BuildHasher;
 use core::hash::Hash;
 
-use std::collections::HashMap;
+use kollect::UnorderedMap;
 
 use crate::iter::PairIterMut;
 use crate::type_info::graph::MapNode;
@@ -20,7 +18,7 @@ use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Value;
 
-impl<K, V, S> Reflect for HashMap<K, V, S>
+impl<K, V, S> Reflect for UnorderedMap<K, V, S>
 where
     K: FromReflect + DescribeType + Eq + Hash,
     V: FromReflect + DescribeType,
@@ -68,7 +66,7 @@ where
     }
 }
 
-impl<K, V, S> FromReflect for HashMap<K, V, S>
+impl<K, V, S> FromReflect for UnorderedMap<K, V, S>
 where
     K: FromReflect + DescribeType + Eq + Hash,
     V: FromReflect + DescribeType,
@@ -77,7 +75,7 @@ where
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_map()?;
         let len = map.len();
-        let mut out = HashMap::with_capacity_and_hasher(len, S::default());
+        let mut out = UnorderedMap::with_capacity_and_hasher(len, S::default());
         for (key, value) in map.iter() {
             out.insert(K::from_reflect(key)?, V::from_reflect(value)?);
         }
@@ -85,12 +83,12 @@ where
     }
 }
 
-impl<K, V> From<HashMap<K, V>> for Value
+impl<K, V> From<UnorderedMap<K, V>> for Value
 where
     K: Reflect,
     V: Reflect,
 {
-    fn from(map: HashMap<K, V>) -> Self {
+    fn from(map: UnorderedMap<K, V>) -> Self {
         let map = map
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
@@ -99,7 +97,7 @@ where
     }
 }
 
-impl<K, V, S> Map for HashMap<K, V, S>
+impl<K, V, S> Map for UnorderedMap<K, V, S>
 where
     K: FromReflect + DescribeType + Hash + Eq,
     V: FromReflect + DescribeType,
@@ -153,7 +151,7 @@ where
     }
 }
 
-impl<K, V, S> DescribeType for HashMap<K, V, S>
+impl<K, V, S> DescribeType for UnorderedMap<K, V, S>
 where
     K: DescribeType,
     V: DescribeType,

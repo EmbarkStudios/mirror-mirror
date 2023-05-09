@@ -1,9 +1,7 @@
 use core::any::Any;
 use core::fmt;
-use core::hash::BuildHasher;
-use core::hash::Hash;
 
-use tame_containers::OrderedMap;
+use kollect::LinearMap;
 
 use crate::iter::PairIterMut;
 use crate::type_info::graph::MapNode;
@@ -18,11 +16,10 @@ use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Value;
 
-impl<K, V, S> Reflect for OrderedMap<K, V, S>
+impl<K, V> Reflect for LinearMap<K, V>
 where
-    K: FromReflect + DescribeType + Eq + Hash,
+    K: FromReflect + DescribeType + Eq,
     V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
 {
     trivial_reflect_methods!();
 
@@ -53,7 +50,7 @@ where
             .iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::OrderedMap(data)
+        Value::Map(data)
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -66,16 +63,15 @@ where
     }
 }
 
-impl<K, V, S> FromReflect for OrderedMap<K, V, S>
+impl<K, V> FromReflect for LinearMap<K, V>
 where
-    K: FromReflect + DescribeType + Eq + Hash,
+    K: FromReflect + DescribeType + Eq,
     V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_map()?;
         let len = map.len();
-        let mut out = OrderedMap::with_capacity_and_hasher(len, S::default());
+        let mut out = LinearMap::with_capacity(len);
         for (key, value) in map.iter() {
             out.insert(K::from_reflect(key)?, V::from_reflect(value)?);
         }
@@ -83,25 +79,24 @@ where
     }
 }
 
-impl<K, V> From<OrderedMap<K, V>> for Value
+impl<K, V> From<LinearMap<K, V>> for Value
 where
-    K: Reflect,
+    K: Reflect + Eq,
     V: Reflect,
 {
-    fn from(map: OrderedMap<K, V>) -> Self {
+    fn from(map: LinearMap<K, V>) -> Self {
         let map = map
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::OrderedMap(map)
+        Value::Map(map)
     }
 }
 
-impl<K, V, S> Map for OrderedMap<K, V, S>
+impl<K, V> Map for LinearMap<K, V>
 where
-    K: FromReflect + DescribeType + Hash + Eq,
+    K: FromReflect + DescribeType + Eq,
     V: FromReflect + DescribeType,
-    S: Default + BuildHasher + Send + 'static,
 {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
         let key = K::from_reflect(key)?;
@@ -151,11 +146,10 @@ where
     }
 }
 
-impl<K, V, S> DescribeType for OrderedMap<K, V, S>
+impl<K, V> DescribeType for LinearMap<K, V>
 where
     K: DescribeType,
     V: DescribeType,
-    S: 'static,
 {
     fn build(graph: &mut TypeGraph) -> NodeId {
         graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))

@@ -3,7 +3,7 @@ use core::fmt;
 use core::hash::BuildHasher;
 use core::hash::Hash;
 
-use tame_containers::UnorderedMap;
+use kollect::OrderedMap;
 
 use crate::iter::PairIterMut;
 use crate::type_info::graph::MapNode;
@@ -18,7 +18,7 @@ use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Value;
 
-impl<K, V, S> Reflect for UnorderedMap<K, V, S>
+impl<K, V, S> Reflect for OrderedMap<K, V, S>
 where
     K: FromReflect + DescribeType + Eq + Hash,
     V: FromReflect + DescribeType,
@@ -53,7 +53,7 @@ where
             .iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::UnorderedMap(data)
+        Value::Map(data)
     }
 
     fn clone_reflect(&self) -> Box<dyn Reflect> {
@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<K, V, S> FromReflect for UnorderedMap<K, V, S>
+impl<K, V, S> FromReflect for OrderedMap<K, V, S>
 where
     K: FromReflect + DescribeType + Eq + Hash,
     V: FromReflect + DescribeType,
@@ -75,7 +75,7 @@ where
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_map()?;
         let len = map.len();
-        let mut out = UnorderedMap::with_capacity_and_hasher(len, S::default());
+        let mut out = OrderedMap::with_capacity_and_hasher(len, S::default());
         for (key, value) in map.iter() {
             out.insert(K::from_reflect(key)?, V::from_reflect(value)?);
         }
@@ -83,21 +83,21 @@ where
     }
 }
 
-impl<K, V> From<UnorderedMap<K, V>> for Value
+impl<K, V> From<OrderedMap<K, V>> for Value
 where
     K: Reflect,
     V: Reflect,
 {
-    fn from(map: UnorderedMap<K, V>) -> Self {
+    fn from(map: OrderedMap<K, V>) -> Self {
         let map = map
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
-        Value::UnorderedMap(map)
+        Value::Map(map)
     }
 }
 
-impl<K, V, S> Map for UnorderedMap<K, V, S>
+impl<K, V, S> Map for OrderedMap<K, V, S>
 where
     K: FromReflect + DescribeType + Hash + Eq,
     V: FromReflect + DescribeType,
@@ -151,7 +151,7 @@ where
     }
 }
 
-impl<K, V, S> DescribeType for UnorderedMap<K, V, S>
+impl<K, V, S> DescribeType for OrderedMap<K, V, S>
 where
     K: DescribeType,
     V: DescribeType,

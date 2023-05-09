@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use alloc::collections::BTreeMap;
 
-use tame_containers::UnorderedMap;
+use kollect::UnorderedMap;
 
 use crate::key_path;
 use crate::key_path::GetPath;

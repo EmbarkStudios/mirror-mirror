@@ -4,13 +4,10 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::type_name;
 use core::any::TypeId;
-use core::hash::BuildHasher;
 use core::hash::Hash;
 use core::hash::Hasher;
 use core::ops::Deref;
-use tame_containers::OrderedMap;
-
-use tame_containers::UnorderedMap;
+use kollect::LinearMap;
 
 use super::*;
 use crate::Value;
@@ -58,42 +55,11 @@ impl<T> Deref for WithId<T> {
     }
 }
 
-/// A hasher that does no hashing because we already have a u64 hash that should be
-/// just as well distributed.
-#[derive(Default, Clone, Copy)]
-pub(crate) struct NoHashHasher(u64);
-
-impl Hasher for NoHashHasher {
-    fn finish(&self) -> u64 {
-        self.0
-    }
-
-    fn write(&mut self, _: &[u8]) {
-        panic!("Only write_u64 should be called exactly once when using NoHashHasher! This is a bug, please report it.")
-    }
-
-    fn write_u64(&mut self, v: u64) {
-        self.0 = v;
-    }
-}
-
-#[derive(Default, Clone, Copy)]
-pub(crate) struct BuildNoHashHasher;
-
-impl BuildHasher for BuildNoHashHasher {
-    type Hasher = NoHashHasher;
-
-    #[inline(always)]
-    fn build_hasher(&self) -> Self::Hasher {
-        NoHashHasher(0)
-    }
-}
-
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeGraph {
-    pub(super) map: UnorderedMap<NodeId, Option<TypeNode>, BuildNoHashHasher>,
+    pub(super) map: LinearMap<NodeId, Option<TypeNode>>,
 }
 
 impl Hash for TypeGraph {
@@ -178,15 +144,15 @@ impl_from! { Opaque(OpaqueNode) }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructNode {
     pub(super) type_name: String,
-    pub(super) fields: OrderedMap<String, NamedFieldNode>,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) fields: LinearMap<String, NamedFieldNode>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl StructNode {
     pub fn new<T>(
         fields: &[NamedFieldNode],
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -204,7 +170,7 @@ impl StructNode {
     }
 }
 
-fn map_metadata(metadata: OrderedMap<&'static str, Value>) -> OrderedMap<String, Value> {
+fn map_metadata(metadata: LinearMap<&'static str, Value>) -> LinearMap<String, Value> {
     metadata
         .into_iter()
         .map(|(key, value)| (key.to_owned(), value))
@@ -221,14 +187,14 @@ fn map_docs(docs: &[&'static str]) -> Box<[String]> {
 pub struct TupleStructNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl TupleStructNode {
     pub fn new<T>(
         fields: &[UnnamedFieldNode],
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -249,14 +215,14 @@ impl TupleStructNode {
 pub struct EnumNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl EnumNode {
     pub fn new<T>(
         variants: &[VariantNode],
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -285,8 +251,8 @@ pub enum VariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructVariantNode {
     pub(super) name: String,
-    pub(super) fields: OrderedMap<String, NamedFieldNode>,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) fields: LinearMap<String, NamedFieldNode>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -294,7 +260,7 @@ impl StructVariantNode {
     pub fn new(
         name: &'static str,
         fields: &[NamedFieldNode],
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -315,7 +281,7 @@ impl StructVariantNode {
 pub struct TupleVariantNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
@@ -323,7 +289,7 @@ impl TupleVariantNode {
     pub fn new(
         name: &'static str,
         fields: &[UnnamedFieldNode],
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -340,14 +306,14 @@ impl TupleVariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitVariantNode {
     pub(super) name: String,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl UnitVariantNode {
     pub fn new(
         name: &'static str,
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self {
         Self {
@@ -364,14 +330,14 @@ impl UnitVariantNode {
 pub struct TupleNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl TupleNode {
     pub fn new<T>(
         fields: &[UnnamedFieldNode],
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
     ) -> Self
     where
@@ -392,14 +358,14 @@ impl TupleNode {
 pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: NodeId,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl NamedFieldNode {
     pub fn new<T>(
         name: &'static str,
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
         graph: &mut TypeGraph,
     ) -> Self
@@ -420,13 +386,13 @@ impl NamedFieldNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnnamedFieldNode {
     pub(super) id: NodeId,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
 
 impl UnnamedFieldNode {
     pub fn new<T>(
-        metadata: OrderedMap<&'static str, Value>,
+        metadata: LinearMap<&'static str, Value>,
         docs: &[&'static str],
         graph: &mut TypeGraph,
     ) -> Self
@@ -556,12 +522,12 @@ scalar_typed! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpaqueNode {
     pub(super) type_name: String,
-    pub(super) metadata: OrderedMap<String, Value>,
+    pub(super) metadata: LinearMap<String, Value>,
     pub(super) default_value: Option<Value>,
 }
 
 impl OpaqueNode {
-    pub fn new<T>(metadata: OrderedMap<&'static str, Value>, _graph: &mut TypeGraph) -> Self
+    pub fn new<T>(metadata: LinearMap<&'static str, Value>, _graph: &mut TypeGraph) -> Self
     where
         T: DescribeType,
     {

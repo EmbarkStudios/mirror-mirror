@@ -1308,7 +1308,7 @@ pub mod __private {
     pub use core::fmt;
 
     pub use once_cell::race::OnceBox;
-    pub use tame_containers::OrderedMap;
+    pub use kollect::LinearMap;
 
     pub use self::enum_::*;
     pub use self::key_path::*;

@@ -13,7 +13,7 @@ use syn::Lit;
 use syn::LitStr;
 use syn::Token;
 use syn::UseTree;
-use tame_containers::OrderedMap;
+use kollect::LinearMap;
 
 mod kw {
     syn::custom_keyword!(Debug);
@@ -32,7 +32,7 @@ pub(super) struct ItemAttrs {
     pub(super) clone_opt_out: bool,
     pub(super) from_reflect_opt_out: bool,
     pub(super) crate_name: UseTree,
-    meta: OrderedMap<Ident, Expr>,
+    meta: LinearMap<Ident, Expr>,
     docs: Vec<LitStr>,
 }
 
@@ -185,19 +185,19 @@ fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
         .collect::<Vec<_>>()
 }
 
-fn tokenize_meta(meta: &OrderedMap<Ident, Expr>) -> TokenStream {
+fn tokenize_meta(meta: &LinearMap<Ident, Expr>) -> TokenStream {
     let pairs = meta.iter().map(|(ident, expr)| {
         quote! {
             (stringify!(#ident), IntoValue::into_value(#expr)),
         }
     });
     quote! {
-        OrderedMap::from([#(#pairs)*])
+        LinearMap::from([#(#pairs)*])
     }
 }
 
 pub(super) struct AttrsDatabase<T> {
-    map: OrderedMap<T, InnerAttrs>,
+    map: LinearMap<T, InnerAttrs>,
 }
 
 impl AttrsDatabase<Ident> {
@@ -209,7 +209,7 @@ impl AttrsDatabase<Ident> {
                 let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((field.ident.clone().unwrap(), attrs))
             })
-            .collect::<syn::Result<OrderedMap<_, _>>>()?;
+            .collect::<syn::Result<LinearMap<_, _>>>()?;
 
         Ok(Self { map })
     }
@@ -229,7 +229,7 @@ impl AttrsDatabase<usize> {
                 let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((index, attrs))
             })
-            .collect::<syn::Result<OrderedMap<_, _>>>()?;
+            .collect::<syn::Result<LinearMap<_, _>>>()?;
 
         Ok(Self { map })
     }
@@ -274,7 +274,7 @@ where
 
 pub(super) struct InnerAttrs {
     pub(super) skip: bool,
-    pub(super) meta: OrderedMap<Ident, Expr>,
+    pub(super) meta: LinearMap<Ident, Expr>,
     pub(super) docs: Vec<LitStr>,
     pub(super) from_reflect_with: Option<Ident>,
 }
