@@ -1,6 +1,5 @@
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -9,6 +8,7 @@ use core::fmt;
 use core::hash::Hash;
 use core::hash::Hasher;
 
+use kollect::LinearMap;
 use ordered_float::OrderedFloat;
 
 use crate::enum_::EnumValue;
@@ -57,7 +57,7 @@ pub enum Value {
     TupleStructValue(TupleStructValue),
     TupleValue(TupleValue),
     List(Vec<Value>),
-    Map(BTreeMap<Value, Value>),
+    Map(LinearMap<Value, Value>),
 }
 
 impl FromReflect for Value {
@@ -90,7 +90,7 @@ enum OrdEqHashValue<'a> {
     TupleStructValue(&'a TupleStructValue),
     TupleValue(&'a TupleValue),
     List(&'a [Value]),
-    Map(&'a BTreeMap<Value, Value>),
+    Map(&'a LinearMap<Value, Value>),
 }
 
 impl<'a> From<&'a Value> for OrdEqHashValue<'a> {

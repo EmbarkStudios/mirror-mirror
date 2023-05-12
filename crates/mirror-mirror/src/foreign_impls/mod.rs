@@ -11,6 +11,8 @@ use mirror_mirror_macros::__private_derive_reflect_foreign;
 mod array;
 mod boxed;
 mod btree_map;
+mod hash_map;
+mod kollect;
 mod vec;
 mod via_scalar;
 
@@ -92,7 +94,7 @@ impl DescribeType for Infallible {
     fn build(graph: &mut TypeGraph) -> NodeId {
         let variants = &[];
         graph.get_or_build_node_with::<Self, _>(|_graph| {
-            EnumNode::new::<Self>(variants, BTreeMap::from([]), &[])
+            EnumNode::new::<Self>(variants, LinearMap::from([]), &[])
         })
     }
 }

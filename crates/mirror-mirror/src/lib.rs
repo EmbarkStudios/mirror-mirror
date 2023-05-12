@@ -186,7 +186,6 @@
 //! - Add meta data to types which becomes part of the type information.
 //! - [Key paths][mod@key_path] for querying value and type information.
 //! - No dependencies on [`bevy`] specific crates.
-//! - `#![no_std]` support.
 //!
 //! # Feature flags
 //!
@@ -196,7 +195,7 @@
 //!
 //! Name | Description | Default?
 //! ---|---|---
-//! `std` | Enables using the standard library (`core` and `alloc` are always required) | Yes
+//! `simple_type_name` | Enables support for intelligently simplifying type names when printing | Yes
 //! `speedy` | Enables [`speedy`] support for most types | Yes
 //! `serde` | Enables [`serde`] support for most types | Yes
 //! `glam` | Enables impls for [`glam`] | No
@@ -209,7 +208,6 @@
 //! [`glam`]: https://crates.io/crates/glam
 //! [`macaw`]: https://crates.io/crates/macaw
 
-#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     clippy::all,
     clippy::dbg_macro,
@@ -330,7 +328,7 @@ mod reflect_eq;
 
 pub use reflect_eq::reflect_eq;
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 #[cfg(test)]
 mod tests;
 
@@ -1314,11 +1312,11 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
 #[doc(hidden)]
 pub mod __private {
     pub use alloc::borrow::Cow;
-    pub use alloc::collections::BTreeMap;
     pub use core::any::Any;
     pub use core::any::TypeId;
     pub use core::fmt;
 
+    pub use kollect::LinearMap;
     pub use once_cell::race::OnceBox;
 
     pub use self::enum_::*;

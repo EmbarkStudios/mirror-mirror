@@ -49,7 +49,7 @@ impl<'a> PrettyPrintRoot for Type<'a> {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     if let Some(name) = super::SimpleTypeName::new(type_name) {
         write!(f, "{name}")
@@ -58,7 +58,7 @@ fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Res
     }
 }
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(feature = "simple_type_name"))]
 fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     f.write_str(type_name)
 }
@@ -237,6 +237,9 @@ impl<'a> PrettyPrintRoot for OpaqueType<'a> {
 #[cfg(test)]
 mod tests {
     use core::time::Duration;
+    use std::collections::HashMap;
+
+    use alloc::collections::BTreeMap;
 
     use super::*;
     use crate::{DescribeType, Reflect};
@@ -383,6 +386,11 @@ mod tests {
         let pp = type_descriptor.pretty_print_root();
 
         assert_eq!(println_and_format!("{pp}"), r#"[String: i32]"#);
+
+        let type_descriptor = <HashMap<u32, (String, i32)> as DescribeType>::type_descriptor();
+        let pp = type_descriptor.pretty_print_root();
+
+        assert_eq!(println_and_format!("{pp}"), r#"[u32: (String, i32)]"#);
     }
 
     #[test]

@@ -1,20 +1,25 @@
-use alloc::boxed::Box;
 use core::fmt;
+
+use alloc::boxed::Box;
 
 use crate::iter::PairIterMut;
 use crate::Reflect;
 
-/// A reflected map type.
+/// A reflected key-to-value map type.
 ///
-/// Note this is only implemented for [`BTreeMap`] and _not_ [`HashMap`] due to technical
-/// limitations.
+/// Maps are guaranteed to not have duplicate entries for the same key, but there is
+/// *not* a guaranteed of a stable ordering of the `(key, value)` elements in the map.
+/// However, for underlying map types that have an ordering, that ordering can be assumed
+/// to be respected.
+///
+/// This is implemented for the std [`BTreeMap`], [`HashMap`], as well as for our own
+/// [`UnorderedMap`], [`OrderedMap`] and [`Value`]s which are maps.
 ///
 /// [`BTreeMap`]: alloc::collections::BTreeMap
 /// [`HashMap`]: std::collections::HashMap
-// HashMap isn't supported because we need a `Value` variant for map values. The most obvious
-// choice is `enum Value { Map(HashMap<Value, Value>) }`. However now `Value` is used as the key in
-// a `HashMap` so it most implement `Hash + Eq` but it can't since it contains a `HashMap` which
-// doesn't implement `Hash + Eq`, because there is no stable iteration order.
+/// [`Value`]: crate::Value
+/// [`OrderedMap`]: kollect::OrderedMap
+/// [`UnorderedMap`]: kollect::UnorderedMap
 pub trait Map: Reflect {
     fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect>;
 
@@ -28,8 +33,14 @@ pub trait Map: Reflect {
 
     fn is_empty(&self) -> bool;
 
+    /// Get an iterator over the `(k, v)` element pairs in the map. Note that the iteration order is *not*
+    /// guaranteed to be stable, though if the underlying implementor type does have a defined order then
+    /// that can be assumed to be respected.
     fn iter(&self) -> Iter<'_>;
 
+    /// Get an iterator over the `(k, v)` element pairs in the map with mutable values. Note that the iteration order is *not*
+    /// guaranteed to be stable, though if the underlying implementor type does have a defined order then
+    /// that can be assumed to be respected.
     fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect>;
 }
 
