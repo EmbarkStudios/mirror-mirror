@@ -27,7 +27,7 @@ ordered-float = { version = "3.4.0", default-features = false }
 serde = { version = "1.0.158", default-features = false, features = ["derive", "alloc"], optional = true }
 speedy = { version = "0.8.5", optional = true }
 syn = { version = "2.0", features = ["full", "parsing"], optional = true }
-glam = { version = "0.22", optional = true }
+glam = { version = ">= 0.22, <= 0.24", optional = true }
 macaw = { version = "0.18", optional = true }
 
 [package.metadata.docs.rs]
