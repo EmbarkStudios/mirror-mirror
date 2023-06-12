@@ -11,10 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   descriptor explicitly with `<T as DescribeType::type_descriptor()` ([#90])
 - **breaking:** Make `KeyPath::pop` return the popped key ([#110])
 - **breaking:** Remove `Reflect::type_id` ([#109])
+- **breaking:** `no-std` support has been removed ([#119])
+- **fixed:** Iterating over fields and variants in type descriptors is now done
+  in the same order as defined in the code ([#119])
+- **fixed:** Support derive reflect for `HashMap` ([#119])
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
 [#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
+[#119]: https://github.com/EmbarkStudios/mirror-mirror/pull/119
 
 # 0.1.19 (26. February, 2023)
 
@@ -62,7 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # 0.1.11 (20. March, 2023)
 
-- **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 - **added:** Implement serialization traits for `ScalarOwned`
 
 # 0.1.14 (11. April, 2023)
