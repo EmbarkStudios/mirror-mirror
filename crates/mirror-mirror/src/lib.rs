@@ -1298,10 +1298,13 @@ pub mod __private {
     pub use once_cell::race::OnceBox;
 
     pub use self::enum_::*;
-    pub use self::key_path::*;
-    pub use self::struct_::*;
-    pub use self::tuple::*;
-    pub use self::tuple_struct::*;
+    pub use self::key_path::{
+        field, get, variant, Breadcrumbs, GetPath, GetTypePath, IntoKeyOrIndex, Key, KeyPath,
+        NamedOrNumbered,
+    };
+    pub use self::struct_::{Struct, StructValue};
+    pub use self::tuple::{Tuple, TupleValue};
+    pub use self::tuple_struct::{TupleStruct, TupleStructValue};
     pub use self::value::*;
     pub use crate::iter::*;
     pub use crate::type_info::graph::*;
