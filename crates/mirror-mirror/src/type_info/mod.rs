@@ -1,3 +1,4 @@
+use core::any::type_name;
 use core::iter::Peekable;
 
 use alloc::borrow::Cow;
@@ -610,22 +611,22 @@ pub enum ScalarType {
 impl ScalarType {
     pub fn type_name(self) -> &'static str {
         match self {
-            ScalarType::usize => "usize",
-            ScalarType::u8 => "u8",
-            ScalarType::u16 => "u16",
-            ScalarType::u32 => "u32",
-            ScalarType::u64 => "u64",
-            ScalarType::u128 => "u128",
-            ScalarType::i8 => "i8",
-            ScalarType::i16 => "i16",
-            ScalarType::i32 => "i32",
-            ScalarType::i64 => "i64",
-            ScalarType::i128 => "i128",
-            ScalarType::bool => "bool",
-            ScalarType::char => "char",
-            ScalarType::f32 => "f32",
-            ScalarType::f64 => "f64",
-            ScalarType::String => "String",
+            ScalarType::usize => type_name::<usize>(),
+            ScalarType::u8 => type_name::<u8>(),
+            ScalarType::u16 => type_name::<u16>(),
+            ScalarType::u32 => type_name::<u32>(),
+            ScalarType::u64 => type_name::<u64>(),
+            ScalarType::u128 => type_name::<u128>(),
+            ScalarType::i8 => type_name::<i8>(),
+            ScalarType::i16 => type_name::<i16>(),
+            ScalarType::i32 => type_name::<i32>(),
+            ScalarType::i64 => type_name::<i64>(),
+            ScalarType::i128 => type_name::<i128>(),
+            ScalarType::bool => type_name::<bool>(),
+            ScalarType::char => type_name::<char>(),
+            ScalarType::f32 => type_name::<f32>(),
+            ScalarType::f64 => type_name::<f64>(),
+            ScalarType::String => type_name::<String>(),
         }
     }
 
