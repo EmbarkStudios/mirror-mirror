@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- **added:** Implement serialization traits for `ScalarOwned`
+- None.
+
+# 0.1.15 (08. August, 2023)
+
+- **added:** Implement serialization traits for `ScalarOwned` ([#117])
+- **fixed:** Use `core::any::type_name` to determine `type_name` for `ScalarType` variants ([#124])
+
+[#124]: https://github.com/EmbarkStudios/mirror-mirror/pull/124
+[#117]: https://github.com/EmbarkStudios/mirror-mirror/pull/117
 
 # 0.1.14 (11. April, 2023)
 
