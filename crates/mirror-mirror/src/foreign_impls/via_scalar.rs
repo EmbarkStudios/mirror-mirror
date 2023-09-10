@@ -27,10 +27,12 @@ macro_rules! impl_reflect_via_scalar {
             impl Reflect for $ty {
                 trivial_reflect_methods!();
 
+                #[allow(clippy::redundant_closure_call)]
                 fn reflect_owned(self: Box<Self>) -> ReflectOwned {
                     ReflectOwned::Scalar(ScalarOwned::from($get_fn(&*self)))
                 }
 
+                #[allow(clippy::redundant_closure_call)]
                 fn reflect_ref(&self) -> ReflectRef<'_> {
                     ReflectRef::Scalar(ScalarRef::from($get_fn(self)))
                 }
@@ -45,6 +47,7 @@ macro_rules! impl_reflect_via_scalar {
                     }
                 }
 
+                #[allow(clippy::redundant_closure_call)]
                 fn to_value(&self) -> Value {
                     $get_fn(self).to_value()
                 }
