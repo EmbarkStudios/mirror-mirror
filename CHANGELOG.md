@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+- **added:** Add `reflect_eq`
 
 # 0.1.15 (08. August, 2023)
 
