@@ -333,8 +333,8 @@ pub mod value;
 
 pub mod try_visit;
 
-mod reflect_eq;
 mod foreign_impls;
+mod reflect_eq;
 
 pub use reflect_eq::reflect_eq;
 

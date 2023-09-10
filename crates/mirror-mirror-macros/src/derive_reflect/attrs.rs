@@ -55,7 +55,9 @@ impl ItemAttrs {
             .filter(|attr| attr.meta.path().is_ident("reflect"))
             .peekable();
 
-        let Some(attr) = reflect_attrs.next() else { return Ok(Self::new(docs)) };
+        let Some(attr) = reflect_attrs.next() else {
+            return Ok(Self::new(docs));
+        };
 
         if let Some(next) = reflect_attrs.peek() {
             return Err(syn::Error::new_spanned(
@@ -177,8 +179,12 @@ fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
         .filter(|attr| attr.meta.path().is_ident("doc"))
         .filter_map(|attr| {
             let name_value = attr.meta.require_name_value().ok()?;
-            let Expr::Lit(lit_expr) = &name_value.value else { return None };
-            let Lit::Str(lit_str) = &lit_expr.lit else { return None };
+            let Expr::Lit(lit_expr) = &name_value.value else {
+                return None;
+            };
+            let Lit::Str(lit_str) = &lit_expr.lit else {
+                return None;
+            };
             Some(lit_str.clone())
         })
         .collect::<Vec<_>>()
@@ -296,7 +302,9 @@ impl InnerAttrs {
             .filter(|attr| attr.meta.path().is_ident("reflect"))
             .peekable();
 
-        let Some(attr) = reflect_attrs.next() else { return Ok(Self::new(docs)) };
+        let Some(attr) = reflect_attrs.next() else {
+            return Ok(Self::new(docs));
+        };
 
         if let Some(next) = reflect_attrs.peek() {
             return Err(syn::Error::new_spanned(
