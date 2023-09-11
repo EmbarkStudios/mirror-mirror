@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- **added:** Add `reflect_eq`
+- None,
+
+# 0.1.16 (11. September, 2023)
+
+- **added:** Add `reflect_eq` ([#126])
+
+[#126]: https://github.com/EmbarkStudios/mirror-mirror/pull/126
 
 # 0.1.15 (08. August, 2023)
 
