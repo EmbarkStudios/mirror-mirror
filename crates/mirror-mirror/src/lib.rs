@@ -334,6 +334,9 @@ pub mod value;
 pub mod try_visit;
 
 mod foreign_impls;
+mod reflect_eq;
+
+pub use reflect_eq::reflect_eq;
 
 #[cfg(feature = "std")]
 #[cfg(test)]
@@ -532,6 +535,12 @@ impl ToOwned for dyn Reflect {
 impl fmt::Debug for dyn Reflect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.debug(f)
+    }
+}
+
+impl PartialEq for dyn Reflect {
+    fn eq(&self, other: &Self) -> bool {
+        reflect_eq(self, other).unwrap_or(false)
     }
 }
 
@@ -972,7 +981,7 @@ impl<'a> ReflectRef<'a> {
 }
 
 /// An immutable reflected scalar value.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum ScalarRef<'a> {
     usize(usize),
