@@ -54,5 +54,6 @@ enum C {
     B(#[reflect(meta(n = 1))] String),
 
     #[reflect(meta(n = 1))]
+    #[allow(clippy::enum_variant_names)]
     C,
 }
