@@ -245,7 +245,7 @@
     missing_debug_implementations,
     // missing_docs
 )]
-#![deny(unreachable_pub, private_in_public)]
+#![deny(unreachable_pub)]
 #![allow(
     elided_lifetimes_in_paths,
     clippy::type_complexity,
@@ -334,6 +334,9 @@ pub mod value;
 pub mod try_visit;
 
 mod foreign_impls;
+mod reflect_eq;
+
+pub use reflect_eq::reflect_eq;
 
 #[cfg(feature = "std")]
 #[cfg(test)]
@@ -532,6 +535,12 @@ impl ToOwned for dyn Reflect {
 impl fmt::Debug for dyn Reflect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.debug(f)
+    }
+}
+
+impl PartialEq for dyn Reflect {
+    fn eq(&self, other: &Self) -> bool {
+        reflect_eq(self, other).unwrap_or(false)
     }
 }
 
@@ -972,7 +981,7 @@ impl<'a> ReflectRef<'a> {
 }
 
 /// An immutable reflected scalar value.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum ScalarRef<'a> {
     usize(usize),
@@ -1298,10 +1307,13 @@ pub mod __private {
     pub use once_cell::race::OnceBox;
 
     pub use self::enum_::*;
-    pub use self::key_path::*;
-    pub use self::struct_::*;
-    pub use self::tuple::*;
-    pub use self::tuple_struct::*;
+    pub use self::key_path::{
+        field, get, variant, Breadcrumbs, GetPath, GetTypePath, IntoKeyOrIndex, Key, KeyPath,
+        NamedOrNumbered,
+    };
+    pub use self::struct_::{Struct, StructValue};
+    pub use self::tuple::{Tuple, TupleValue};
+    pub use self::tuple_struct::{TupleStruct, TupleStructValue};
     pub use self::value::*;
     pub use crate::iter::*;
     pub use crate::type_info::graph::*;
