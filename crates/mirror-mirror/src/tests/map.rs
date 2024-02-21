@@ -31,7 +31,7 @@ fn works() {
 
 #[test]
 fn exotic_key_type() {
-    #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Reflect)]
+    #[derive(Clone, Debug, Default, Ord, PartialOrd, Eq, PartialEq, Reflect)]
     #[reflect(crate_name(crate))]
     struct Foo(i32);
 
@@ -49,7 +49,7 @@ fn exotic_key_type() {
 
 #[test]
 fn exoctic_value_type() {
-    #[derive(Debug, Clone, Reflect)]
+    #[derive(Debug, Clone, Default, Reflect)]
     #[reflect(crate_name(crate))]
     struct Foo {
         array: [i32; 5],

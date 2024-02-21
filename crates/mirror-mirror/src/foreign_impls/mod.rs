@@ -43,10 +43,10 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct Range<Idx>
     where
-        Idx: FromReflect + DescribeType,
+        Idx: FromReflect + DescribeType
     {
         start: Idx,
         end: Idx,
@@ -54,7 +54,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct RangeFrom<Idx>
     where
         Idx: FromReflect + DescribeType,
@@ -69,7 +69,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct RangeToInclusive<Idx>
     where
         Idx: FromReflect + DescribeType,
@@ -79,7 +79,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct RangeTo<Idx>
     where
         Idx: FromReflect + DescribeType,

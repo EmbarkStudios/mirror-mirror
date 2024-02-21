@@ -135,19 +135,19 @@ fn box_dyn_reflect_as_reflect() {
 
 #[test]
 fn deeply_nested() {
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Foo {
         bar: Bar,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Bar {
         baz: Baz,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Baz {
         qux: i32,
@@ -196,7 +196,7 @@ fn accessing_docs_in_type_info() {
     /// Here are the docs.
     ///
     /// Foo bar.
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Foo {
         inner: Vec<BTreeMap<String, Vec<Option<Inner>>>>,
@@ -233,13 +233,13 @@ fn accessing_docs_in_type_info() {
 // order
 #[test]
 fn consistent_iteration_order_of_struct_fields() {
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate))]
     struct Outer {
         inner: Inner,
     }
 
-    #[derive(Reflect, Debug, Clone, Copy)]
+    #[derive(Reflect, Debug, Clone, Copy, Default)]
     #[reflect(crate_name(crate))]
     struct Inner {
         // the order the fields are declared in is important!
@@ -275,7 +275,7 @@ fn consistent_iteration_order_of_struct_fields() {
 
 #[test]
 fn consistent_iteration_order_of_struct_variant_fields() {
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate))]
     struct Outer {
         inner: Inner,

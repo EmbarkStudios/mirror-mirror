@@ -9,6 +9,7 @@ use core::iter::FusedIterator;
 use crate::iter::PairIterMut;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
+use crate::type_info::graph::StructNode;
 use crate::type_info::graph::TypeGraph;
 use crate::DescribeType;
 use crate::FromReflect;
@@ -42,6 +43,48 @@ pub trait Struct: Reflect {
 impl fmt::Debug for dyn Struct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.as_reflect().debug(f)
+    }
+}
+
+#[derive(Default, Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct TypedStructValue {
+    field_names: Vec<String>,
+    // use a `BTreeMap` because `HashMap` isn't `serde::Serialize`
+    fields: BTreeMap<String, Value>,
+}
+
+impl TypedStructValue {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            field_names: Vec::with_capacity(capacity),
+            // there is no `BTreeMap::with_capacity` :(
+            fields: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_field(mut self, name: impl Into<String>, value: impl Into<Value>) -> Self {
+        self.set_field(name, value);
+        self
+    }
+
+    pub fn set_field(&mut self, name: impl Into<String>, value: impl Into<Value>) {
+        let name = name.into();
+        self.field_names.push(name.clone());
+        self.fields.insert(name, value.into());
+    }
+}
+
+impl DescribeType for TypedStructValue {
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| {
+            OpaqueNode::new::<Self>(Default::default(), graph)
+        })
     }
 }
 

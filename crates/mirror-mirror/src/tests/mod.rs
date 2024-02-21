@@ -14,12 +14,12 @@ mod type_info;
 mod value;
 
 #[derive(Reflect)]
-#[reflect(crate_name(crate), opt_out(Debug, Clone))]
+#[reflect(crate_name(crate), opt_out(Debug, Clone, Default))]
 #[allow(dead_code)]
 struct DebugOptOut;
 
 #[derive(Reflect)]
-#[reflect(crate_name(crate), opt_out(Debug, Clone))]
+#[reflect(crate_name(crate), opt_out(Debug, Clone, Default))]
 #[allow(dead_code)]
 struct ContainsBoxed(Box<f32>);
 
@@ -30,7 +30,7 @@ mod complex_types {
 
     use crate::Reflect;
 
-    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
     #[reflect(crate_name(crate))]
     struct A {
         a: String,
@@ -45,11 +45,11 @@ mod complex_types {
         D { d: D },
     }
 
-    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
     #[reflect(crate_name(crate))]
     struct C(String, i32, Vec<bool>);
 
-    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
     #[reflect(crate_name(crate))]
     struct D;
 }
@@ -59,14 +59,14 @@ mod skip {
 
     use super::*;
 
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate))]
     struct TestStruct {
         #[reflect(skip)]
         not_reflect: NotReflect,
     }
 
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate))]
     struct TestTupleStruct(#[reflect(skip)] NotReflect);
 
@@ -98,7 +98,7 @@ mod option_f32 {
 
     use super::*;
 
-    #[derive(Debug, Clone, Reflect)]
+    #[derive(Debug, Clone, Reflect, Default)]
     #[reflect(crate_name(crate))]
     struct Foo {
         maybe_float: Option<f32>,
@@ -147,7 +147,7 @@ mod derive_foreign {
     }
 
     __private_derive_reflect_foreign! {
-        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
         struct Bar<A, B>
         where
             A: FromReflect + DescribeType,
@@ -164,7 +164,7 @@ mod derive_foreign {
         B: FromReflect + DescribeType;
 
     __private_derive_reflect_foreign! {
-        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
         struct Baz<A, B>(A, B)
         where
             A: FromReflect + DescribeType,
@@ -174,7 +174,7 @@ mod derive_foreign {
     struct Qux;
 
     __private_derive_reflect_foreign! {
-        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
         struct Qux;
     }
 }
@@ -185,7 +185,7 @@ mod from_reflect_opt_out {
     use super::*;
     use crate::FromReflect;
 
-    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
     #[reflect(crate_name(crate), opt_out(FromReflect))]
     struct Percentage(f32);
 
@@ -218,7 +218,7 @@ mod from_reflect_opt_out {
         );
     }
 
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate), opt_out(FromReflect))]
     struct B {
         n: f32,
@@ -249,14 +249,14 @@ mod from_reflect_with {
     use super::*;
     use crate::FromReflect;
 
-    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
     #[reflect(crate_name(crate))]
     struct A {
         #[reflect(from_reflect_with(clamp_ratio))]
         a: f32,
     }
 
-    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
     #[reflect(crate_name(crate))]
     struct B(#[reflect(from_reflect_with(clamp_ratio))] f32);
 

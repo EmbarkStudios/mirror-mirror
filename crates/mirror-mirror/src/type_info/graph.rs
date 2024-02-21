@@ -131,6 +131,7 @@ pub struct StructNode {
     pub(super) field_names: Box<[String]>,
     pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl StructNode {
@@ -140,7 +141,7 @@ impl StructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + OpaqueTypeDefault,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -151,6 +152,7 @@ impl StructNode {
             field_names: fields.iter().map(|field| field.name.clone()).collect(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }

@@ -15,7 +15,6 @@ use crate::key_path::GetTypePath;
 use crate::key_path::Key;
 use crate::key_path::KeyPath;
 use crate::key_path::NamedOrNumbered;
-use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
 use crate::tuple_struct::TupleStructValue;
 use crate::FromReflect;
@@ -88,6 +87,12 @@ pub trait DescribeType: 'static {
     /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
     /// for the root item.
     fn build(graph: &mut TypeGraph) -> NodeId;
+}
+
+/// TODO:
+pub trait OpaqueTypeDefault {
+    /// TODO:
+    fn default_value() -> Option<Value>;
 }
 
 /// The root of a type.
@@ -710,16 +715,11 @@ impl<'a> StructType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut value = StructValue::new();
-        for field in self.field_types() {
-            value.set_field(field.name(), field.get_type().default_value()?);
-        }
-        Some(value.to_value())
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        self.field_types()
-            .all(|field| field.get_type().has_default_value())
+        self.node.default_value.is_some()
     }
 }
 

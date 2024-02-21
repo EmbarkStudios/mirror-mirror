@@ -253,7 +253,7 @@ mod tests {
 
     #[test]
     fn struct_() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo {
             a: String,
@@ -274,7 +274,7 @@ mod tests {
 
     #[test]
     fn struct_empty() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo {}
 
@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn tuple_struct() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo(String, Vec<i32>);
 
@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn tuple_struct_empty() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo();
 
@@ -313,7 +313,7 @@ mod tests {
 
     #[test]
     fn unit_struct() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo;
 
