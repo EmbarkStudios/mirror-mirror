@@ -11,7 +11,7 @@ use crate::Reflect;
 #[allow(clippy::bool_assert_comparison)]
 fn works() {
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate), opt_out(Default))] // TODO: implement default
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct A {
         a: i32,
         b: B,

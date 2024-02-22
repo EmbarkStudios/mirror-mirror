@@ -63,7 +63,6 @@ fn expand_describe_type(
 
     let meta = attrs.meta();
     let docs = attrs.docs();
-
     let Generics {
         impl_generics,
         type_generics,
@@ -101,7 +100,6 @@ fn expand_default_value(ident: &Ident, attrs: &ItemAttrs, generics: &Generics<'_
                 fn __default<Z: Default>() -> Z {
                     Default::default()
                 }
-
                 Some(__default::<#ident #type_generics>().to_value())
             }
         }

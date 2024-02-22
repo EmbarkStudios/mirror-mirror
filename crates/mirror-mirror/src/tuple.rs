@@ -168,8 +168,6 @@ macro_rules! impl_tuple {
                     TupleNode::new::<Self>(fields, Default::default(), Default::default())
                 })
             }
-
-
         }
 
         #[allow(non_snake_case, unused_mut, unused_variables)]

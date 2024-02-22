@@ -1080,14 +1080,8 @@ impl<'a> StructVariant<'a> {
     pub fn default_value(self) -> Option<Value> {
         let mut value = EnumValue::new_struct_variant(self.name());
         for field in self.field_types() {
-            #[cfg(feature = "std")]
-            println!("{:?}", field.get_type().default_value());
             value.set_struct_field(field.name(), field.get_type().default_value()?);
         }
-
-        #[cfg(feature = "std")]
-        println!("");
-
         Some(value.finish().to_value())
     }
 

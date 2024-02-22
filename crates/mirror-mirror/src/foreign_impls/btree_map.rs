@@ -71,8 +71,8 @@ where
 
 impl<K, V> DescribeType for BTreeMap<K, V>
 where
-    K: FromReflect + DescribeType + Ord,
-    V: FromReflect + DescribeType,
+    K: DescribeType,
+    V: DescribeType,
 {
     fn build(graph: &mut TypeGraph) -> NodeId {
         graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))

@@ -30,8 +30,8 @@ mod complex_types {
 
     use crate::Reflect;
 
-    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate), opt_out(Default))]
+    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     struct A {
         a: String,
         b: Vec<B>,
@@ -45,12 +45,12 @@ mod complex_types {
         D { d: D },
     }
 
-    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate), opt_out(Default))]
+    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     struct C(String, i32, Vec<bool>);
 
-    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate), opt_out(Default))]
+    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate))]
     struct D;
 }
 
@@ -185,8 +185,8 @@ mod from_reflect_opt_out {
     use super::*;
     use crate::FromReflect;
 
-    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
-    #[reflect(crate_name(crate), opt_out(FromReflect, Default))]
+    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(FromReflect))]
     struct Percentage(f32);
 
     impl FromReflect for Percentage {
