@@ -77,10 +77,6 @@ where
     fn build(graph: &mut TypeGraph) -> NodeId {
         graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
     }
-
-    fn default_value() -> Option<Value> {
-        Some(Self::default().to_value())
-    }
 }
 
 impl<K, V> Reflect for BTreeMap<K, V>

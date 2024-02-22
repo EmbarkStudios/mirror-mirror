@@ -21,6 +21,7 @@ pub(super) fn expand(
     let variants = VariantData::try_from_enum(&enum_)?;
 
     let describe_type = expand_describe_type(ident, &variants, &attrs, generics);
+    let default_value = expand_default_value(ident, &attrs, generics);
     let reflect = expand_reflect(ident, &variants, &attrs, generics)?;
     let from_reflect = (!attrs.from_reflect_opt_out)
         .then(|| expand_from_reflect(ident, &variants, &attrs, generics));
@@ -28,6 +29,7 @@ pub(super) fn expand(
 
     Ok(quote! {
         #describe_type
+        #default_value
         #reflect
         #from_reflect
         #enum_
@@ -103,14 +105,30 @@ fn expand_describe_type(
     let meta = attrs.meta();
     let docs = attrs.docs();
 
-    let fn_build = quote! {
-        fn build(graph: &mut TypeGraph) -> NodeId {
-            let variants = &[#(#code_for_variants),*];
-            graph.get_or_build_node_with::<Self, _>(|graph| {
-                EnumNode::new::<Self>(variants, #meta, #docs)
-            })
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
+    quote! {
+        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
+            fn build(graph: &mut TypeGraph) -> NodeId {
+                let variants = &[#(#code_for_variants),*];
+                graph.get_or_build_node_with::<Self, _>(|graph| {
+                    EnumNode::new::<Self>(variants, #meta, #docs)
+                })
+            }
         }
-    };
+    }
+}
+
+fn expand_default_value(ident: &Ident, attrs: &ItemAttrs, generics: &Generics<'_>) -> TokenStream {
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
 
     let fn_default_value = if attrs.default_opt_out {
         quote! {
@@ -120,22 +138,22 @@ fn expand_describe_type(
         }
     } else {
         quote! {
+
+
+
             fn default_value() -> Option<Value> {
-                Some(#ident::default().to_value())
+                fn __default<Z: Default>() -> Z {
+                    Default::default()
+                }
+
+                Some(__default::<#ident #type_generics>().to_value())
             }
         }
     };
 
-    let Generics {
-        impl_generics,
-        type_generics,
-        where_clause,
-    } = generics;
-
     quote! {
-        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
-           #fn_build
-           #fn_default_value
+        impl #impl_generics DefaultValue for #ident #type_generics #where_clause {
+            #fn_default_value
         }
     }
 }

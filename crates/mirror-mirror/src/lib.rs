@@ -7,7 +7,7 @@
 //! ```
 //! use mirror_mirror::{Reflect, Struct};
 //!
-//! #[derive(Reflect, Clone, Debug)]
+//! #[derive(Reflect, Clone, Debug, Default)]
 //! struct Foo {
 //!     x: i32,
 //! }
@@ -66,6 +66,7 @@
 //! }
 //!
 //! #[derive(Reflect, Clone, Debug)]
+//! #[reflect(opt_out(Default))]
 //! enum Bar {
 //!     X { x: i32 },
 //!     Y(String),
@@ -96,17 +97,17 @@
 //! };
 //!
 //! // Some complex nested data type.
-//! #[derive(Reflect, Clone, Debug)]
+//! #[derive(Reflect, Clone, Debug, Default)]
 //! struct User {
 //!     employer: Option<Company>,
 //! }
 //!
-//! #[derive(Reflect, Clone, Debug)]
+//! #[derive(Reflect, Clone, Debug, Default)]
 //! struct Company {
 //!     countries: Vec<Country>,
 //! }
 //!
-//! #[derive(Reflect, Clone, Debug)]
+//! #[derive(Reflect, Clone, Debug, Default)]
 //! struct Country {
 //!     name: String
 //! }
@@ -145,7 +146,7 @@
 //! ```
 //! use mirror_mirror::{Reflect, Value, FromReflect};
 //!
-//! #[derive(Reflect, Clone, Debug)]
+//! #[derive(Reflect, Clone, Debug, Default)]
 //! struct Foo(Vec<i32>);
 //!
 //! # (|| {
@@ -363,6 +364,8 @@ pub use self::struct_::Struct;
 pub use self::tuple::Tuple;
 #[doc(inline)]
 pub use self::tuple_struct::TupleStruct;
+#[doc(inline)]
+pub use self::type_info::DefaultValue;
 #[doc(inline)]
 pub use self::type_info::DescribeType;
 #[doc(inline)]

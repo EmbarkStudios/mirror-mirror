@@ -86,7 +86,10 @@ pub trait DescribeType: 'static {
     /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
     /// for the root item.
     fn build(graph: &mut TypeGraph) -> NodeId;
+}
 
+/// TODO:
+pub trait DefaultValue {
     /// TODO:
     fn default_value() -> Option<Value>;
 }

@@ -95,7 +95,9 @@ impl DescribeType for Infallible {
             EnumNode::new::<Self>(variants, BTreeMap::from([]), &[])
         })
     }
+}
 
+impl DefaultValue for Infallible {
     fn default_value() -> Option<Value> {
         None
     }
