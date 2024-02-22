@@ -423,6 +423,40 @@ fn from_reflect_with_value() {
 }
 
 #[test]
+fn default_value() {
+    #[derive(Debug, Clone, Reflect, PartialEq)]
+    #[reflect(crate_name(crate))]
+    pub enum Foo {
+        A,
+        B(i32, String),
+    }
+
+    impl Default for Foo {
+        fn default() -> Self {
+            Foo::B(10, String::from("test"))
+        }
+    }
+
+    #[derive(Debug, Clone, Reflect, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(Default))]
+    pub enum Bar {
+        A,
+        B(i32, String),
+    }
+
+    let foo_descriptor = <Foo as DescribeType>::type_descriptor();
+    let bar_descriptor = <Bar as DescribeType>::type_descriptor();
+
+    assert!(foo_descriptor.has_default_value());
+    assert!(!bar_descriptor.has_default_value());
+
+    let foo_default = Foo::default().to_value();
+
+    assert_eq!(foo_descriptor.default_value(), Some(foo_default));
+    assert_eq!(bar_descriptor.default_value(), None);
+}
+
+#[test]
 fn default_value_for_enum_variant_type() {
     #[derive(Debug, Clone, Reflect, PartialEq)]
     #[reflect(crate_name(crate), opt_out(Default))]

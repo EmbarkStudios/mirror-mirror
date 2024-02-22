@@ -328,3 +328,37 @@ fn consistent_iteration_order_of_struct_variant_fields() {
 
     assert_eq!(by_value, by_type);
 }
+
+#[test]
+fn default_value() {
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate))]
+    struct Foo {
+        a: u32,
+        b: u32,
+    }
+
+    impl Default for Foo {
+        fn default() -> Self {
+            Foo { a: 1, b: 2 }
+        }
+    }
+
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate), opt_out(Default))]
+    struct Bar {
+        a: u32,
+        b: u32,
+    }
+
+    let foo_descriptor = <Foo as DescribeType>::type_descriptor();
+    let bar_descriptor = <Bar as DescribeType>::type_descriptor();
+
+    assert!(foo_descriptor.has_default_value());
+    assert!(!bar_descriptor.has_default_value());
+
+    let foo_default = Foo::default().to_value();
+
+    assert_eq!(foo_descriptor.default_value(), Some(foo_default));
+    assert_eq!(bar_descriptor.default_value(), None);
+}
