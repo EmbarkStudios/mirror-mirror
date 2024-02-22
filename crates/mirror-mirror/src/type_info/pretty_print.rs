@@ -335,7 +335,7 @@ mod tests {
     #[test]
     fn enum_() {
         #[derive(Reflect, Clone, Debug)]
-        #[reflect(crate_name(crate))]
+        #[reflect(crate_name(crate), opt_out(Default))]
         enum Foo {
             A(String, i32),
             A2(),

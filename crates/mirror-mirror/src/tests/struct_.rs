@@ -203,7 +203,7 @@ fn accessing_docs_in_type_info() {
     }
 
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Inner {
         Variant {
             /// Bingo!
@@ -275,14 +275,14 @@ fn consistent_iteration_order_of_struct_fields() {
 
 #[test]
 fn consistent_iteration_order_of_struct_variant_fields() {
-    #[derive(Reflect, Debug, Clone, Default)]
-    #[reflect(crate_name(crate))]
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct Outer {
         inner: Inner,
     }
 
     #[derive(Reflect, Debug, Clone, Copy)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Inner {
         A {
             // the order the fields are declared in is important!

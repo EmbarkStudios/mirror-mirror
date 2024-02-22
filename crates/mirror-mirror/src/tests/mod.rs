@@ -30,8 +30,8 @@ mod complex_types {
 
     use crate::Reflect;
 
-    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct A {
         a: String,
         b: Vec<B>,
@@ -39,18 +39,18 @@ mod complex_types {
     }
 
     #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum B {
         C(C),
         D { d: D },
     }
 
-    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct C(String, i32, Vec<bool>);
 
-    #[derive(Reflect, Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[derive(Reflect, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct D;
 }
 
@@ -71,7 +71,7 @@ mod skip {
     struct TestTupleStruct(#[reflect(skip)] NotReflect);
 
     #[derive(Reflect, Debug, Clone)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     #[allow(clippy::enum_variant_names)]
     enum TestEnum {
         #[reflect(skip)]
@@ -125,7 +125,7 @@ mod derive_foreign {
     }
 
     __private_derive_reflect_foreign! {
-        #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+        #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
         enum Foo<A, B>
         where
             A: FromReflect + DescribeType,
@@ -185,8 +185,8 @@ mod from_reflect_opt_out {
     use super::*;
     use crate::FromReflect;
 
-    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
-    #[reflect(crate_name(crate), opt_out(FromReflect))]
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(FromReflect, Default))]
     struct Percentage(f32);
 
     impl FromReflect for Percentage {
@@ -231,7 +231,7 @@ mod from_reflect_opt_out {
     }
 
     #[derive(Reflect, Debug, Clone)]
-    #[reflect(crate_name(crate), opt_out(FromReflect))]
+    #[reflect(crate_name(crate), opt_out(FromReflect, Default))]
     enum C {
         A(f32),
     }
@@ -249,19 +249,19 @@ mod from_reflect_with {
     use super::*;
     use crate::FromReflect;
 
-    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct A {
         #[reflect(from_reflect_with(clamp_ratio))]
         a: f32,
     }
 
-    #[derive(Reflect, Debug, Clone, Copy, Default, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct B(#[reflect(from_reflect_with(clamp_ratio))] f32);
 
     #[derive(Reflect, Debug, Clone, Copy, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum C {
         C(#[reflect(from_reflect_with(clamp_ratio))] f32),
         D {

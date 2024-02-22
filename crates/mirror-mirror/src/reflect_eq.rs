@@ -441,7 +441,7 @@ mod tests {
     #[test]
     fn reflect_eq_enum() {
         #[derive(Reflect, Debug, Clone)]
-        #[reflect(crate_name(crate))]
+        #[reflect(crate_name(crate), opt_out(Default))]
         enum A {
             Struct { a: i32, b: bool },
             Tuple(i32, bool),

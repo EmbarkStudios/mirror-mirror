@@ -31,7 +31,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     enum Result<T, E>
     where
         T: FromReflect + DescribeType,
@@ -94,6 +94,10 @@ impl DescribeType for Infallible {
         graph.get_or_build_node_with::<Self, _>(|_graph| {
             EnumNode::new::<Self>(variants, BTreeMap::from([]), &[])
         })
+    }
+
+    fn default_value() -> Option<Value> {
+        None
     }
 }
 

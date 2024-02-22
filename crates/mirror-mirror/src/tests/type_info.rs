@@ -68,7 +68,7 @@ fn struct_() {
 #[test]
 fn enum_() {
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A { a: String },
         B(Vec<Foo>),
@@ -187,6 +187,10 @@ fn opaque_default() {
                 OpaqueNode::new::<Self>(Default::default(), graph).default_value(Opaque(1337))
             })
         }
+
+        fn default_value() -> Option<Value> {
+            None
+        }
     }
 
     impl From<Opaque> for Value {
@@ -287,6 +291,12 @@ fn has_default_value() {
     #[reflect(crate_name(crate))]
     enum C {
         C(i32),
+    }
+
+    impl Default for C {
+        fn default() -> Self {
+            Self::C(0)
+        }
     }
 
     assert!(<A as DescribeType>::type_descriptor().has_default_value());

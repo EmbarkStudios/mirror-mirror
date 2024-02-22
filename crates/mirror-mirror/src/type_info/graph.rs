@@ -141,7 +141,7 @@ impl StructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType + OpaqueTypeDefault,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -176,6 +176,7 @@ pub struct TupleStructNode {
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl TupleStructNode {
@@ -192,6 +193,7 @@ impl TupleStructNode {
             fields: fields.to_vec(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -204,6 +206,7 @@ pub struct EnumNode {
     pub(super) variants: Vec<VariantNode>,
     pub(super) metadata: BTreeMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl EnumNode {
@@ -220,6 +223,7 @@ impl EnumNode {
             variants: variants.to_vec(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -493,6 +497,10 @@ macro_rules! scalar_typed {
             impl DescribeType for $ty {
                 fn build(graph: &mut TypeGraph) -> NodeId {
                     graph.get_or_build_node_with::<Self, _>(|_graph| ScalarNode::$ty)
+                }
+
+                fn default_value() -> Option<Value> {
+                    Some($ty::default().to_value())
                 }
             }
         )*

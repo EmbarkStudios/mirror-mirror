@@ -103,6 +103,29 @@ fn expand_describe_type(
     let meta = attrs.meta();
     let docs = attrs.docs();
 
+    let fn_build = quote! {
+        fn build(graph: &mut TypeGraph) -> NodeId {
+            let variants = &[#(#code_for_variants),*];
+            graph.get_or_build_node_with::<Self, _>(|graph| {
+                EnumNode::new::<Self>(variants, #meta, #docs)
+            })
+        }
+    };
+
+    let fn_default_value = if attrs.default_opt_out {
+        quote! {
+            fn default_value() -> Option<Value> {
+                None
+            }
+        }
+    } else {
+        quote! {
+            fn default_value() -> Option<Value> {
+                Some(#ident::default().to_value())
+            }
+        }
+    };
+
     let Generics {
         impl_generics,
         type_generics,
@@ -111,12 +134,8 @@ fn expand_describe_type(
 
     quote! {
         impl #impl_generics DescribeType for #ident #type_generics #where_clause {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                let variants = &[#(#code_for_variants),*];
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    EnumNode::new::<Self>(variants, #meta, #docs)
-                })
-            }
+           #fn_build
+           #fn_default_value
         }
     }
 }

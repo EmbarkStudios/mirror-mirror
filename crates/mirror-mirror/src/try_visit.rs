@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[derive(Debug, Clone, Reflect)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Bar {
         A(BTreeMap<i32, i32>),
     }

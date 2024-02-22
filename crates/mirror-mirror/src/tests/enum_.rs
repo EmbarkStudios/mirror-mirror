@@ -56,7 +56,7 @@ fn enum_value() {
 #[test]
 fn static_enum() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         Foo { foo: i32, bar: bool },
         Bar { baz: String },
@@ -125,7 +125,7 @@ fn static_enum() {
 #[test]
 fn patching() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A { a: i32 },
         B { b: bool },
@@ -201,7 +201,7 @@ fn patching() {
 #[test]
 fn static_tuple_enum() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A(i32, bool),
         B(String),
@@ -272,7 +272,7 @@ fn static_tuple_enum() {
 #[test]
 fn unit_variant() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A,
         B,
@@ -397,14 +397,14 @@ fn option() {
 #[test]
 fn from_reflect_with_value() {
     #[derive(Debug, Clone, Reflect)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     pub enum Foo {
         Struct { number: Number },
         Tuple(Number),
     }
 
     #[derive(Debug, Clone, Reflect)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     pub enum Number {
         One,
         Two,
@@ -425,7 +425,7 @@ fn from_reflect_with_value() {
 #[test]
 fn default_value_for_enum_variant_type() {
     #[derive(Debug, Clone, Reflect, PartialEq)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     pub enum Foo {
         A,
         B(i32, String),

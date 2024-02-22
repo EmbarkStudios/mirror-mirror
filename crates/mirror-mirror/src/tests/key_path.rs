@@ -27,7 +27,7 @@ fn works() {
     }
 
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum C {
         C { d: String },
     }
@@ -110,7 +110,7 @@ fn query_type_info_struct() {
 #[test]
 fn query_type_info_enum() {
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A { a: String },
         B(i32),

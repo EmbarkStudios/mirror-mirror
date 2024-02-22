@@ -42,7 +42,7 @@ struct A {
 struct B(#[reflect(meta(n = 1))] String);
 
 #[derive(Reflect, Debug, Clone)]
-#[reflect(crate_name(crate), meta(n = 1))]
+#[reflect(crate_name(crate), meta(n = 1), opt_out(Default))]
 enum C {
     #[reflect(meta(n = 1))]
     A {
