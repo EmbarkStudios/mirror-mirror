@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - None
 
+# 0.1.19 (26. February, 2023)
+
+- Allow a `glam` version range between `0.22` and `0.25`, inclusive.
+
 # 0.1.18 (22. February, 2023)
 
 - Update internal dependencies
