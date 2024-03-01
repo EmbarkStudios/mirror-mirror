@@ -88,9 +88,11 @@ pub trait DescribeType: 'static {
     fn build(graph: &mut TypeGraph) -> NodeId;
 }
 
-/// TODO:
+/// Trait for accessing the default [`Value`] of a struct, tuple struct, or enum.
+///
+/// Will be implemented by `#[derive(Reflect)]`.
 pub trait DefaultValue {
-    /// TODO:
+    /// Returns the default value for a type that has `#[derive(Reflect)]`.
     fn default_value() -> Option<Value>;
 }
 
