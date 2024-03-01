@@ -187,10 +187,6 @@ impl DescribeType for Value {
             OpaqueNode::new::<Self>(Default::default(), graph)
         })
     }
-
-    fn default_value() -> Option<Value> {
-        None
-    }
 }
 
 impl Reflect for Value {

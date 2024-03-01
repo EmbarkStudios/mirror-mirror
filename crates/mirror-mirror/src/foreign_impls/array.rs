@@ -23,10 +23,6 @@ where
     fn build(graph: &mut TypeGraph) -> NodeId {
         graph.get_or_build_node_with::<Self, _>(|graph| ArrayNode::new::<Self, T, N>(graph))
     }
-
-    fn default_value() -> Option<Value> {
-        None
-    }
 }
 
 impl<T, const N: usize> Reflect for [T; N]

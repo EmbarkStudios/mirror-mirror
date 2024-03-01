@@ -95,10 +95,6 @@ impl DescribeType for TupleValue {
             OpaqueNode::new::<Self>(Default::default(), graph)
         })
     }
-
-    fn default_value() -> Option<Value> {
-        None
-    }
 }
 
 impl Reflect for TupleValue {
@@ -171,10 +167,6 @@ macro_rules! impl_tuple {
                     ];
                     TupleNode::new::<Self>(fields, Default::default(), Default::default())
                 })
-            }
-
-            fn default_value() -> Option<Value> {
-                None
             }
         }
 

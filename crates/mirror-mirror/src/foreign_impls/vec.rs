@@ -78,14 +78,10 @@ where
 
 impl<T> DescribeType for Vec<T>
 where
-    T: FromReflect + DescribeType,
+    T: DescribeType,
 {
     fn build(graph: &mut TypeGraph) -> NodeId {
         graph.get_or_build_node_with::<Self, _>(|graph| ListNode::new::<Self, T>(graph))
-    }
-
-    fn default_value() -> Option<Value> {
-        Some(Vec::<T>::new().to_value())
     }
 }
 
