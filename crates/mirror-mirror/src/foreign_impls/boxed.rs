@@ -22,6 +22,10 @@ where
     fn build(graph: &mut TypeGraph) -> NodeId {
         T::build(graph)
     }
+
+    fn default_value() -> Option<Value> {
+        T::default_value()
+    }
 }
 
 impl<T> Reflect for Box<T>

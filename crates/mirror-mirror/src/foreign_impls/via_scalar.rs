@@ -22,6 +22,10 @@ macro_rules! impl_reflect_via_scalar {
                         OpaqueNode::new::<Self>(Default::default(), graph)
                     })
                 }
+
+                fn default_value() -> Option<Value> {
+                    <$via_ty>::default_value()
+                }
             }
 
             impl Reflect for $ty {

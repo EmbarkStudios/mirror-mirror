@@ -141,7 +141,7 @@ impl StructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType + DefaultValue,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -186,7 +186,7 @@ impl TupleStructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType + DefaultValue,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -216,7 +216,7 @@ impl EnumNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType + DefaultValue,
+        T: DescribeType,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -497,6 +497,10 @@ macro_rules! scalar_typed {
             impl DescribeType for $ty {
                 fn build(graph: &mut TypeGraph) -> NodeId {
                     graph.get_or_build_node_with::<Self, _>(|_graph| ScalarNode::$ty)
+                }
+
+                fn default_value() -> Option<Value> {
+                    Some($ty::default().to_value())
                 }
             }
         )*

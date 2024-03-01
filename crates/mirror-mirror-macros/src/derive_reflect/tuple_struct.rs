@@ -26,7 +26,6 @@ pub(super) fn expand(
     let fields = fields.unnamed;
 
     let describe_type = expand_describe_type(ident, &fields, &attrs, &field_attrs, generics);
-    let default_value = expand_default_value(ident, &attrs, generics);
     let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
     let from_reflect = (!attrs.from_reflect_opt_out)
         .then(|| expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics));
@@ -34,7 +33,6 @@ pub(super) fn expand(
 
     Ok(quote! {
         #describe_type
-        #default_value
         #reflect
         #from_reflect
         #tuple_struct
@@ -69,24 +67,14 @@ fn expand_describe_type(
         where_clause,
     } = generics;
 
-    quote! {
-        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
-            fn build(graph: &mut TypeGraph) -> NodeId {
-                let fields = &[#(#code_for_fields),*];
-                graph.get_or_build_node_with::<Self, _>(|graph| {
-                    TupleStructNode::new::<Self>(fields, #meta, #docs)
-                })
-            }
+    let fn_build = quote! {
+        fn build(graph: &mut TypeGraph) -> NodeId {
+            let fields = &[#(#code_for_fields),*];
+            graph.get_or_build_node_with::<Self, _>(|graph| {
+                TupleStructNode::new::<Self>(fields, #meta, #docs)
+            })
         }
-    }
-}
-
-fn expand_default_value(ident: &Ident, attrs: &ItemAttrs, generics: &Generics<'_>) -> TokenStream {
-    let Generics {
-        impl_generics,
-        type_generics,
-        where_clause,
-    } = generics;
+    };
 
     let fn_default_value = if attrs.default_opt_out {
         quote! {
@@ -106,7 +94,8 @@ fn expand_default_value(ident: &Ident, attrs: &ItemAttrs, generics: &Generics<'_
     };
 
     quote! {
-        impl #impl_generics DefaultValue for #ident #type_generics #where_clause {
+        impl #impl_generics DescribeType for #ident #type_generics #where_clause {
+            #fn_build
             #fn_default_value
         }
     }

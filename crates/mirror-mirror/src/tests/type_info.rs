@@ -187,6 +187,10 @@ fn opaque_default() {
                 OpaqueNode::new::<Self>(Default::default(), graph).default_value(Opaque(1337))
             })
         }
+
+        fn default_value() -> Option<Value> {
+            None
+        }
     }
 
     impl From<Opaque> for Value {
