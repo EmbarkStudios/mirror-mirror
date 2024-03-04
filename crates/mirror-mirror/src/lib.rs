@@ -164,7 +164,8 @@
 //!     .as_tuple_struct_mut()?
 //!     .field_at_mut(0)?
 //!     .as_list_mut()?
-//!     .push(&4);
+//!     .try_push(&4)
+//!     .unwrap();
 //!
 //! // Convert the `value` back into a `Foo`.
 //! let new_foo = Foo::from_reflect(&value)?;
@@ -281,6 +282,63 @@ macro_rules! trivial_reflect_methods {
 
         fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
             self
+        }
+    };
+}
+
+macro_rules! map_methods {
+    () => {
+        fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
+            let key = K::from_reflect(key)?;
+            let value = Self::get(self, &key)?;
+            Some(value.as_reflect())
+        }
+
+        fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect> {
+            let key = K::from_reflect(key)?;
+            let value = Self::get_mut(self, &key)?;
+            Some(value.as_reflect_mut())
+        }
+
+        fn try_insert<'a>(
+            &mut self,
+            key: &'a dyn Reflect,
+            value: &'a dyn Reflect,
+        ) -> Result<Option<Box<dyn Reflect>>, MapError> {
+            let (key, value) = crate::map::key_value_from_reflect(key, value)?;
+            if let Some(previous) = Self::insert(self, key, value) {
+                Ok(Some(Box::new(previous)))
+            } else {
+                Ok(None)
+            }
+        }
+
+        fn try_remove(&mut self, key: &dyn Reflect) -> Result<Option<Box<dyn Reflect>>, MapError> {
+            let key = K::from_reflect(key).ok_or(MapError::KeyFromReflectFailed)?;
+            if let Some(previous) = Self::remove(self, &key) {
+                Ok(Some(Box::new(previous)))
+            } else {
+                Ok(None)
+            }
+        }
+
+        fn len(&self) -> usize {
+            Self::len(self)
+        }
+
+        fn is_empty(&self) -> bool {
+            Self::is_empty(self)
+        }
+
+        fn iter(&self) -> crate::map::Iter<'_> {
+            let iter = Self::iter(self).map(|(key, value)| (key.as_reflect(), value.as_reflect()));
+            Box::new(iter)
+        }
+
+        fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect> {
+            let iter =
+                Self::iter_mut(self).map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
+            Box::new(iter)
         }
     };
 }

@@ -6,6 +6,7 @@ use core::hash::Hash;
 use kollect::OrderedMap;
 
 use crate::iter::PairIterMut;
+use crate::map::MapError;
 use crate::type_info::graph::MapNode;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
@@ -103,52 +104,7 @@ where
     V: FromReflect + DescribeType,
     S: Default + BuildHasher + Send + 'static,
 {
-    fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
-        let key = K::from_reflect(key)?;
-        let value = self.get(&key)?;
-        Some(value.as_reflect())
-    }
-
-    fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect> {
-        let key = K::from_reflect(key)?;
-        let value = self.get_mut(&key)?;
-        Some(value.as_reflect_mut())
-    }
-
-    fn insert(&mut self, key: &dyn Reflect, value: &dyn Reflect) -> Option<Box<dyn Reflect>> {
-        let key = K::from_reflect(key)?;
-        let value = V::from_reflect(value)?;
-        let previous = self.insert(key, value)?;
-        Some(Box::new(previous))
-    }
-
-    fn remove(&mut self, key: &dyn Reflect) -> Option<Box<dyn Reflect>> {
-        let key = K::from_reflect(key)?;
-        let previous = self.remove(&key)?;
-        Some(Box::new(previous))
-    }
-
-    fn len(&self) -> usize {
-        self.len()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.is_empty()
-    }
-
-    fn iter(&self) -> crate::map::Iter<'_> {
-        let iter = self
-            .iter()
-            .map(|(key, value)| (key.as_reflect(), value.as_reflect()));
-        Box::new(iter)
-    }
-
-    fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect> {
-        let iter = self
-            .iter_mut()
-            .map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
-        Box::new(iter)
-    }
+    map_methods!();
 }
 
 impl<K, V, S> DescribeType for OrderedMap<K, V, S>

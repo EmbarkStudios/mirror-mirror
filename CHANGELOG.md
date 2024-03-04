@@ -15,11 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **fixed:** Iterating over fields and variants in type descriptors is now done
   in the same order as defined in the code ([#119])
 - **fixed:** Support derive reflect for `HashMap` ([#119])
+- **breaking:** Add `Array::swap` ([#136])
+- **breaking:** Add `List::try_insert` ([#136])
+- **breaking:** `List::push` renamed to `List::try_push` ([#136])
+- **breaking:** `Map::insert` renamed to `Map::try_insert` ([#136])
+- **breaking:** `Map::remove` renamed to `Map::try_remove` ([#136])
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
 [#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
 [#119]: https://github.com/EmbarkStudios/mirror-mirror/pull/119
+[#136]: https://github.com/EmbarkStudios/mirror-mirror/pull/136
 
 # 0.1.19 (26. February, 2023)
 
