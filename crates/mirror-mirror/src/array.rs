@@ -17,6 +17,13 @@ pub trait Array: Reflect {
     fn iter(&self) -> Iter<'_>;
 
     fn iter_mut(&mut self) -> ValueIterMut<'_>;
+
+    /// Swaps two elements in the array.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `a` or `b` are out of bounds.
+    fn swap(&mut self, a: usize, b: usize);
 }
 
 impl fmt::Debug for dyn Array {

@@ -101,6 +101,10 @@ where
             .map(|value| value.as_reflect_mut());
         Box::new(iter)
     }
+
+    fn swap(&mut self, a: usize, b: usize) {
+        self.as_mut_slice().swap(a, b);
+    }
 }
 
 impl<T, const N: usize> FromReflect for [T; N]

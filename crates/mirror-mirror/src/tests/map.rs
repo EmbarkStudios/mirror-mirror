@@ -193,6 +193,9 @@ fn exoctic_value_type() {
     let foo_default_value = <Foo as DescribeType>::type_descriptor()
         .default_value()
         .unwrap();
-    map.as_map_mut().unwrap().insert(&1, &foo_default_value);
+    map.as_map_mut()
+        .unwrap()
+        .try_insert(&1, &foo_default_value)
+        .unwrap();
     assert_eq!(map.len(), 1);
 }
