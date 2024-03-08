@@ -101,7 +101,7 @@ dependencies = [
 
 [[package]]
 name = "mirror-mirror"
-version = "0.1.19"
+version = "0.2.0"
 dependencies = [
  "ahash",
  "glam",
@@ -117,7 +117,7 @@ dependencies = [
 
 [[package]]
 name = "mirror-mirror-macros"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "kollect",
  "mirror-mirror",
