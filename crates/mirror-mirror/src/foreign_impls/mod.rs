@@ -33,7 +33,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     enum Result<T, E>
     where
         T: FromReflect + DescribeType,
@@ -45,10 +45,10 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct Range<Idx>
     where
-        Idx: FromReflect + DescribeType,
+        Idx: FromReflect + DescribeType
     {
         start: Idx,
         end: Idx,
@@ -56,7 +56,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct RangeFrom<Idx>
     where
         Idx: FromReflect + DescribeType,
@@ -71,7 +71,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct RangeToInclusive<Idx>
     where
         Idx: FromReflect + DescribeType,
@@ -81,7 +81,7 @@ __private_derive_reflect_foreign! {
 }
 
 __private_derive_reflect_foreign! {
-    #[reflect(opt_out(Clone, Debug), crate_name(crate))]
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
     struct RangeTo<Idx>
     where
         Idx: FromReflect + DescribeType,
@@ -96,6 +96,12 @@ impl DescribeType for Infallible {
         graph.get_or_build_node_with::<Self, _>(|_graph| {
             EnumNode::new::<Self>(variants, LinearMap::from([]), &[])
         })
+    }
+}
+
+impl DefaultValue for Infallible {
+    fn default_value() -> Option<Value> {
+        None
     }
 }
 

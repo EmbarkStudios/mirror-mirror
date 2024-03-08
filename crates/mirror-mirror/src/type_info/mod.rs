@@ -14,9 +14,7 @@ use crate::key_path::GetTypePath;
 use crate::key_path::Key;
 use crate::key_path::KeyPath;
 use crate::key_path::NamedOrNumbered;
-use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
-use crate::tuple_struct::TupleStructValue;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::Value;
@@ -72,6 +70,14 @@ pub trait DescribeType: 'static {
     /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
     /// for the root item.
     fn build(graph: &mut TypeGraph) -> NodeId;
+}
+
+/// Trait for accessing the default [`Value`] of a struct, tuple struct, or enum.
+///
+/// Will be implemented by `#[derive(Reflect)]`.
+pub trait DefaultValue {
+    /// Returns the default value for a type that has `#[derive(Reflect)]`.
+    fn default_value() -> Option<Value>;
 }
 
 /// A descriptor of a type including all sub-types.
@@ -697,16 +703,11 @@ impl<'a> StructType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut value = StructValue::new();
-        for field in self.field_types() {
-            value.set_field(field.name(), field.get_type().default_value()?);
-        }
-        Some(value.to_value())
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        self.field_types()
-            .all(|field| field.get_type().has_default_value())
+        self.node.default_value.is_some()
     }
 }
 
@@ -752,16 +753,11 @@ impl<'a> TupleStructType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut value = TupleStructValue::new();
-        for field in self.field_types() {
-            value.push_field(field.get_type().default_value()?);
-        }
-        Some(value.to_value())
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        self.field_types()
-            .all(|field| field.get_type().has_default_value())
+        self.node.default_value.is_some()
     }
 }
 
@@ -871,16 +867,11 @@ impl<'a> EnumType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut variants = self.variants();
-        let first_variant = variants.next()?;
-        first_variant.default_value()
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        let mut variants = self.variants();
-        variants
-            .next()
-            .map_or(false, |first_variant| first_variant.has_default_value())
+        self.node.default_value.is_some()
     }
 }
 
