@@ -20,12 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **breaking:** `List::push` renamed to `List::try_push` ([#136])
 - **breaking:** `Map::insert` renamed to `Map::try_insert` ([#136])
 - **breaking:** `Map::remove` renamed to `Map::try_remove` ([#136])
+- **breaking:** Update to kollect 0.3 ([#138])
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
 [#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
 [#119]: https://github.com/EmbarkStudios/mirror-mirror/pull/119
 [#136]: https://github.com/EmbarkStudios/mirror-mirror/pull/136
+[#138]: https://github.com/EmbarkStudios/mirror-mirror/pull/138
 
 # 0.1.19 (26. February, 2023)
 
