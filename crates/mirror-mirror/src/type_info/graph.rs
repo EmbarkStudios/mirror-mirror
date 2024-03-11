@@ -115,6 +115,7 @@ pub enum TypeNode {
     List(ListNode),
     Array(ArrayNode),
     Map(MapNode),
+    Set(SetNode),
     Scalar(ScalarNode),
     Opaque(OpaqueNode),
 }
@@ -136,6 +137,7 @@ impl_from! { Enum(EnumNode) }
 impl_from! { List(ListNode) }
 impl_from! { Array(ArrayNode) }
 impl_from! { Map(MapNode) }
+impl_from! { Set(SetNode) }
 impl_from! { Scalar(ScalarNode) }
 impl_from! { Opaque(OpaqueNode) }
 
@@ -477,6 +479,27 @@ impl MapNode {
             type_name: type_name::<M>().to_owned(),
             key_type_id: K::build(graph),
             value_type_id: V::build(graph),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct SetNode {
+    pub(super) type_name: String,
+    pub(super) element_type_id: NodeId,
+}
+
+impl SetNode {
+    pub(crate) fn new<M, V>(graph: &mut TypeGraph) -> Self
+    where
+        M: DescribeType,
+        V: DescribeType,
+    {
+        Self {
+            type_name: type_name::<M>().to_owned(),
+            element_type_id: V::build(graph),
         }
     }
 }

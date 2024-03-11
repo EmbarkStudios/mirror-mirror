@@ -43,6 +43,7 @@ impl<'a> PrettyPrintRoot for Type<'a> {
             Type::List(inner) => inner.pretty_root_fmt(f),
             Type::Array(inner) => inner.pretty_root_fmt(f),
             Type::Map(inner) => inner.pretty_root_fmt(f),
+            Type::Set(inner) => inner.pretty_root_fmt(f),
             Type::Scalar(inner) => inner.pretty_root_fmt(f),
             Type::Opaque(inner) => inner.pretty_root_fmt(f),
         }
@@ -199,6 +200,15 @@ impl<'a> PrettyPrintRoot for MapType<'a> {
         f.write_str(": ")?;
         simple_type_name_fmt(self.value_type().type_name(), f)?;
         f.write_char(']')?;
+        Ok(())
+    }
+}
+
+impl<'a> PrettyPrintRoot for SetType<'a> {
+    fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_char('{')?;
+        simple_type_name_fmt(self.element_type().type_name(), f)?;
+        f.write_char('}')?;
         Ok(())
     }
 }
