@@ -22,6 +22,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "base64"
+version = "0.21.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
+name = "bitflags"
+version = "2.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed570934406eb16438a4e976b1b4500774099c13b8cb96eec99f620f05090ddf"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -125,7 +140,24 @@ dependencies = [
  "glam",
  "kollect",
  "macaw",
- "mirror-mirror-macros",
+ "mirror-mirror 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mirror-mirror-macros 0.1.4",
+ "once_cell",
+ "ordered-float",
+ "ron",
+ "serde",
+ "speedy",
+ "syn",
+]
+
+[[package]]
+name = "mirror-mirror"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b14e8dc2bf56db79766cf6438a1bfb33047af85a439809550101dabcd1c0c42b"
+dependencies = [
+ "ahash",
+ "mirror-mirror-macros 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "ordered-float",
  "serde",
@@ -138,7 +170,18 @@ name = "mirror-mirror-macros"
 version = "0.1.4"
 dependencies = [
  "kollect",
- "mirror-mirror",
+ "mirror-mirror 0.1.19",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "mirror-mirror-macros"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "873a8136d73249ded007bc60b4a2e0fc44558469e622f86a84e906361fb79131"
+dependencies = [
  "proc-macro2",
  "quote",
  "syn",
@@ -195,6 +238,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "291ec9ab5efd934aaf503a6466c5d5251535d108ee747472c3977cc5acc868ef"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "ron"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
+dependencies = [
+ "base64",
+ "bitflags",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
