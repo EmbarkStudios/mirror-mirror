@@ -366,6 +366,13 @@ fn deserialize_old_struct() {
     let v2_type_descriptor =
         ron::from_str::<Cow<'static, crate::type_info::TypeDescriptor>>(&v1_ron).unwrap();
 
-    let name_type = v2_type_descriptor.as_struct().unwrap().field_type("n").unwrap().get_type().as_scalar().unwrap();
+    let name_type = v2_type_descriptor
+        .as_struct()
+        .unwrap()
+        .field_type("n")
+        .unwrap()
+        .get_type()
+        .as_scalar()
+        .unwrap();
     assert!(matches!(name_type, crate::type_info::ScalarType::i32));
 }
