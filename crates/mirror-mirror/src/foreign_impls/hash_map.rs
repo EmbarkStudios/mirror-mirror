@@ -1,7 +1,11 @@
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
+
 use core::any::Any;
 use core::fmt;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+
+use std::collections::HashMap;
 
 use crate::iter::PairIterMut;
 use crate::map::MapError;
@@ -17,28 +21,11 @@ use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Value;
 
-impl<K, V> Map for BTreeMap<K, V>
+impl<K, V, S> Reflect for HashMap<K, V, S>
 where
-    K: FromReflect + DescribeType + Ord,
+    K: FromReflect + DescribeType + Eq + Hash,
     V: FromReflect + DescribeType,
-{
-    map_methods!();
-}
-
-impl<K, V> DescribeType for BTreeMap<K, V>
-where
-    K: DescribeType,
-    V: DescribeType,
-{
-    fn build(graph: &mut TypeGraph) -> NodeId {
-        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
-    }
-}
-
-impl<K, V> Reflect for BTreeMap<K, V>
-where
-    K: FromReflect + DescribeType + Ord,
-    V: FromReflect + DescribeType,
+    S: Default + BuildHasher + Send + 'static,
 {
     trivial_reflect_methods!();
 
@@ -82,14 +69,16 @@ where
     }
 }
 
-impl<K, V> FromReflect for BTreeMap<K, V>
+impl<K, V, S> FromReflect for HashMap<K, V, S>
 where
-    K: FromReflect + DescribeType + Ord,
+    K: FromReflect + DescribeType + Eq + Hash,
     V: FromReflect + DescribeType,
+    S: Default + BuildHasher + Send + 'static,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_map()?;
-        let mut out = BTreeMap::new();
+        let len = map.len();
+        let mut out = HashMap::with_capacity_and_hasher(len, S::default());
         for (key, value) in map.iter() {
             out.insert(K::from_reflect(key)?, V::from_reflect(value)?);
         }
@@ -97,16 +86,36 @@ where
     }
 }
 
-impl<K, V> From<BTreeMap<K, V>> for Value
+impl<K, V> From<HashMap<K, V>> for Value
 where
     K: Reflect,
     V: Reflect,
 {
-    fn from(map: BTreeMap<K, V>) -> Self {
+    fn from(map: HashMap<K, V>) -> Self {
         let map = map
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
         Value::Map(map)
+    }
+}
+
+impl<K, V, S> Map for HashMap<K, V, S>
+where
+    K: FromReflect + DescribeType + Hash + Eq,
+    V: FromReflect + DescribeType,
+    S: Default + BuildHasher + Send + 'static,
+{
+    map_methods!();
+}
+
+impl<K, V, S> DescribeType for HashMap<K, V, S>
+where
+    K: DescribeType,
+    V: DescribeType,
+    S: 'static,
+{
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
     }
 }

@@ -3,7 +3,6 @@ use core::iter::Peekable;
 
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -23,11 +22,12 @@ use crate::Value;
 pub mod graph;
 pub mod pretty_print;
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 mod simple_type_name;
 
 pub use self::pretty_print::{PrettyPrintRoot, RootPrettyPrinter};
-#[cfg(feature = "std")]
+
+#[cfg(feature = "simple_type_name")]
 pub use self::simple_type_name::SimpleTypeName;
 
 /// Trait for accessing type information.
@@ -36,51 +36,35 @@ pub use self::simple_type_name::SimpleTypeName;
 pub trait DescribeType: 'static {
     /// Creates a type descriptor for the current type.
     ///
-    /// On targets with the standard library, it's done only once per process, then subsequent
-    /// accesses are "free" because the result is cached. On non-std targets, the type descriptor
-    /// is recomputed and reallocated on each call.
+    /// It's done only once per process, then subsequent accesses are "free" because the result is cached.
     fn type_descriptor() -> Cow<'static, TypeDescriptor> {
-        #[cfg(feature = "std")]
-        {
-            use crate::__private::*;
-            use std::collections::HashMap;
-            use std::sync::RwLock;
+        use crate::__private::*;
+        use std::collections::HashMap;
+        use std::sync::RwLock;
 
-            // a map required for generic types to have different type descriptors such as
-            // `Vec<i32>` and `Vec<bool>`
-            static INFO: OnceBox<
-                RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>,
-            > = OnceBox::new();
+        // amortizing creation of type descriptors so that each process only needs to compute a type descriptor for each type once
+        static INFO: OnceBox<RwLock<HashMap<TypeId, &'static TypeDescriptor, ahash::RandomState>>> =
+            OnceBox::new();
 
-            let type_id = TypeId::of::<Self>();
+        let type_id = TypeId::of::<Self>();
 
-            let lock = INFO.get_or_init(|| {
-                Box::from(RwLock::new(HashMap::with_hasher(
-                    STATIC_RANDOM_STATE.clone(),
-                ))) // use seeded random state
-            });
-            if let Some(info) = lock.read().unwrap().get(&type_id) {
-                return Cow::Borrowed(info);
-            }
-
-            let mut map = lock.write().unwrap();
-            let info = map.entry(type_id).or_insert_with(|| {
-                let mut graph = TypeGraph::default();
-                let id = Self::build(&mut graph);
-                let info = TypeDescriptor::new(id, graph);
-                Box::leak(Box::new(info))
-            });
-            Cow::Borrowed(*info)
+        let lock = INFO.get_or_init(|| {
+            Box::from(RwLock::new(HashMap::with_hasher(
+                STATIC_RANDOM_STATE.clone(),
+            ))) // use seeded random state
+        });
+        if let Some(info) = lock.read().unwrap().get(&type_id) {
+            return Cow::Borrowed(info);
         }
 
-        #[cfg(not(feature = "std"))]
-        {
-            use crate::__private::*;
-
+        let mut map = lock.write().unwrap();
+        let info = map.entry(type_id).or_insert_with(|| {
             let mut graph = TypeGraph::default();
             let id = Self::build(&mut graph);
-            Cow::Owned(TypeDescriptor::new(id, graph))
-        }
+            let info = TypeDescriptor::new(id, graph);
+            Box::leak(Box::new(info))
+        });
+        Cow::Borrowed(*info)
     }
 
     /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
@@ -96,12 +80,15 @@ pub trait DefaultValue {
     fn default_value() -> Option<Value>;
 }
 
-/// The root of a type.
+/// A descriptor of a type including all sub-types.
 ///
 /// Accessed via the [`DescribeType`] trait.
 ///
 /// `mirror-mirror` represents types as (possibly cyclic) graphs since types can contain
 /// themselves. For example `struct Foo(Vec<Foo>)`.
+///
+/// Note that the trait-implemented `PartialEq`, `Eq`, and `Hash` implementations are *not* stable
+/// across different binary builds!
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -678,12 +665,9 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.field_names.iter().map(move |field_name| {
-            let node = self.node.fields.get(field_name).unwrap();
-            NamedField {
-                node,
-                graph: self.graph,
-            }
+        self.node.fields.iter().map(|(_, node)| NamedField {
+            node,
+            graph: self.graph,
         })
     }
 
@@ -700,8 +684,11 @@ impl<'a> StructType<'a> {
     }
 
     pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
-        let name = self.node.field_names.get(index)?;
-        self.field_type(name)
+        let node = &self.node.fields.get_index(index)?.1;
+        Some(NamedField {
+            node,
+            graph: self.graph,
+        })
     }
 
     fn into_type_info_at_path(self) -> TypeAtPath<'a> {
@@ -1046,12 +1033,9 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_types(self) -> impl Iterator<Item = NamedField<'a>> {
-        self.node.field_names.iter().map(|field_name| {
-            let node = self.node.fields.get(field_name).unwrap();
-            NamedField {
-                node,
-                graph: self.graph,
-            }
+        self.node.fields.iter().map(|(_, node)| NamedField {
+            node,
+            graph: self.graph,
         })
     }
 
@@ -1068,8 +1052,11 @@ impl<'a> StructVariant<'a> {
     }
 
     pub fn field_type_at(self, index: usize) -> Option<NamedField<'a>> {
-        let name = self.node.field_names.get(index)?;
-        self.field_type(name)
+        let node = &self.node.fields.get_index(index)?.1;
+        Some(NamedField {
+            node,
+            graph: self.graph,
+        })
     }
 
     pub fn enum_type(self) -> EnumType<'a> {
@@ -1330,7 +1317,7 @@ impl<'a> MapType<'a> {
     }
 
     pub fn default_value(self) -> Value {
-        BTreeMap::<(), ()>::new().to_value()
+        Value::Map(Default::default())
     }
 
     pub fn has_default_value(&self) -> bool {

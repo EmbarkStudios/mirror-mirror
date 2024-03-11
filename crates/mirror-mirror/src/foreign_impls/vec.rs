@@ -4,6 +4,7 @@ use core::any::Any;
 
 use crate::array::Array;
 use crate::iter::ValueIterMut;
+use crate::list::ListError;
 use crate::type_info::graph::ListNode;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::TypeGraph;
@@ -20,9 +21,12 @@ impl<T> List for Vec<T>
 where
     T: FromReflect + DescribeType,
 {
-    fn push(&mut self, value: &dyn Reflect) {
-        if let Some(value) = T::from_reflect(value) {
+    fn try_push(&mut self, element: &dyn Reflect) -> Result<(), ListError> {
+        if let Some(value) = T::from_reflect(element) {
             Vec::push(self, value);
+            Ok(())
+        } else {
+            Err(ListError)
         }
     }
 
@@ -37,6 +41,15 @@ where
             Some(Box::new(value))
         } else {
             None
+        }
+    }
+
+    fn try_insert(&mut self, index: usize, element: &dyn Reflect) -> Result<(), ListError> {
+        if let Some(element) = T::from_reflect(element) {
+            Vec::insert(self, index, element);
+            Ok(())
+        } else {
+            Err(ListError)
         }
     }
 }
@@ -73,6 +86,10 @@ where
             .iter_mut()
             .map(|value| value.as_reflect_mut());
         Box::new(iter)
+    }
+
+    fn swap(&mut self, a: usize, b: usize) {
+        self.as_mut_slice().swap(a, b);
     }
 }
 

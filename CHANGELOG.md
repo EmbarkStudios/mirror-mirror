@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None
+- **breaking:** Remove `Reflect::type_descriptor`. Instead capture the type
+  descriptor explicitly with `<T as DescribeType::type_descriptor()` ([#90])
+- **breaking:** Make `KeyPath::pop` return the popped key ([#110])
+- **breaking:** Remove `Reflect::type_id` ([#109])
+- **breaking:** `no-std` support has been removed ([#119])
+- **fixed:** Iterating over fields and variants in type descriptors is now done
+  in the same order as defined in the code ([#119])
+- **fixed:** Support derive reflect for `HashMap` ([#119])
+- **breaking:** Add `Array::swap` ([#136])
+- **breaking:** Add `List::try_insert` ([#136])
+- **breaking:** `List::push` renamed to `List::try_push` ([#136])
+- **breaking:** `Map::insert` renamed to `Map::try_insert` ([#136])
+- **breaking:** `Map::remove` renamed to `Map::try_remove` ([#136])
+- **breaking:** Update to kollect 0.3 ([#138])
+
+[#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
+[#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
+[#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
+[#119]: https://github.com/EmbarkStudios/mirror-mirror/pull/119
+[#136]: https://github.com/EmbarkStudios/mirror-mirror/pull/136
+[#138]: https://github.com/EmbarkStudios/mirror-mirror/pull/138
+
+# 0.1.19 (26. February, 2023)
+
+- Allow a `glam` version range between `0.22` and `0.25`, inclusive.
+
+# 0.1.18 (22. February, 2023)
+
+- Update internal dependencies
 
 # 0.1.17 (23. January, 2023)
 
@@ -47,6 +75,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # 0.1.11 (20. March, 2023)
 
+- **added:** Implement serialization traits for `ScalarOwned`
+
+# 0.1.14 (11. April, 2023)
+
+- **change:** Make use of deterministic hashes for `NodeId` and `TypeDescriptor` ([#115])
+
+[#115]: https://github.com/EmbarkStudios/mirror-mirror/pull/115
+
+# 0.1.13 (29. March, 2023)
+
+- **fixed:** Require less strict `speedy` version ([#114])
+
+[#114]: https://github.com/EmbarkStudios/mirror-mirror/pull/114
+
+# 0.1.12 (21. March, 2023)
+
+- **change:** Update to syn 2.0 ([#113])
+
+[#113]: https://github.com/EmbarkStudios/mirror-mirror/pull/113
+
+# 0.1.11 (20. March, 2023)
+
 - **added:** Implement `Reflect`, and friends, for `Infallible` ([#111])
 - **change:** Update to syn 2.0 ([#112])
 
@@ -57,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **fixed:** Fully qualify `FromReflect` in generated code ([#107])
 
+[#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#107]: https://github.com/EmbarkStudios/mirror-mirror/pull/107
 
 # 0.1.9 (24. February, 2023)

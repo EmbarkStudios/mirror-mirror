@@ -1,7 +1,7 @@
-use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use core::any::Any;
 use core::fmt;
+
+use kollect::LinearMap;
 
 use crate::iter::PairIterMut;
 use crate::map::MapError;
@@ -17,27 +17,9 @@ use crate::ReflectOwned;
 use crate::ReflectRef;
 use crate::Value;
 
-impl<K, V> Map for BTreeMap<K, V>
+impl<K, V> Reflect for LinearMap<K, V>
 where
-    K: FromReflect + DescribeType + Ord,
-    V: FromReflect + DescribeType,
-{
-    map_methods!();
-}
-
-impl<K, V> DescribeType for BTreeMap<K, V>
-where
-    K: DescribeType,
-    V: DescribeType,
-{
-    fn build(graph: &mut TypeGraph) -> NodeId {
-        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
-    }
-}
-
-impl<K, V> Reflect for BTreeMap<K, V>
-where
-    K: FromReflect + DescribeType + Ord,
+    K: FromReflect + DescribeType + Eq,
     V: FromReflect + DescribeType,
 {
     trivial_reflect_methods!();
@@ -82,14 +64,15 @@ where
     }
 }
 
-impl<K, V> FromReflect for BTreeMap<K, V>
+impl<K, V> FromReflect for LinearMap<K, V>
 where
-    K: FromReflect + DescribeType + Ord,
+    K: FromReflect + DescribeType + Eq,
     V: FromReflect + DescribeType,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let map = reflect.as_map()?;
-        let mut out = BTreeMap::new();
+        let len = map.len();
+        let mut out = LinearMap::with_capacity(len);
         for (key, value) in map.iter() {
             out.insert(K::from_reflect(key)?, V::from_reflect(value)?);
         }
@@ -97,16 +80,34 @@ where
     }
 }
 
-impl<K, V> From<BTreeMap<K, V>> for Value
+impl<K, V> From<LinearMap<K, V>> for Value
 where
-    K: Reflect,
+    K: Reflect + Eq,
     V: Reflect,
 {
-    fn from(map: BTreeMap<K, V>) -> Self {
+    fn from(map: LinearMap<K, V>) -> Self {
         let map = map
             .into_iter()
             .map(|(key, value)| (key.to_value(), value.to_value()))
             .collect();
         Value::Map(map)
+    }
+}
+
+impl<K, V> Map for LinearMap<K, V>
+where
+    K: FromReflect + DescribeType + Eq,
+    V: FromReflect + DescribeType,
+{
+    map_methods!();
+}
+
+impl<K, V> DescribeType for LinearMap<K, V>
+where
+    K: DescribeType,
+    V: DescribeType,
+{
+    fn build(graph: &mut TypeGraph) -> NodeId {
+        graph.get_or_build_node_with::<Self, _>(|graph| MapNode::new::<Self, K, V>(graph))
     }
 }

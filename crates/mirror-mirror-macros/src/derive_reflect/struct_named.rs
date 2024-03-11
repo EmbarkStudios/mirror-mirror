@@ -165,12 +165,6 @@ fn expand_reflect(
         }
     };
 
-    let fn_type_info = quote! {
-        fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-            <Self as DescribeType>::type_descriptor()
-        }
-    };
-
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
@@ -198,7 +192,6 @@ fn expand_reflect(
                 self
             }
 
-            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect
@@ -408,17 +401,55 @@ fn expand_struct(
         }
     };
 
+    let fields_len = fields
+        .iter()
+        .filter(field_attrs.filter_out_skipped_named())
+        .count();
+
+    let fn_fields_len = {
+        quote! {
+            fn fields_len(&self) -> usize {
+                #fields_len
+            }
+        }
+    };
+
     let fn_fields = {
         let crate_name = &attrs.crate_name;
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    (#field, self.#ident.as_reflect()),
+                }
+            });
 
-        quote! {
-            fn fields(&self) -> #crate_name::struct_::Iter<'_> {
-                #crate_name::struct_::Iter::new(self)
+        if fields_len <= 32 {
+            quote! {
+                fn fields(&self) -> #crate_name::struct_::FieldsIter<'_> {
+                    let fields = [
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
+            }
+        } else {
+            quote! {
+                fn fields(&self) -> #crate_name::struct_::FieldsIter<'_> {
+                    let fields = vec![
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
             }
         }
     };
 
     let fn_fields_mut = {
+        let crate_name = &attrs.crate_name;
         let code_for_fields = fields
             .iter()
             .filter(field_attrs.filter_out_skipped_named())
@@ -430,23 +461,23 @@ fn expand_struct(
                 }
             });
 
-        quote! {
-            fn fields_mut(&mut self) -> PairIterMut<'_> {
-                let iter = [#(#code_for_fields)*];
-                Box::new(iter.into_iter())
+        if fields_len <= 32 {
+            quote! {
+                fn fields_mut(&mut self) -> #crate_name::struct_::FieldsIterMut <'_> {
+                    let fields = [
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
             }
-        }
-    };
-
-    let fn_fields_len = {
-        let len = fields
-            .iter()
-            .filter(field_attrs.filter_out_skipped_named())
-            .count();
-
-        quote! {
-            fn fields_len(&self) -> usize {
-                #len
+        } else {
+            quote! {
+                fn fields_mut(&mut self) -> #crate_name::struct_::FieldsIterMut <'_> {
+                    let fields = vec![
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
             }
         }
     };

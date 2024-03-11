@@ -1,5 +1,6 @@
-use alloc::collections::BTreeMap;
+use core::hash::Hash;
 
+use kollect::LinearMap;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -33,7 +34,7 @@ pub(super) struct ItemAttrs {
     pub(super) default_opt_out: bool,
     pub(super) from_reflect_opt_out: bool,
     pub(super) crate_name: UseTree,
-    meta: BTreeMap<Ident, Expr>,
+    meta: LinearMap<Ident, Expr>,
     docs: Vec<LitStr>,
 }
 
@@ -196,19 +197,19 @@ fn parse_docs(attrs: &[Attribute]) -> Vec<LitStr> {
         .collect::<Vec<_>>()
 }
 
-fn tokenize_meta(meta: &BTreeMap<Ident, Expr>) -> TokenStream {
+fn tokenize_meta(meta: &LinearMap<Ident, Expr>) -> TokenStream {
     let pairs = meta.iter().map(|(ident, expr)| {
         quote! {
             (stringify!(#ident), IntoValue::into_value(#expr)),
         }
     });
     quote! {
-        BTreeMap::from([#(#pairs)*])
+        LinearMap::from([#(#pairs)*])
     }
 }
 
 pub(super) struct AttrsDatabase<T> {
-    map: BTreeMap<T, InnerAttrs>,
+    map: LinearMap<T, InnerAttrs>,
 }
 
 impl AttrsDatabase<Ident> {
@@ -220,7 +221,7 @@ impl AttrsDatabase<Ident> {
                 let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((field.ident.clone().unwrap(), attrs))
             })
-            .collect::<syn::Result<BTreeMap<_, _>>>()?;
+            .collect::<syn::Result<LinearMap<_, _>>>()?;
 
         Ok(Self { map })
     }
@@ -240,7 +241,7 @@ impl AttrsDatabase<usize> {
                 let attrs = InnerAttrs::parse(&field.attrs)?;
                 Ok((index, attrs))
             })
-            .collect::<syn::Result<BTreeMap<_, _>>>()?;
+            .collect::<syn::Result<LinearMap<_, _>>>()?;
 
         Ok(Self { map })
     }
@@ -252,7 +253,7 @@ impl AttrsDatabase<usize> {
 
 impl<T> AttrsDatabase<T>
 where
-    T: core::cmp::Ord + Eq,
+    T: Hash + Eq,
 {
     pub(super) fn skip(&self, key: &T) -> bool {
         self.map
@@ -285,7 +286,7 @@ where
 
 pub(super) struct InnerAttrs {
     pub(super) skip: bool,
-    pub(super) meta: BTreeMap<Ident, Expr>,
+    pub(super) meta: LinearMap<Ident, Expr>,
     pub(super) docs: Vec<LitStr>,
     pub(super) from_reflect_with: Option<Ident>,
 }

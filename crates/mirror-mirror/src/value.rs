@@ -1,6 +1,5 @@
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -9,6 +8,7 @@ use core::fmt;
 use core::hash::Hash;
 use core::hash::Hasher;
 
+use kollect::LinearMap;
 use ordered_float::OrderedFloat;
 
 use crate::enum_::EnumValue;
@@ -27,7 +27,6 @@ use crate::ReflectRef;
 use crate::ScalarMut;
 use crate::ScalarOwned;
 use crate::ScalarRef;
-use crate::TypeDescriptor;
 
 /// A type erased value type.
 ///
@@ -58,7 +57,7 @@ pub enum Value {
     TupleStructValue(TupleStructValue),
     TupleValue(TupleValue),
     List(Vec<Value>),
-    Map(BTreeMap<Value, Value>),
+    Map(LinearMap<Value, Value>),
 }
 
 impl FromReflect for Value {
@@ -91,7 +90,7 @@ enum OrdEqHashValue<'a> {
     TupleStructValue(&'a TupleStructValue),
     TupleValue(&'a TupleValue),
     List(&'a [Value]),
-    Map(&'a BTreeMap<Value, Value>),
+    Map(&'a LinearMap<Value, Value>),
 }
 
 impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
@@ -190,10 +189,6 @@ impl DescribeType for Value {
 }
 
 impl Reflect for Value {
-    fn type_descriptor(&self) -> alloc::borrow::Cow<'static, TypeDescriptor> {
-        <Self as DescribeType>::type_descriptor()
-    }
-
     fn as_any(&self) -> &dyn Any {
         for_each_variant!(self, inner => inner)
     }

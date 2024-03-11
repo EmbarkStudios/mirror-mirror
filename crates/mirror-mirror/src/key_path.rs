@@ -262,8 +262,8 @@ impl KeyPath {
         self.path.is_empty()
     }
 
-    pub fn pop(&mut self) {
-        self.path.pop();
+    pub fn pop(&mut self) -> Option<Key> {
+        self.path.pop()
     }
 
     pub fn iter(&self) -> Iter<'_> {

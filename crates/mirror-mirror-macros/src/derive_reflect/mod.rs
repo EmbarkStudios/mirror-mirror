@@ -30,8 +30,6 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
     let attrs = attrs::ItemAttrs::parse(&item.attrs)?;
     let crate_name = attrs.crate_name.clone();
 
-    check_for_known_unsupported_types(&item)?;
-
     let tokens = match item.data {
         syn::Data::Struct(data) => match data.fields {
             syn::Fields::Named(named) => struct_named::expand(ident, named, attrs, &generics)?,
@@ -88,28 +86,4 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
             }
         };
     })
-}
-
-fn check_for_known_unsupported_types(item: &DeriveInput) -> syn::Result<()> {
-    #[derive(Default)]
-    struct Visitor(Option<syn::Error>);
-
-    impl<'ast> syn::visit::Visit<'ast> for Visitor {
-        fn visit_ident(&mut self, i: &'ast proc_macro2::Ident) {
-            if i == "HashMap" && self.0.is_none() {
-                self.0 = Some(syn::Error::new_spanned(
-                    i,
-                    "`#[derive(Reflect)]` doesn't support `HashMap`. Use a `BTreeMap` instead.",
-                ));
-            }
-        }
-    }
-
-    let mut visitor = Visitor::default();
-    syn::visit::visit_derive_input(&mut visitor, item);
-
-    match visitor.0 {
-        Some(err) => Err(err),
-        None => Ok(()),
-    }
 }

@@ -165,7 +165,8 @@
 //!     .as_tuple_struct_mut()?
 //!     .field_at_mut(0)?
 //!     .as_list_mut()?
-//!     .push(&4);
+//!     .try_push(&4)
+//!     .unwrap();
 //!
 //! // Convert the `value` back into a `Foo`.
 //! let new_foo = Foo::from_reflect(&value)?;
@@ -187,7 +188,6 @@
 //! - Add meta data to types which becomes part of the type information.
 //! - [Key paths][mod@key_path] for querying value and type information.
 //! - No dependencies on [`bevy`] specific crates.
-//! - `#![no_std]` support.
 //!
 //! # Feature flags
 //!
@@ -197,7 +197,7 @@
 //!
 //! Name | Description | Default?
 //! ---|---|---
-//! `std` | Enables using the standard library (`core` and `alloc` are always required) | Yes
+//! `simple_type_name` | Enables support for intelligently simplifying type names when printing | Yes
 //! `speedy` | Enables [`speedy`] support for most types | Yes
 //! `serde` | Enables [`serde`] support for most types | Yes
 //! `glam` | Enables impls for [`glam`] | No
@@ -210,7 +210,6 @@
 //! [`glam`]: https://crates.io/crates/glam
 //! [`macaw`]: https://crates.io/crates/macaw
 
-#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     clippy::all,
     clippy::dbg_macro,
@@ -259,12 +258,10 @@
 
 extern crate alloc;
 
-use alloc::borrow::Cow;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::string::String;
 use core::any::Any;
-use core::any::TypeId;
 use core::fmt;
 
 use crate::enum_::VariantField;
@@ -272,12 +269,6 @@ use crate::enum_::VariantKind;
 
 macro_rules! trivial_reflect_methods {
     () => {
-        fn type_descriptor(
-            &self,
-        ) -> alloc::borrow::Cow<'static, $crate::type_info::TypeDescriptor> {
-            <Self as $crate::type_info::DescribeType>::type_descriptor()
-        }
-
         fn as_any(&self) -> &dyn Any {
             self
         }
@@ -292,6 +283,63 @@ macro_rules! trivial_reflect_methods {
 
         fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
             self
+        }
+    };
+}
+
+macro_rules! map_methods {
+    () => {
+        fn get(&self, key: &dyn Reflect) -> Option<&dyn Reflect> {
+            let key = K::from_reflect(key)?;
+            let value = Self::get(self, &key)?;
+            Some(value.as_reflect())
+        }
+
+        fn get_mut(&mut self, key: &dyn Reflect) -> Option<&mut dyn Reflect> {
+            let key = K::from_reflect(key)?;
+            let value = Self::get_mut(self, &key)?;
+            Some(value.as_reflect_mut())
+        }
+
+        fn try_insert<'a>(
+            &mut self,
+            key: &'a dyn Reflect,
+            value: &'a dyn Reflect,
+        ) -> Result<Option<Box<dyn Reflect>>, MapError> {
+            let (key, value) = crate::map::key_value_from_reflect(key, value)?;
+            if let Some(previous) = Self::insert(self, key, value) {
+                Ok(Some(Box::new(previous)))
+            } else {
+                Ok(None)
+            }
+        }
+
+        fn try_remove(&mut self, key: &dyn Reflect) -> Result<Option<Box<dyn Reflect>>, MapError> {
+            let key = K::from_reflect(key).ok_or(MapError::KeyFromReflectFailed)?;
+            if let Some(previous) = Self::remove(self, &key) {
+                Ok(Some(Box::new(previous)))
+            } else {
+                Ok(None)
+            }
+        }
+
+        fn len(&self) -> usize {
+            Self::len(self)
+        }
+
+        fn is_empty(&self) -> bool {
+            Self::is_empty(self)
+        }
+
+        fn iter(&self) -> crate::map::Iter<'_> {
+            let iter = Self::iter(self).map(|(key, value)| (key.as_reflect(), value.as_reflect()));
+            Box::new(iter)
+        }
+
+        fn iter_mut(&mut self) -> PairIterMut<'_, dyn Reflect> {
+            let iter =
+                Self::iter_mut(self).map(|(key, value)| (key.as_reflect(), value.as_reflect_mut()));
+            Box::new(iter)
         }
     };
 }
@@ -339,7 +387,7 @@ mod reflect_eq;
 
 pub use reflect_eq::reflect_eq;
 
-#[cfg(feature = "std")]
+#[cfg(feature = "simple_type_name")]
 #[cfg(test)]
 mod tests;
 
@@ -382,8 +430,6 @@ pub(crate) static STATIC_RANDOM_STATE: ahash::RandomState = ahash::RandomState::
 
 /// A reflected type.
 pub trait Reflect: Any + Send + 'static {
-    fn type_descriptor(&self) -> Cow<'static, TypeDescriptor>;
-
     fn as_any(&self) -> &dyn Any;
 
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -406,10 +452,35 @@ pub trait Reflect: Any + Send + 'static {
 
     fn debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 
-    fn type_id(&self) -> TypeId {
-        TypeId::of::<Self>()
-    }
-
+    /// Get the type name of the value.
+    ///
+    /// ```
+    /// use mirror_mirror::Reflect;
+    ///
+    /// fn dyn_reflect_type_name(value: &dyn Reflect) -> &str {
+    ///     value.type_name()
+    /// }
+    ///
+    /// assert_eq!(dyn_reflect_type_name(&1_i32), "i32");
+    /// ```
+    ///
+    /// Note that converting something into a [`Value`] will change what this method returns:
+    ///
+    /// ```
+    /// use mirror_mirror::Reflect;
+    ///
+    /// fn dyn_reflect_type_name(value: &dyn Reflect) -> &str {
+    ///     value.type_name()
+    /// }
+    ///
+    /// assert_eq!(
+    ///     dyn_reflect_type_name(&1_i32.to_value()),
+    ///     // the type name is no longer "i32"
+    ///     "mirror_mirror::value::Value",
+    /// );
+    /// ```
+    ///
+    /// If you want to keep the name of the original type use [`DescribeType::type_descriptor`].
     fn type_name(&self) -> &str {
         core::any::type_name::<Self>()
     }
@@ -1302,11 +1373,11 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
 #[doc(hidden)]
 pub mod __private {
     pub use alloc::borrow::Cow;
-    pub use alloc::collections::BTreeMap;
     pub use core::any::Any;
     pub use core::any::TypeId;
     pub use core::fmt;
 
+    pub use kollect::LinearMap;
     pub use once_cell::race::OnceBox;
 
     pub use self::enum_::*;
