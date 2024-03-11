@@ -1,9 +1,7 @@
 use core::any::Any;
 use core::fmt;
-use core::hash::Hash;
-use std::hash::BuildHasher;
 
-use kollect::UnorderedSet;
+use kollect::LinearSet;
 
 use crate::{
     set::{Iter, SetError},
@@ -11,10 +9,9 @@ use crate::{
     DescribeType, FromReflect, Reflect, ReflectMut, ReflectOwned, ReflectRef, Set, Value,
 };
 
-impl<V, S> Reflect for UnorderedSet<V, S>
+impl<V> Reflect for LinearSet<V>
 where
-    V: FromReflect + DescribeType + Hash + Eq,
-    S: Default + BuildHasher + Send + 'static,
+    V: FromReflect + DescribeType + Eq,
 {
     trivial_reflect_methods!();
 
@@ -54,15 +51,14 @@ where
     }
 }
 
-impl<V, S> FromReflect for UnorderedSet<V, S>
+impl<V> FromReflect for LinearSet<V>
 where
-    V: FromReflect + DescribeType + Eq + Hash,
-    S: Default + BuildHasher + Send + 'static,
+    V: FromReflect + DescribeType + Eq,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let set = reflect.as_set()?;
         let len = set.len();
-        let mut out = UnorderedSet::with_capacity_and_hasher(len, S::default());
+        let mut out = LinearSet::with_capacity(len);
         for element in set.iter() {
             out.insert(V::from_reflect(element)?);
         }
@@ -70,28 +66,26 @@ where
     }
 }
 
-impl<V> From<UnorderedSet<V>> for Value
+impl<V> From<LinearSet<V>> for Value
 where
-    V: Reflect,
+    V: Reflect + Eq,
 {
-    fn from(set: UnorderedSet<V>) -> Self {
+    fn from(set: LinearSet<V>) -> Self {
         let set = set.into_iter().map(|element| element.to_value()).collect();
         Value::Set(set)
     }
 }
 
-impl<V, S> Set for UnorderedSet<V, S>
+impl<V> Set for LinearSet<V>
 where
-    V: FromReflect + DescribeType + Eq + Hash,
-    S: Default + BuildHasher + Send + 'static,
+    V: FromReflect + DescribeType + Eq,
 {
     set_methods!();
 }
 
-impl<V, S> DescribeType for UnorderedSet<V, S>
+impl<V> DescribeType for LinearSet<V>
 where
     V: DescribeType,
-    S: 'static,
 {
     fn build(graph: &mut TypeGraph) -> NodeId {
         graph.get_or_build_node_with::<Self, _>(|graph| SetNode::new::<Self, V>(graph))

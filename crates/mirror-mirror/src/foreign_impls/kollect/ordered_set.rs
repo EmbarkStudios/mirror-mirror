@@ -3,7 +3,7 @@ use core::fmt;
 use core::hash::Hash;
 use std::hash::BuildHasher;
 
-use kollect::UnorderedSet;
+use kollect::OrderedSet;
 
 use crate::{
     set::{Iter, SetError},
@@ -11,7 +11,7 @@ use crate::{
     DescribeType, FromReflect, Reflect, ReflectMut, ReflectOwned, ReflectRef, Set, Value,
 };
 
-impl<V, S> Reflect for UnorderedSet<V, S>
+impl<V, S> Reflect for OrderedSet<V, S>
 where
     V: FromReflect + DescribeType + Hash + Eq,
     S: Default + BuildHasher + Send + 'static,
@@ -54,7 +54,7 @@ where
     }
 }
 
-impl<V, S> FromReflect for UnorderedSet<V, S>
+impl<V, S> FromReflect for OrderedSet<V, S>
 where
     V: FromReflect + DescribeType + Eq + Hash,
     S: Default + BuildHasher + Send + 'static,
@@ -62,7 +62,7 @@ where
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
         let set = reflect.as_set()?;
         let len = set.len();
-        let mut out = UnorderedSet::with_capacity_and_hasher(len, S::default());
+        let mut out = OrderedSet::with_capacity_and_hasher(len, S::default());
         for element in set.iter() {
             out.insert(V::from_reflect(element)?);
         }
@@ -70,17 +70,17 @@ where
     }
 }
 
-impl<V> From<UnorderedSet<V>> for Value
+impl<V> From<OrderedSet<V>> for Value
 where
     V: Reflect,
 {
-    fn from(set: UnorderedSet<V>) -> Self {
+    fn from(set: OrderedSet<V>) -> Self {
         let set = set.into_iter().map(|element| element.to_value()).collect();
         Value::Set(set)
     }
 }
 
-impl<V, S> Set for UnorderedSet<V, S>
+impl<V, S> Set for OrderedSet<V, S>
 where
     V: FromReflect + DescribeType + Eq + Hash,
     S: Default + BuildHasher + Send + 'static,
@@ -88,7 +88,7 @@ where
     set_methods!();
 }
 
-impl<V, S> DescribeType for UnorderedSet<V, S>
+impl<V, S> DescribeType for OrderedSet<V, S>
 where
     V: DescribeType,
     S: 'static,
