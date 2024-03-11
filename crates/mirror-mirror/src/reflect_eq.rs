@@ -329,7 +329,7 @@ mod tests {
 
     #[test]
     fn reflect_eq_struct() {
-        #[derive(Reflect, Debug, Clone)]
+        #[derive(Reflect, Debug, Clone, Default)]
         #[reflect(crate_name(crate))]
         struct A {
             foo: i32,
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn reflect_eq_tuple_struct() {
-        #[derive(Reflect, Debug, Clone)]
+        #[derive(Reflect, Debug, Clone, Default)]
         #[reflect(crate_name(crate))]
         struct A(i32, bool);
 
@@ -441,7 +441,7 @@ mod tests {
     #[test]
     fn reflect_eq_enum() {
         #[derive(Reflect, Debug, Clone)]
-        #[reflect(crate_name(crate))]
+        #[reflect(crate_name(crate), opt_out(Default))]
         enum A {
             Struct { a: i32, b: bool },
             Tuple(i32, bool),

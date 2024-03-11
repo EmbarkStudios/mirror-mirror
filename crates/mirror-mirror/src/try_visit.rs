@@ -150,7 +150,7 @@ mod tests {
     use alloc::collections::BTreeMap;
     use core::convert::Infallible;
 
-    #[derive(Debug, Clone, Reflect)]
+    #[derive(Debug, Clone, Default, Reflect)]
     #[reflect(crate_name(crate))]
     struct Foo {
         a: String,
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[derive(Debug, Clone, Reflect)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Bar {
         A(BTreeMap<i32, i32>),
     }
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn recursive() {
-        #[derive(Debug, Clone, Reflect)]
+        #[derive(Debug, Clone, Default, Reflect)]
         #[reflect(crate_name(crate))]
         struct Recursive(i32, Vec<Recursive>);
 

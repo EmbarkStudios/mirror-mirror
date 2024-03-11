@@ -4,7 +4,7 @@ use crate::Reflect;
 
 #[test]
 fn from_default() {
-    #[derive(Debug, Clone, Reflect, PartialEq)]
+    #[derive(Debug, Clone, Default, Reflect, PartialEq)]
     #[reflect(crate_name(crate))]
     struct Foo([i32; 5]);
 

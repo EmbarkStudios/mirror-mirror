@@ -135,19 +135,19 @@ fn box_dyn_reflect_as_reflect() {
 
 #[test]
 fn deeply_nested() {
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Foo {
         bar: Bar,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Bar {
         baz: Baz,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Baz {
         qux: i32,
@@ -196,14 +196,14 @@ fn accessing_docs_in_type_info() {
     /// Here are the docs.
     ///
     /// Foo bar.
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Foo {
         inner: Vec<BTreeMap<String, Vec<Option<Inner>>>>,
     }
 
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Inner {
         Variant {
             /// Bingo!
@@ -233,13 +233,13 @@ fn accessing_docs_in_type_info() {
 // order
 #[test]
 fn consistent_iteration_order_of_struct_fields() {
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate))]
     struct Outer {
         inner: Inner,
     }
 
-    #[derive(Reflect, Debug, Clone, Copy)]
+    #[derive(Reflect, Debug, Clone, Copy, Default)]
     #[reflect(crate_name(crate))]
     struct Inner {
         // the order the fields are declared in is important!
@@ -276,13 +276,13 @@ fn consistent_iteration_order_of_struct_fields() {
 #[test]
 fn consistent_iteration_order_of_struct_variant_fields() {
     #[derive(Reflect, Debug, Clone)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct Outer {
         inner: Inner,
     }
 
     #[derive(Reflect, Debug, Clone, Copy)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Inner {
         A {
             // the order the fields are declared in is important!
@@ -327,4 +327,38 @@ fn consistent_iteration_order_of_struct_variant_fields() {
     }
 
     assert_eq!(by_value, by_type);
+}
+
+#[test]
+fn default_value() {
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate))]
+    struct Foo {
+        a: u32,
+        b: u32,
+    }
+
+    impl Default for Foo {
+        fn default() -> Self {
+            Foo { a: 1, b: 2 }
+        }
+    }
+
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate), opt_out(Default))]
+    struct Bar {
+        a: u32,
+        b: u32,
+    }
+
+    let foo_descriptor = <Foo as DescribeType>::type_descriptor();
+    let bar_descriptor = <Bar as DescribeType>::type_descriptor();
+
+    assert!(foo_descriptor.has_default_value());
+    assert!(!bar_descriptor.has_default_value());
+
+    let foo_default = Foo::default().to_value();
+
+    assert_eq!(foo_descriptor.default_value(), Some(foo_default));
+    assert_eq!(bar_descriptor.default_value(), None);
 }

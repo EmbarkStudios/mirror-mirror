@@ -147,6 +147,7 @@ pub struct StructNode {
     pub(super) fields: LinearMap<String, NamedFieldNode>,
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl StructNode {
@@ -156,7 +157,7 @@ impl StructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + DefaultValue,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -166,6 +167,7 @@ impl StructNode {
                 .collect(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -189,6 +191,7 @@ pub struct TupleStructNode {
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl TupleStructNode {
@@ -198,13 +201,14 @@ impl TupleStructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + DefaultValue,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -217,6 +221,7 @@ pub struct EnumNode {
     pub(super) variants: Vec<VariantNode>,
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl EnumNode {
@@ -226,13 +231,14 @@ impl EnumNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + DefaultValue,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             variants: variants.to_vec(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
