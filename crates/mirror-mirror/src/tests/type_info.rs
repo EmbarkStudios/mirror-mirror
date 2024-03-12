@@ -14,7 +14,7 @@ use crate::Value;
 
 #[test]
 fn struct_() {
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Foo {
         n: i32,
@@ -68,7 +68,7 @@ fn struct_() {
 #[test]
 fn enum_() {
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A { a: String },
         B(Vec<Foo>),
@@ -78,7 +78,7 @@ fn enum_() {
 
 #[test]
 fn complex_meta_type() {
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate), meta(a = Foo(1337)))]
     struct Foo(i32);
 
@@ -90,7 +90,7 @@ fn complex_meta_type() {
 
 #[test]
 fn type_to_root() {
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate), meta(a = Foo(1337)))]
     struct Foo(i32);
 
@@ -111,11 +111,11 @@ fn type_to_root() {
 
 #[test]
 fn two_types() {
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Foo(i32);
 
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Bar(bool);
 
@@ -147,7 +147,7 @@ fn two_types() {
 #[test]
 fn how_to_handle_generics() {
     #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
-    #[reflect(crate_name(crate), opt_out(Debug, Clone))]
+    #[reflect(crate_name(crate), opt_out(Debug, Clone, Default))]
     struct Foo<T>(T)
     where
         T: Reflect + FromReflect + DescribeType;
@@ -205,11 +205,11 @@ fn opaque_default() {
 
 #[test]
 fn basic_eq() {
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Foo(i32);
 
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Bar {
         b: bool,
@@ -235,13 +235,13 @@ fn basic_eq() {
 fn basic_hash() {
     use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hasher};
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Foo {
         a: i32,
     }
 
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Bar {
         b: bool,
@@ -310,13 +310,13 @@ fn basic_static_hash() {
 
 #[test]
 fn has_default_value() {
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct A {
         a: String,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct B(String);
 
@@ -324,6 +324,12 @@ fn has_default_value() {
     #[reflect(crate_name(crate))]
     enum C {
         C(i32),
+    }
+
+    impl Default for C {
+        fn default() -> Self {
+            Self::C(0)
+        }
     }
 
     assert!(<A as DescribeType>::type_descriptor().has_default_value());

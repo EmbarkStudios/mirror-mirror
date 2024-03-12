@@ -18,6 +18,7 @@ use syn::UseTree;
 mod kw {
     syn::custom_keyword!(Debug);
     syn::custom_keyword!(Clone);
+    syn::custom_keyword!(Default);
     syn::custom_keyword!(FromReflect);
     syn::custom_keyword!(skip);
     syn::custom_keyword!(meta);
@@ -30,6 +31,7 @@ mod kw {
 pub(super) struct ItemAttrs {
     pub(super) debug_opt_out: bool,
     pub(super) clone_opt_out: bool,
+    pub(super) default_opt_out: bool,
     pub(super) from_reflect_opt_out: bool,
     pub(super) crate_name: UseTree,
     meta: LinearMap<Ident, Expr>,
@@ -41,6 +43,7 @@ impl ItemAttrs {
         Self {
             debug_opt_out: Default::default(),
             clone_opt_out: Default::default(),
+            default_opt_out: Default::default(),
             from_reflect_opt_out: Default::default(),
             meta: Default::default(),
             docs,
@@ -85,6 +88,9 @@ impl ItemAttrs {
                         } else if lh.peek(kw::Clone) {
                             content.parse::<kw::Clone>()?;
                             item_attrs.clone_opt_out = true;
+                        } else if lh.peek(kw::Default) {
+                            content.parse::<kw::Default>()?;
+                            item_attrs.default_opt_out = true;
                         } else if lh.peek(kw::FromReflect) {
                             content.parse::<kw::FromReflect>()?;
                             item_attrs.from_reflect_opt_out = true;
