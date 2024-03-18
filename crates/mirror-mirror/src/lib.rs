@@ -344,6 +344,38 @@ macro_rules! map_methods {
     };
 }
 
+macro_rules! set_methods {
+    () => {
+        fn len(&self) -> usize {
+            Self::len(self)
+        }
+
+        fn is_empty(&self) -> bool {
+            Self::is_empty(self)
+        }
+
+        fn try_insert(&mut self, element: &dyn Reflect) -> Result<bool, SetError> {
+            let element = V::from_reflect(element).ok_or(SetError)?;
+            Ok(self.insert(element))
+        }
+
+        fn try_remove(&mut self, element: &dyn Reflect) -> Result<bool, SetError> {
+            let element = V::from_reflect(element).ok_or(SetError)?;
+            Ok(self.remove(&element))
+        }
+
+        fn try_contains(&mut self, element: &dyn Reflect) -> Result<bool, SetError> {
+            let element = V::from_reflect(element).ok_or(SetError)?;
+            Ok(self.contains(&element))
+        }
+
+        fn iter(&self) -> Iter<'_> {
+            let iter = Self::iter(self).map(|element| element.as_reflect());
+            Box::new(iter)
+        }
+    };
+}
+
 /// Reflected array types.
 pub mod array;
 
@@ -364,6 +396,9 @@ pub mod list;
 
 /// Reflected map types.
 pub mod map;
+
+/// Reflected set types.
+pub mod set;
 
 /// Reflected struct types.
 pub mod struct_;
@@ -406,6 +441,8 @@ pub use self::get_field::GetFieldMut;
 pub use self::list::List;
 #[doc(inline)]
 pub use self::map::Map;
+#[doc(inline)]
+pub use self::set::Set;
 #[doc(inline)]
 pub use self::struct_::Struct;
 #[doc(inline)]
@@ -567,6 +604,18 @@ pub trait Reflect: Any + Send + 'static {
 
     fn as_map_mut(&mut self) -> Option<&mut dyn Map> {
         self.reflect_mut().as_map_mut()
+    }
+
+    fn into_set(self: Box<Self>) -> Option<Box<dyn Set>> {
+        self.reflect_owned().into_set()
+    }
+
+    fn as_set(&self) -> Option<&dyn Set> {
+        self.reflect_ref().as_set()
+    }
+
+    fn as_set_mut(&mut self) -> Option<&mut dyn Set> {
+        self.reflect_mut().as_set_mut()
     }
 
     fn into_scalar(self: Box<Self>) -> Option<ScalarOwned> {
@@ -774,6 +823,7 @@ pub enum ReflectOwned {
     Array(Box<dyn Array>),
     List(Box<dyn List>),
     Map(Box<dyn Map>),
+    Set(Box<dyn Set>),
     Scalar(ScalarOwned),
     /// Not all `Reflect` implementations allow access to the underlying value. This variant can be
     /// used for such types.
@@ -790,6 +840,7 @@ impl ReflectOwned {
             ReflectOwned::Array(inner) => inner.as_reflect_mut(),
             ReflectOwned::List(inner) => inner.as_reflect_mut(),
             ReflectOwned::Map(inner) => inner.as_reflect_mut(),
+            ReflectOwned::Set(inner) => inner.as_reflect_mut(),
             ReflectOwned::Scalar(inner) => inner.as_reflect_mut(),
             ReflectOwned::Opaque(inner) => inner.as_reflect_mut(),
         }
@@ -804,6 +855,7 @@ impl ReflectOwned {
             ReflectOwned::Array(inner) => inner.as_reflect(),
             ReflectOwned::List(inner) => inner.as_reflect(),
             ReflectOwned::Map(inner) => inner.as_reflect(),
+            ReflectOwned::Set(inner) => inner.as_reflect(),
             ReflectOwned::Scalar(inner) => inner.as_reflect(),
             ReflectOwned::Opaque(inner) => inner.as_reflect(),
         }
@@ -858,6 +910,13 @@ impl ReflectOwned {
         }
     }
 
+    pub fn into_set(self) -> Option<Box<dyn Set>> {
+        match self {
+            Self::Set(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
     pub fn into_scalar(self) -> Option<ScalarOwned> {
         match self {
             Self::Scalar(inner) => Some(inner),
@@ -883,6 +942,7 @@ impl Clone for ReflectOwned {
             Self::Array(inner) => inner.clone_reflect().reflect_owned(),
             Self::List(inner) => inner.clone_reflect().reflect_owned(),
             Self::Map(inner) => inner.clone_reflect().reflect_owned(),
+            Self::Set(inner) => inner.clone_reflect().reflect_owned(),
             Self::Opaque(inner) => inner.clone_reflect().reflect_owned(),
             Self::Scalar(inner) => Self::Scalar(inner.clone()),
         }
@@ -969,6 +1029,7 @@ pub enum ReflectRef<'a> {
     Array(&'a dyn Array),
     List(&'a dyn List),
     Map(&'a dyn Map),
+    Set(&'a dyn Set),
     Scalar(ScalarRef<'a>),
     /// Not all `Reflect` implementations allow access to the underlying value. This variant can be
     /// used for such types.
@@ -985,6 +1046,7 @@ impl<'a> ReflectRef<'a> {
             ReflectRef::Array(inner) => inner.as_reflect(),
             ReflectRef::List(inner) => inner.as_reflect(),
             ReflectRef::Map(inner) => inner.as_reflect(),
+            ReflectRef::Set(inner) => inner.as_reflect(),
             ReflectRef::Scalar(inner) => inner.as_reflect(),
             ReflectRef::Opaque(inner) => inner.as_reflect(),
         }
@@ -1035,6 +1097,13 @@ impl<'a> ReflectRef<'a> {
     pub fn as_map(self) -> Option<&'a dyn Map> {
         match self {
             Self::Map(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_set(self) -> Option<&'a dyn Set> {
+        match self {
+            Self::Set(inner) => Some(inner),
             _ => None,
         }
     }
@@ -1111,6 +1180,7 @@ pub enum ReflectMut<'a> {
     Array(&'a mut dyn Array),
     List(&'a mut dyn List),
     Map(&'a mut dyn Map),
+    Set(&'a mut dyn Set),
     Scalar(ScalarMut<'a>),
     /// Not all `Reflect` implementations allow mutable access to the underlying value (such as
     /// [`core::num::NonZeroU8`]). This variant can be used for such types.
@@ -1127,6 +1197,7 @@ impl<'a> ReflectMut<'a> {
             ReflectMut::Array(inner) => inner.as_reflect_mut(),
             ReflectMut::List(inner) => inner.as_reflect_mut(),
             ReflectMut::Map(inner) => inner.as_reflect_mut(),
+            ReflectMut::Set(inner) => inner.as_reflect_mut(),
             ReflectMut::Scalar(inner) => inner.as_reflect_mut(),
             ReflectMut::Opaque(inner) => inner.as_reflect_mut(),
         }
@@ -1141,6 +1212,7 @@ impl<'a> ReflectMut<'a> {
             ReflectMut::Array(inner) => inner.as_reflect(),
             ReflectMut::List(inner) => inner.as_reflect(),
             ReflectMut::Map(inner) => inner.as_reflect(),
+            ReflectMut::Set(inner) => inner.as_reflect(),
             ReflectMut::Scalar(inner) => inner.as_reflect(),
             ReflectMut::Opaque(inner) => inner.as_reflect(),
         }
@@ -1191,6 +1263,13 @@ impl<'a> ReflectMut<'a> {
     pub fn as_map_mut(self) -> Option<&'a mut dyn Map> {
         match self {
             Self::Map(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_set_mut(self) -> Option<&'a mut dyn Set> {
+        match self {
+            Self::Set(inner) => Some(inner),
             _ => None,
         }
     }
@@ -1345,6 +1424,7 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
         ReflectRef::Array(inner) => f.debug_list().entries(inner.iter()).finish(),
         ReflectRef::List(inner) => f.debug_list().entries(inner.iter()).finish(),
         ReflectRef::Map(inner) => f.debug_map().entries(inner.iter()).finish(),
+        ReflectRef::Set(inner) => f.debug_set().entries(inner.iter()).finish(),
         ReflectRef::Scalar(inner) => match inner {
             ScalarRef::usize(inner) => scalar_debug(&inner, f),
             ScalarRef::u8(inner) => scalar_debug(&inner, f),
