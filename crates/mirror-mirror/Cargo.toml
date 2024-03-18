@@ -24,7 +24,7 @@ ahash = { version = "0.8.2", default-features = false, features = [
     # required for wasm support
     "no-rng",
 ] }
-kollect = { version = "0.3.0", default-features = false }
+kollect = { version = "0.3.2", default-features = false }
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.2.0" }
 once_cell = { version = "1.16", features = ["alloc", "race", "critical-section"], default-features = false }
 ordered-float = { version = "4", default-features = false }
@@ -33,6 +33,10 @@ speedy = { version = "0.8.5", optional = true }
 syn = { version = "2.0", features = ["full", "parsing"], optional = true }
 glam = { version = ">= 0.22, <= 0.25", optional = true }
 macaw = { version = "0.19", optional = true }
+
+[dev-dependencies]
+mirror-mirror-1 = { package = "mirror-mirror", version = "0.1" }
+ron = "0.8.1"
 
 [package.metadata.docs.rs]
 all-features = true

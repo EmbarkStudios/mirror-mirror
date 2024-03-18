@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
@@ -67,7 +69,7 @@ fn from_reflect() {
     let foo = Foo::default();
     let foo_reflect: &dyn Reflect = &foo;
 
-    let foo = Foo::from_reflect(foo_reflect).unwrap();
+    let foo = <Foo as FromReflect>::from_reflect(foo_reflect).unwrap();
 
     assert_eq!(foo.field, 0);
 }
@@ -129,7 +131,7 @@ fn box_dyn_reflect_as_reflect() {
         &42,
     );
 
-    let foo = Foo::from_reflect(box_dyn_reflect.as_reflect()).unwrap();
+    let foo = <Foo as FromReflect>::from_reflect(box_dyn_reflect.as_reflect()).unwrap();
     assert_eq!(foo, Foo { field: 42 });
 }
 
@@ -327,6 +329,52 @@ fn consistent_iteration_order_of_struct_variant_fields() {
     }
 
     assert_eq!(by_value, by_type);
+}
+
+#[test]
+fn deserialize_old_struct() {
+    mod v1 {
+        #[derive(mirror_mirror_1::Reflect, Debug, Clone)]
+        #[reflect(crate_name(mirror_mirror_1))]
+        pub struct Foo {
+            pub n: i32,
+        }
+    }
+
+    mod v2 {
+        #[derive(crate::Reflect, Default, Debug, Clone)]
+        #[reflect(crate_name(crate))]
+        pub struct Foo {
+            pub n: i32,
+        }
+    }
+
+    // deserializing value
+    let n = 123;
+    let v1_foo = mirror_mirror_1::Reflect::to_value(&v1::Foo { n });
+    let v1_ron = ron::to_string(&v1_foo).unwrap();
+
+    let v2_value = ron::from_str::<crate::Value>(&v1_ron).unwrap();
+    let v2_foo = <v2::Foo as crate::FromReflect>::from_reflect(&v2_value).unwrap();
+
+    assert_eq!(n, v2_foo.n);
+
+    // deserializing type descriptor
+    let v1_type_descriptor = <v1::Foo as mirror_mirror_1::DescribeType>::type_descriptor();
+    let v1_ron = ron::to_string(&v1_type_descriptor).unwrap();
+
+    let v2_type_descriptor =
+        ron::from_str::<Cow<'static, crate::type_info::TypeDescriptor>>(&v1_ron).unwrap();
+
+    let name_type = v2_type_descriptor
+        .as_struct()
+        .unwrap()
+        .field_type("n")
+        .unwrap()
+        .get_type()
+        .as_scalar()
+        .unwrap();
+    assert!(matches!(name_type, crate::type_info::ScalarType::i32));
 }
 
 #[test]
