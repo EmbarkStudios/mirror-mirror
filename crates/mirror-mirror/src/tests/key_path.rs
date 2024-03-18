@@ -11,7 +11,7 @@ use crate::Reflect;
 #[allow(clippy::bool_assert_comparison)]
 fn works() {
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct A {
         a: i32,
         b: B,
@@ -21,13 +21,13 @@ fn works() {
     }
 
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     struct B {
         c: bool,
     }
 
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum C {
         C { d: String },
     }
@@ -69,19 +69,19 @@ fn display() {
 
 #[test]
 fn query_type_info_struct() {
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct User {
         employer: Company,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Company {
         countries: Vec<Country>,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Country {
         name: String,
@@ -110,7 +110,7 @@ fn query_type_info_struct() {
 #[test]
 fn query_type_info_enum() {
     #[derive(Reflect, Clone, Debug)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Foo {
         A { a: String },
         B(i32),
@@ -143,7 +143,7 @@ fn query_type_info_enum() {
 
 #[test]
 fn select_tuple_field() {
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Reflect, Clone, Debug, Default)]
     #[reflect(crate_name(crate))]
     struct Foo(i32, bool);
 

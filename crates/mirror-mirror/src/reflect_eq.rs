@@ -1,6 +1,6 @@
 use crate::{
     enum_::{VariantField, VariantKind},
-    Array, Enum, List, Map, Reflect, ReflectRef, Struct, Tuple, TupleStruct,
+    Array, Enum, List, Map, Reflect, ReflectRef, Set, Struct, Tuple, TupleStruct,
 };
 
 /// Compare two reflected values for equality.
@@ -15,6 +15,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
         (ReflectRef::Enum(a), ReflectRef::Enum(b)) => reflect_eq_enum(a, b),
         (ReflectRef::Array(a), ReflectRef::Array(b)) => reflect_eq_array(a, b),
         (ReflectRef::List(a), ReflectRef::List(b)) => reflect_eq_list(a, b),
+        (ReflectRef::Set(a), ReflectRef::Set(b)) => reflect_eq_set(a, b),
         (ReflectRef::Map(a), ReflectRef::Map(b)) => reflect_eq_map(a, b),
         (ReflectRef::Opaque(_), _) | (_, ReflectRef::Opaque(_)) => None,
 
@@ -25,6 +26,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Array(_)
             | ReflectRef::List(_)
             | ReflectRef::Map(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::TupleStruct(_),
         )
@@ -35,6 +37,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Array(_)
             | ReflectRef::List(_)
             | ReflectRef::Map(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::Tuple(_),
         )
@@ -45,6 +48,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Array(_)
             | ReflectRef::List(_)
             | ReflectRef::Map(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::Enum(_),
         )
@@ -55,6 +59,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Enum(_)
             | ReflectRef::List(_)
             | ReflectRef::Map(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::Array(_),
         )
@@ -65,6 +70,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Enum(_)
             | ReflectRef::Array(_)
             | ReflectRef::Map(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::List(_),
         )
@@ -74,7 +80,19 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Tuple(_)
             | ReflectRef::Enum(_)
             | ReflectRef::Array(_)
+            | ReflectRef::Map(_)
             | ReflectRef::List(_)
+            | ReflectRef::Scalar(_),
+            ReflectRef::Set(_),
+        )
+        | (
+            ReflectRef::Struct(_)
+            | ReflectRef::TupleStruct(_)
+            | ReflectRef::Tuple(_)
+            | ReflectRef::Enum(_)
+            | ReflectRef::Array(_)
+            | ReflectRef::List(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::Map(_),
         )
@@ -85,6 +103,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Enum(_)
             | ReflectRef::Array(_)
             | ReflectRef::List(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Map(_),
             ReflectRef::Scalar(_),
         )
@@ -95,6 +114,7 @@ pub fn reflect_eq(a: &dyn Reflect, b: &dyn Reflect) -> Option<bool> {
             | ReflectRef::Array(_)
             | ReflectRef::List(_)
             | ReflectRef::Map(_)
+            | ReflectRef::Set(_)
             | ReflectRef::Scalar(_),
             ReflectRef::Struct(_),
         ) => Some(false),
@@ -252,6 +272,23 @@ fn reflect_eq_list(a: &dyn List, b: &dyn List) -> Option<bool> {
     )
 }
 
+fn reflect_eq_set(a: &dyn Set, b: &dyn Set) -> Option<bool> {
+    Some(
+        a.len() == b.len() && {
+            for (value_a, value_b) in a.iter().zip(b.iter()) {
+                match reflect_eq(value_a, value_b) {
+                    Some(true) => {}
+                    Some(false) => {
+                        return Some(false);
+                    }
+                    None => return None,
+                }
+            }
+            true
+        },
+    )
+}
+
 fn reflect_eq_map(a: &dyn Map, b: &dyn Map) -> Option<bool> {
     Some(
         a.len() == b.len() && {
@@ -329,7 +366,7 @@ mod tests {
 
     #[test]
     fn reflect_eq_struct() {
-        #[derive(Reflect, Debug, Clone)]
+        #[derive(Reflect, Debug, Clone, Default)]
         #[reflect(crate_name(crate))]
         struct A {
             foo: i32,
@@ -386,7 +423,7 @@ mod tests {
 
     #[test]
     fn reflect_eq_tuple_struct() {
-        #[derive(Reflect, Debug, Clone)]
+        #[derive(Reflect, Debug, Clone, Default)]
         #[reflect(crate_name(crate))]
         struct A(i32, bool);
 
@@ -441,7 +478,7 @@ mod tests {
     #[test]
     fn reflect_eq_enum() {
         #[derive(Reflect, Debug, Clone)]
-        #[reflect(crate_name(crate))]
+        #[reflect(crate_name(crate), opt_out(Default))]
         enum A {
             Struct { a: i32, b: bool },
             Tuple(i32, bool),

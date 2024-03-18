@@ -115,6 +115,7 @@ pub enum TypeNode {
     List(ListNode),
     Array(ArrayNode),
     Map(MapNode),
+    Set(SetNode),
     Scalar(ScalarNode),
     Opaque(OpaqueNode),
 }
@@ -136,6 +137,7 @@ impl_from! { Enum(EnumNode) }
 impl_from! { List(ListNode) }
 impl_from! { Array(ArrayNode) }
 impl_from! { Map(MapNode) }
+impl_from! { Set(SetNode) }
 impl_from! { Scalar(ScalarNode) }
 impl_from! { Opaque(OpaqueNode) }
 
@@ -147,6 +149,7 @@ pub struct StructNode {
     pub(super) fields: LinearMap<String, NamedFieldNode>,
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl StructNode {
@@ -156,7 +159,7 @@ impl StructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + DefaultValue,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
@@ -166,6 +169,7 @@ impl StructNode {
                 .collect(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -189,6 +193,7 @@ pub struct TupleStructNode {
     pub(super) fields: Vec<UnnamedFieldNode>,
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl TupleStructNode {
@@ -198,13 +203,14 @@ impl TupleStructNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + DefaultValue,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             fields: fields.to_vec(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -217,6 +223,7 @@ pub struct EnumNode {
     pub(super) variants: Vec<VariantNode>,
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
+    pub(super) default_value: Option<Value>,
 }
 
 impl EnumNode {
@@ -226,13 +233,14 @@ impl EnumNode {
         docs: &[&'static str],
     ) -> Self
     where
-        T: DescribeType,
+        T: DescribeType + DefaultValue,
     {
         Self {
             type_name: type_name::<T>().to_owned(),
             variants: variants.to_vec(),
             metadata: map_metadata(metadata),
             docs: map_docs(docs),
+            default_value: T::default_value(),
         }
     }
 }
@@ -471,6 +479,27 @@ impl MapNode {
             type_name: type_name::<M>().to_owned(),
             key_type_id: K::build(graph),
             value_type_id: V::build(graph),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct SetNode {
+    pub(super) type_name: String,
+    pub(super) element_type_id: NodeId,
+}
+
+impl SetNode {
+    pub(crate) fn new<M, V>(graph: &mut TypeGraph) -> Self
+    where
+        M: DescribeType,
+        V: DescribeType,
+    {
+        Self {
+            type_name: type_name::<M>().to_owned(),
+            element_type_id: V::build(graph),
         }
     }
 }

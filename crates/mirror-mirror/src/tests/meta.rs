@@ -4,7 +4,7 @@ use crate::Reflect;
 
 #[test]
 fn works() {
-    #[derive(Reflect, Debug, Clone)]
+    #[derive(Reflect, Debug, Clone, Default)]
     #[reflect(crate_name(crate), meta(foo = "bar", baz = 42))]
     struct Foo;
 
@@ -30,19 +30,19 @@ fn works() {
     );
 }
 
-#[derive(Reflect, Debug, Clone)]
+#[derive(Reflect, Debug, Default, Clone)]
 #[reflect(crate_name(crate), meta(n = 1))]
 struct A {
     #[reflect(meta(n = 1))]
     a: String,
 }
 
-#[derive(Reflect, Debug, Clone)]
+#[derive(Reflect, Debug, Default, Clone)]
 #[reflect(crate_name(crate), meta(n = 1))]
 struct B(#[reflect(meta(n = 1))] String);
 
 #[derive(Reflect, Debug, Clone)]
-#[reflect(crate_name(crate), meta(n = 1))]
+#[reflect(crate_name(crate), meta(n = 1), opt_out(Default))]
 enum C {
     #[reflect(meta(n = 1))]
     A {

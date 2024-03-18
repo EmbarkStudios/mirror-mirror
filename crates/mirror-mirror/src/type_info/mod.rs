@@ -14,9 +14,7 @@ use crate::key_path::GetTypePath;
 use crate::key_path::Key;
 use crate::key_path::KeyPath;
 use crate::key_path::NamedOrNumbered;
-use crate::struct_::StructValue;
 use crate::tuple::TupleValue;
-use crate::tuple_struct::TupleStructValue;
 use crate::FromReflect;
 use crate::Reflect;
 use crate::Value;
@@ -72,6 +70,14 @@ pub trait DescribeType: 'static {
     /// Creates the full subtree describing this node in the `TypeGraph`, and returns the `NodeId`
     /// for the root item.
     fn build(graph: &mut TypeGraph) -> NodeId;
+}
+
+/// Trait for accessing the default [`Value`] of a struct, tuple struct, or enum.
+///
+/// Will be implemented by `#[derive(Reflect)]`.
+pub trait DefaultValue {
+    /// Returns the default value for a type that has `#[derive(Reflect)]`.
+    fn default_value() -> Option<Value>;
 }
 
 /// A descriptor of a type including all sub-types.
@@ -174,6 +180,7 @@ pub enum Type<'a> {
     List(ListType<'a>),
     Array(ArrayType<'a>),
     Map(MapType<'a>),
+    Set(SetType<'a>),
     Scalar(ScalarType),
     Opaque(OpaqueType<'a>),
 }
@@ -230,6 +237,13 @@ impl<'a> Type<'a> {
                 };
                 Type::Map(node)
             }
+            TypeNode::Set(node) => {
+                let node = SetType {
+                    node: WithId::new(id, node),
+                    graph,
+                };
+                Type::Set(node)
+            }
             TypeNode::Scalar(scalar) => {
                 let node = match scalar {
                     ScalarNode::usize => ScalarType::usize,
@@ -270,6 +284,7 @@ impl<'a> Type<'a> {
             Type::List(inner) => inner.type_name(),
             Type::Array(inner) => inner.type_name(),
             Type::Map(inner) => inner.type_name(),
+            Type::Set(inner) => inner.type_name(),
             Type::Scalar(inner) => inner.type_name(),
             Type::Opaque(inner) => inner.type_name(),
         }
@@ -284,6 +299,7 @@ impl<'a> Type<'a> {
             Type::List(inner) => inner.into_type_info_at_path(),
             Type::Array(inner) => inner.into_type_info_at_path(),
             Type::Map(inner) => inner.into_type_info_at_path(),
+            Type::Set(inner) => inner.into_type_info_at_path(),
             Type::Scalar(inner) => inner.into_type_info_at_path(),
             Type::Opaque(inner) => inner.into_type_info_at_path(),
         }
@@ -298,6 +314,7 @@ impl<'a> Type<'a> {
             Type::List(inner) => Some(inner.default_value()),
             Type::Array(inner) => inner.default_value(),
             Type::Map(inner) => Some(inner.default_value()),
+            Type::Set(inner) => Some(inner.default_value()),
             Type::Scalar(inner) => Some(inner.default_value()),
             Type::Opaque(inner) => inner.default_value(),
         }
@@ -312,6 +329,7 @@ impl<'a> Type<'a> {
             Type::List(inner) => inner.has_default_value(),
             Type::Array(inner) => inner.has_default_value(),
             Type::Map(inner) => inner.has_default_value(),
+            Type::Set(inner) => inner.has_default_value(),
             Type::Scalar(inner) => inner.has_default_value(),
             Type::Opaque(inner) => inner.has_default_value(),
         }
@@ -326,6 +344,7 @@ impl<'a> Type<'a> {
             Type::List(inner) => Cow::Owned(inner.into_type_descriptor()),
             Type::Array(inner) => Cow::Owned(inner.into_type_descriptor()),
             Type::Map(inner) => Cow::Owned(inner.into_type_descriptor()),
+            Type::Set(inner) => Cow::Owned(inner.into_type_descriptor()),
             Type::Scalar(inner) => match inner {
                 ScalarType::usize => <usize as DescribeType>::type_descriptor(),
                 ScalarType::u8 => <u8 as DescribeType>::type_descriptor(),
@@ -393,6 +412,13 @@ impl<'a> Type<'a> {
     pub fn as_map(self) -> Option<MapType<'a>> {
         match self {
             Type::Map(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
+    pub fn as_set(self) -> Option<SetType<'a>> {
+        match self {
+            Type::Set(inner) => Some(inner),
             _ => None,
         }
     }
@@ -477,6 +503,7 @@ mod private {
     impl<'a> Sealed for ListType<'a> {}
     impl<'a> Sealed for ArrayType<'a> {}
     impl<'a> Sealed for MapType<'a> {}
+    impl<'a> Sealed for SetType<'a> {}
     impl Sealed for ScalarType {}
     impl Sealed for Type<'_> {}
     impl Sealed for StructType<'_> {}
@@ -514,9 +541,12 @@ impl<'a> GetMeta<'a> for Type<'a> {
             Type::TupleStruct(inner) => inner.meta(key),
             Type::Enum(inner) => inner.meta(key),
             Type::Opaque(inner) => inner.meta(key),
-            Type::Tuple(_) | Type::List(_) | Type::Array(_) | Type::Map(_) | Type::Scalar(_) => {
-                None
-            }
+            Type::Set(_)
+            | Type::Tuple(_)
+            | Type::List(_)
+            | Type::Array(_)
+            | Type::Map(_)
+            | Type::Scalar(_) => None,
         }
     }
 
@@ -529,6 +559,7 @@ impl<'a> GetMeta<'a> for Type<'a> {
             | Type::List(_)
             | Type::Array(_)
             | Type::Map(_)
+            | Type::Set(_)
             | Type::Scalar(_)
             | Type::Opaque(_) => &[],
         }
@@ -697,16 +728,11 @@ impl<'a> StructType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut value = StructValue::new();
-        for field in self.field_types() {
-            value.set_field(field.name(), field.get_type().default_value()?);
-        }
-        Some(value.to_value())
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        self.field_types()
-            .all(|field| field.get_type().has_default_value())
+        self.node.default_value.is_some()
     }
 }
 
@@ -752,16 +778,11 @@ impl<'a> TupleStructType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut value = TupleStructValue::new();
-        for field in self.field_types() {
-            value.push_field(field.get_type().default_value()?);
-        }
-        Some(value.to_value())
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        self.field_types()
-            .all(|field| field.get_type().has_default_value())
+        self.node.default_value.is_some()
     }
 }
 
@@ -871,16 +892,11 @@ impl<'a> EnumType<'a> {
     }
 
     pub fn default_value(self) -> Option<Value> {
-        let mut variants = self.variants();
-        let first_variant = variants.next()?;
-        first_variant.default_value()
+        self.node.default_value.clone()
     }
 
     pub fn has_default_value(&self) -> bool {
-        let mut variants = self.variants();
-        variants
-            .next()
-            .map_or(false, |first_variant| first_variant.has_default_value())
+        self.node.default_value.is_some()
     }
 }
 
@@ -1335,6 +1351,41 @@ impl<'a> MapType<'a> {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct SetType<'a> {
+    node: WithId<&'a SetNode>,
+    graph: &'a TypeGraph,
+}
+
+impl<'a> SetType<'a> {
+    pub fn type_name(self) -> &'a str {
+        &self.node.type_name
+    }
+
+    pub fn element_type(self) -> Type<'a> {
+        Type::new(self.node.element_type_id, self.graph)
+    }
+
+    fn into_type_info_at_path(self) -> TypeAtPath<'a> {
+        TypeAtPath::Set(self)
+    }
+
+    pub fn into_type_descriptor(self) -> TypeDescriptor {
+        TypeDescriptor {
+            root: self.node.id,
+            graph: self.graph.clone(),
+        }
+    }
+
+    pub fn default_value(self) -> Value {
+        Value::Set(Default::default())
+    }
+
+    pub fn has_default_value(&self) -> bool {
+        true
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct OpaqueType<'a> {
     node: WithId<&'a OpaqueNode>,
     graph: &'a TypeGraph,
@@ -1376,6 +1427,7 @@ pub enum TypeAtPath<'a> {
     List(ListType<'a>),
     Array(ArrayType<'a>),
     Map(MapType<'a>),
+    Set(SetType<'a>),
     Scalar(ScalarType),
     Opaque(OpaqueType<'a>),
 }
@@ -1392,6 +1444,7 @@ impl<'a> GetMeta<'a> for TypeAtPath<'a> {
             | TypeAtPath::List(_)
             | TypeAtPath::Array(_)
             | TypeAtPath::Map(_)
+            | TypeAtPath::Set(_)
             | TypeAtPath::Scalar(_) => None,
         }
     }
@@ -1406,6 +1459,7 @@ impl<'a> GetMeta<'a> for TypeAtPath<'a> {
             | TypeAtPath::List(_)
             | TypeAtPath::Array(_)
             | TypeAtPath::Map(_)
+            | TypeAtPath::Set(_)
             | TypeAtPath::Scalar(_)
             | TypeAtPath::Opaque(_) => &[],
         }
@@ -1423,6 +1477,7 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::List(inner) => Some(inner.default_value()),
             TypeAtPath::Array(inner) => inner.default_value(),
             TypeAtPath::Map(inner) => Some(inner.default_value()),
+            TypeAtPath::Set(inner) => Some(inner.default_value()),
             TypeAtPath::Scalar(inner) => Some(inner.default_value()),
             TypeAtPath::Opaque(inner) => inner.default_value(),
         }
@@ -1438,6 +1493,7 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::List(inner) => inner.has_default_value(),
             TypeAtPath::Array(inner) => inner.has_default_value(),
             TypeAtPath::Map(inner) => inner.has_default_value(),
+            TypeAtPath::Set(inner) => inner.has_default_value(),
             TypeAtPath::Scalar(inner) => inner.has_default_value(),
             TypeAtPath::Opaque(inner) => inner.has_default_value(),
         }
@@ -1453,6 +1509,7 @@ impl<'a> TypeAtPath<'a> {
             TypeAtPath::List(inner) => inner.type_name(),
             TypeAtPath::Array(inner) => inner.type_name(),
             TypeAtPath::Map(inner) => inner.type_name(),
+            TypeAtPath::Set(inner) => inner.type_name(),
             TypeAtPath::Scalar(inner) => inner.type_name(),
             TypeAtPath::Opaque(inner) => inner.type_name(),
         }
@@ -1514,6 +1571,13 @@ impl<'a> TypeAtPath<'a> {
         }
     }
 
+    pub fn as_set(self) -> Option<SetType<'a>> {
+        match self {
+            Self::Set(inner) => Some(inner),
+            _ => None,
+        }
+    }
+
     pub fn as_scalar(self) -> Option<ScalarType> {
         match self {
             Self::Scalar(inner) => Some(inner),
@@ -1555,6 +1619,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::List(_)
                     | TypeAtPath::Array(_)
                     | TypeAtPath::Map(_)
+                    | TypeAtPath::Set(_)
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
@@ -1577,6 +1642,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::List(_)
                     | TypeAtPath::Array(_)
                     | TypeAtPath::Map(_)
+                    | TypeAtPath::Set(_)
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
@@ -1602,6 +1668,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::Tuple(_)
                     | TypeAtPath::Enum(_)
                     | TypeAtPath::Variant(_)
+                    | TypeAtPath::Set(_)
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },
@@ -1624,6 +1691,7 @@ impl<'a> GetTypePath<'a> for TypeAtPath<'a> {
                     | TypeAtPath::List(_)
                     | TypeAtPath::Array(_)
                     | TypeAtPath::Map(_)
+                    | TypeAtPath::Set(_)
                     | TypeAtPath::Scalar(_)
                     | TypeAtPath::Opaque(_) => return None,
                 },

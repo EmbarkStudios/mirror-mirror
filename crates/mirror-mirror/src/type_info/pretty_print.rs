@@ -43,6 +43,7 @@ impl<'a> PrettyPrintRoot for Type<'a> {
             Type::List(inner) => inner.pretty_root_fmt(f),
             Type::Array(inner) => inner.pretty_root_fmt(f),
             Type::Map(inner) => inner.pretty_root_fmt(f),
+            Type::Set(inner) => inner.pretty_root_fmt(f),
             Type::Scalar(inner) => inner.pretty_root_fmt(f),
             Type::Opaque(inner) => inner.pretty_root_fmt(f),
         }
@@ -203,6 +204,15 @@ impl<'a> PrettyPrintRoot for MapType<'a> {
     }
 }
 
+impl<'a> PrettyPrintRoot for SetType<'a> {
+    fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_char('{')?;
+        simple_type_name_fmt(self.element_type().type_name(), f)?;
+        f.write_char('}')?;
+        Ok(())
+    }
+}
+
 impl PrettyPrintRoot for ScalarType {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -256,7 +266,7 @@ mod tests {
 
     #[test]
     fn struct_() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo {
             a: String,
@@ -277,7 +287,7 @@ mod tests {
 
     #[test]
     fn struct_empty() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo {}
 
@@ -289,7 +299,7 @@ mod tests {
 
     #[test]
     fn tuple_struct() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo(String, Vec<i32>);
 
@@ -304,7 +314,7 @@ mod tests {
 
     #[test]
     fn tuple_struct_empty() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo();
 
@@ -316,7 +326,7 @@ mod tests {
 
     #[test]
     fn unit_struct() {
-        #[derive(Reflect, Clone, Debug)]
+        #[derive(Reflect, Clone, Debug, Default)]
         #[reflect(crate_name(crate))]
         struct Foo;
 
@@ -338,7 +348,7 @@ mod tests {
     #[test]
     fn enum_() {
         #[derive(Reflect, Clone, Debug)]
-        #[reflect(crate_name(crate))]
+        #[reflect(crate_name(crate), opt_out(Default))]
         enum Foo {
             A(String, i32),
             A2(),
