@@ -75,9 +75,9 @@ dependencies = [
 
 [[package]]
 name = "kollect"
-version = "0.3.0"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b152467962ad3dd6b1f0c6c4c1e453c7bbaff3d02d19180dec658e2f3fc1e804"
+checksum = "149a6226dcaffb051e49418fd3b7e2e19814688c4cabfeddbe64b0dd0767e489"
 dependencies = [
  "ahash",
  "indexmap",

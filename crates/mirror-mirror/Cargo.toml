@@ -21,7 +21,7 @@ macaw = ["dep:macaw"]
 
 [dependencies]
 ahash = { version = "0.8.2", default-features = false, features = ["runtime-rng"] }
-kollect = { version = "0.3", default-features = false }
+kollect = { version = "0.3.2", default-features = false }
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.4" }
 once_cell = { version = "1.16", features = ["alloc", "race", "critical-section"], default-features = false }
 ordered-float = { version = "4", default-features = false }

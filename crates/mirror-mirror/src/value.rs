@@ -7,7 +7,7 @@ use core::cmp::Ordering;
 use core::fmt;
 use core::hash::Hash;
 use core::hash::Hasher;
-use kollect::OrderedSet;
+use kollect::LinearSet;
 
 use kollect::LinearMap;
 use ordered_float::OrderedFloat;
@@ -58,7 +58,7 @@ pub enum Value {
     TupleStructValue(TupleStructValue),
     TupleValue(TupleValue),
     List(Vec<Value>),
-    Set(OrderedSet<Value>),
+    Set(LinearSet<Value>),
     Map(LinearMap<Value, Value>),
 }
 
@@ -92,7 +92,7 @@ enum OrdEqHashValue<'a> {
     TupleStructValue(&'a TupleStructValue),
     TupleValue(&'a TupleValue),
     List(&'a [Value]),
-    Set(&'a OrderedSet<Value>),
+    Set(&'a LinearSet<Value>),
     Map(&'a LinearMap<Value, Value>),
 }
 
