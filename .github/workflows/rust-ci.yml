@@ -57,7 +57,7 @@ jobs:
         RUSTDOCFLAGS: "-D broken-intra-doc-links"
       run: cargo doc --all-features --no-deps
 
-  no-std-build:
+  build-wasm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -66,8 +66,8 @@ jobs:
           toolchain: stable
           override: true
       - uses: Swatinem/rust-cache@v1
-      - run: rustup target add thumbv7m-none-eabi
-      - run: cargo build --target thumbv7m-none-eabi --no-default-features
+      - run: rustup target add wasm32-unknown-unknown
+      - run: cargo build --target wasm32-unknown-unknown --no-default-features
 
   test:
     name: Test

@@ -4,7 +4,7 @@ use crate::{DescribeType, FromReflect, Reflect};
 
 #[test]
 fn option_uses_none_as_default() {
-    #[derive(Reflect, Clone, Debug, PartialEq, Eq)]
+    #[derive(Reflect, Clone, Debug, Default, PartialEq, Eq)]
     #[reflect(crate_name(crate))]
     struct Foo {
         x: Option<i32>,

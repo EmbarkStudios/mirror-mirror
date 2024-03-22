@@ -135,6 +135,14 @@ where
                 try_visit(visitor, value, value_ty)?;
             }
         }
+        Type::Set(set_ty) => {
+            let set = value.as_set().unwrap();
+            let element_ty = set_ty.element_type();
+
+            for element in set.iter() {
+                try_visit(visitor, element, element_ty)?;
+            }
+        }
         Type::Opaque(opaque_ty) => {
             visitor.try_visit_opaque(value, opaque_ty)?;
         }
@@ -150,7 +158,7 @@ mod tests {
     use alloc::collections::BTreeMap;
     use core::convert::Infallible;
 
-    #[derive(Debug, Clone, Reflect)]
+    #[derive(Debug, Clone, Default, Reflect)]
     #[reflect(crate_name(crate))]
     struct Foo {
         a: String,
@@ -159,7 +167,7 @@ mod tests {
     }
 
     #[derive(Debug, Clone, Reflect)]
-    #[reflect(crate_name(crate))]
+    #[reflect(crate_name(crate), opt_out(Default))]
     enum Bar {
         A(BTreeMap<i32, i32>),
     }
@@ -206,7 +214,7 @@ mod tests {
 
     #[test]
     fn recursive() {
-        #[derive(Debug, Clone, Reflect)]
+        #[derive(Debug, Clone, Default, Reflect)]
         #[reflect(crate_name(crate))]
         struct Recursive(i32, Vec<Recursive>);
 

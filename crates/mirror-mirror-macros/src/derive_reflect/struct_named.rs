@@ -26,6 +26,7 @@ pub(super) fn expand(
     let fields = fields.named;
 
     let describe_type = expand_describe_type(ident, &fields, &attrs, &field_attrs, generics);
+    let default_value = expand_default_value(ident, &attrs, generics);
     let reflect = expand_reflect(ident, &fields, &attrs, &field_attrs, generics);
     let from_reflect = (!attrs.from_reflect_opt_out)
         .then(|| expand_from_reflect(ident, &attrs, &fields, &field_attrs, generics));
@@ -33,6 +34,7 @@ pub(super) fn expand(
 
     Ok(quote! {
         #describe_type
+        #default_value
         #reflect
         #from_reflect
         #struct_
@@ -76,6 +78,37 @@ fn expand_describe_type(
                     StructNode::new::<Self>(fields, #meta, #docs)
                 })
             }
+        }
+    }
+}
+
+fn expand_default_value(ident: &Ident, attrs: &ItemAttrs, generics: &Generics<'_>) -> TokenStream {
+    let Generics {
+        impl_generics,
+        type_generics,
+        where_clause,
+    } = generics;
+
+    let fn_default_value = if attrs.default_opt_out {
+        quote! {
+            fn default_value() -> Option<Value> {
+                None
+            }
+        }
+    } else {
+        quote! {
+            fn default_value() -> Option<Value> {
+                fn __default<Z: Default>() -> Z {
+                    Default::default()
+                }
+                Some(__default::<#ident #type_generics>().to_value())
+            }
+        }
+    };
+
+    quote! {
+        impl #impl_generics DefaultValue for #ident #type_generics #where_clause {
+            #fn_default_value
         }
     }
 }
@@ -132,12 +165,6 @@ fn expand_reflect(
         }
     };
 
-    let fn_type_info = quote! {
-        fn type_descriptor(&self) -> Cow<'static, TypeDescriptor> {
-            <Self as DescribeType>::type_descriptor()
-        }
-    };
-
     let fn_debug = attrs.fn_debug_tokens();
     let fn_clone_reflect = attrs.fn_clone_reflect_tokens();
 
@@ -165,7 +192,6 @@ fn expand_reflect(
                 self
             }
 
-            #fn_type_info
             #fn_patch
             #fn_to_value
             #fn_clone_reflect
@@ -375,17 +401,55 @@ fn expand_struct(
         }
     };
 
+    let fields_len = fields
+        .iter()
+        .filter(field_attrs.filter_out_skipped_named())
+        .count();
+
+    let fn_fields_len = {
+        quote! {
+            fn fields_len(&self) -> usize {
+                #fields_len
+            }
+        }
+    };
+
     let fn_fields = {
         let crate_name = &attrs.crate_name;
+        let code_for_fields = fields
+            .iter()
+            .filter(field_attrs.filter_out_skipped_named())
+            .map(|field| {
+                let ident = &field.ident;
+                let field = stringify(ident);
+                quote! {
+                    (#field, self.#ident.as_reflect()),
+                }
+            });
 
-        quote! {
-            fn fields(&self) -> #crate_name::struct_::Iter<'_> {
-                #crate_name::struct_::Iter::new(self)
+        if fields_len <= 32 {
+            quote! {
+                fn fields(&self) -> #crate_name::struct_::FieldsIter<'_> {
+                    let fields = [
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
+            }
+        } else {
+            quote! {
+                fn fields(&self) -> #crate_name::struct_::FieldsIter<'_> {
+                    let fields = vec![
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
             }
         }
     };
 
     let fn_fields_mut = {
+        let crate_name = &attrs.crate_name;
         let code_for_fields = fields
             .iter()
             .filter(field_attrs.filter_out_skipped_named())
@@ -397,23 +461,23 @@ fn expand_struct(
                 }
             });
 
-        quote! {
-            fn fields_mut(&mut self) -> PairIterMut<'_> {
-                let iter = [#(#code_for_fields)*];
-                Box::new(iter.into_iter())
+        if fields_len <= 32 {
+            quote! {
+                fn fields_mut(&mut self) -> #crate_name::struct_::FieldsIterMut <'_> {
+                    let fields = [
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
             }
-        }
-    };
-
-    let fn_fields_len = {
-        let len = fields
-            .iter()
-            .filter(field_attrs.filter_out_skipped_named())
-            .count();
-
-        quote! {
-            fn fields_len(&self) -> usize {
-                #len
+        } else {
+            quote! {
+                fn fields_mut(&mut self) -> #crate_name::struct_::FieldsIterMut <'_> {
+                    let fields = vec![
+                        #(#code_for_fields)*
+                    ];
+                    Box::new(fields.into_iter())
+                }
             }
         }
     };

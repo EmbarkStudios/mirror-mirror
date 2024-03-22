@@ -1,6 +1,7 @@
 use alloc::vec::Vec;
 
 use crate::tuple_struct::TupleStructValue;
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::GetField;
 use crate::Reflect;
@@ -63,4 +64,31 @@ fn from_reflect_with_value() {
     let value = TupleStructValue::new().with_field(Number::One);
 
     assert!(Foo::from_reflect(&value).is_some());
+}
+#[test]
+fn default_value() {
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate))]
+    struct Foo(u32, u32);
+
+    impl Default for Foo {
+        fn default() -> Self {
+            Foo(1, 2)
+        }
+    }
+
+    #[derive(Reflect, Debug, Clone, Copy)]
+    #[reflect(crate_name(crate), opt_out(Default))]
+    struct Bar(u32, u32);
+
+    let foo_descriptor = <Foo as DescribeType>::type_descriptor();
+    let bar_descriptor = <Bar as DescribeType>::type_descriptor();
+
+    assert!(foo_descriptor.has_default_value());
+    assert!(!bar_descriptor.has_default_value());
+
+    let foo_default = Foo::default().to_value();
+
+    assert_eq!(foo_descriptor.default_value(), Some(foo_default));
+    assert_eq!(bar_descriptor.default_value(), None);
 }
