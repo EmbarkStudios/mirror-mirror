@@ -8,6 +8,7 @@ fn simple_type_name<T>() -> String {
 
 #[test]
 fn works() {
+    #[allow(dead_code)]
     struct Foo<'a, const N: usize>(&'a ());
 
     assert_eq!(simple_type_name::<String>(), "String");

@@ -126,7 +126,7 @@ mod tests {
             <NonZeroI8 as DescribeType>::type_descriptor()
                 .get_type()
                 .type_name(),
-            "core::num::nonzero::NonZeroI8"
+            "core::num::nonzero::NonZero<i8>"
         );
 
         assert_eq!(
