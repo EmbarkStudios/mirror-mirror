@@ -19,6 +19,7 @@ use crate::tuple_struct::TupleStructValue;
 use crate::type_info::graph::NodeId;
 use crate::type_info::graph::OpaqueNode;
 use crate::type_info::graph::TypeGraph;
+use crate::Array;
 use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
@@ -208,6 +209,27 @@ impl Reflect for Value {
 
     fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         for_each_variant!(self, inner => inner)
+    }
+
+    fn as_array(&self) -> Option<&dyn Array> {
+        match self {
+            Value::List(list) => Some(list),
+            _ => None,
+        }
+    }
+
+    fn as_array_mut(&mut self) -> Option<&mut dyn Array> {
+        match self {
+            Value::List(list) => Some(list),
+            _ => None,
+        }
+    }
+
+    fn into_array(self: Box<Self>) -> Option<Box<dyn Array>> {
+        match *self {
+            Value::List(list) => Some(Box::new(list)),
+            _ => None,
+        }
     }
 
     fn reflect_owned(self: Box<Self>) -> ReflectOwned {

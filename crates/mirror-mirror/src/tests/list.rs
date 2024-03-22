@@ -1,5 +1,10 @@
+use crate::DescribeType;
 use crate::FromReflect;
 use crate::Reflect;
+use crate::ReflectMut;
+use crate::ReflectOwned;
+use crate::ReflectRef;
+use crate::Value;
 
 #[test]
 fn indexing() {
@@ -42,4 +47,59 @@ fn remove() {
     );
     assert!(list.try_remove(2).is_none());
     assert!(list.try_remove(1337).is_none());
+}
+
+#[test]
+fn list_default_value_yields_list() {
+    let ty = <Vec<i32> as DescribeType>::type_descriptor();
+    let default = ty.default_value().unwrap();
+    assert!(default.as_list().is_some());
+
+    // it is also valid as an array
+    assert!(default.as_array().is_some());
+}
+
+#[test]
+fn casting_list_to_list() {
+    let mut list = Vec::<i32>::new();
+    assert!(list.as_list().is_some());
+    assert!(list.as_list_mut().is_some());
+    assert!(Box::new(list).into_list().is_some());
+
+    let mut list = Value::List(Vec::new());
+    assert!(list.as_list().is_some());
+    assert!(list.as_list_mut().is_some());
+    assert!(matches!(list.reflect_ref(), ReflectRef::List(_)));
+    assert!(Box::new(list).into_list().is_some());
+
+    let mut list = Vec::<i32>::new();
+    assert!(matches!(list.reflect_ref(), ReflectRef::List(_)));
+    assert!(matches!(list.reflect_mut(), ReflectMut::List(_)));
+    assert!(matches!(
+        Box::new(list).reflect_owned(),
+        ReflectOwned::List(_)
+    ));
+}
+
+#[test]
+fn casting_list_to_array() {
+    let mut list = Vec::<i32>::new();
+    assert!(list.as_array().is_some());
+    assert!(list.as_array_mut().is_some());
+    assert!(matches!(list.reflect_ref(), ReflectRef::List(_)));
+    assert!(Box::new(list).into_array().is_some());
+
+    let mut list = Value::List(Vec::new());
+    assert!(list.as_array().is_some());
+    assert!(list.as_array_mut().is_some());
+    assert!(matches!(list.reflect_ref(), ReflectRef::List(_)));
+    assert!(Box::new(list).into_array().is_some());
+
+    let mut list = Value::List(Vec::new());
+    assert!(matches!(list.reflect_ref(), ReflectRef::List(_)));
+    assert!(matches!(list.reflect_mut(), ReflectMut::List(_)));
+    assert!(matches!(
+        Box::new(list).reflect_owned(),
+        ReflectOwned::List(_)
+    ));
 }
