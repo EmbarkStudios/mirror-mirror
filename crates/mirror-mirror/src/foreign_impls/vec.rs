@@ -143,6 +143,18 @@ where
     fn reflect_mut(&mut self) -> ReflectMut<'_> {
         ReflectMut::List(self)
     }
+
+    fn as_array(&self) -> Option<&dyn Array> {
+        Some(self)
+    }
+
+    fn as_array_mut(&mut self) -> Option<&mut dyn Array> {
+        Some(self)
+    }
+
+    fn into_array(self: Box<Self>) -> Option<Box<dyn Array>> {
+        Some(self)
+    }
 }
 
 impl<T> FromReflect for Vec<T>
@@ -150,9 +162,13 @@ where
     T: FromReflect + DescribeType,
 {
     fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-        let list = reflect.reflect_ref().as_list()?;
-        let mut out = Vec::new();
-        for value in list.iter() {
+        let iter = match reflect.reflect_ref() {
+            ReflectRef::Array(array) => array.iter(),
+            ReflectRef::List(list) => list.iter(),
+            _ => return None,
+        };
+        let mut out = Vec::with_capacity(iter.len());
+        for value in iter {
             out.push(T::from_reflect(value)?);
         }
         Some(out)
