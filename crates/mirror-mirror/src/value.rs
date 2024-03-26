@@ -9,7 +9,7 @@ use core::fmt;
 use core::hash::Hash;
 use core::hash::Hasher;
 
-use ordered_float::OrderedFloat;
+use tiny_ordered_float::{OrderedF32, OrderedF64};
 
 use crate::enum_::EnumValue;
 use crate::struct_::StructValue;
@@ -83,8 +83,8 @@ enum OrdEqHashValue<'a> {
     i128(i128),
     bool(bool),
     char(char),
-    f32(OrderedFloat<f32>),
-    f64(OrderedFloat<f64>),
+    f32(OrderedF32),
+    f64(OrderedF64),
     String(&'a str),
     StructValue(&'a StructValue),
     EnumValue(&'a EnumValue),
@@ -110,8 +110,8 @@ impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
             Value::i128(inner) => OrdEqHashValue::i128(*inner),
             Value::bool(inner) => OrdEqHashValue::bool(*inner),
             Value::char(inner) => OrdEqHashValue::char(*inner),
-            Value::f32(inner) => OrdEqHashValue::f32(OrderedFloat(*inner)),
-            Value::f64(inner) => OrdEqHashValue::f64(OrderedFloat(*inner)),
+            Value::f32(inner) => OrdEqHashValue::f32(OrderedF32(*inner)),
+            Value::f64(inner) => OrdEqHashValue::f64(OrderedF64(*inner)),
             Value::String(inner) => OrdEqHashValue::String(inner),
             Value::StructValue(inner) => OrdEqHashValue::StructValue(inner),
             Value::EnumValue(inner) => OrdEqHashValue::EnumValue(inner),
