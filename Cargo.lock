@@ -85,6 +85,17 @@ dependencies = [
  "ahash",
  "indexmap",
  "rustc-hash",
+]
+
+[[package]]
+name = "kollect"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "753942edbae76822719fb0cb9c88cd1afe04ddc7fb9575d478f98cb0d9d615c5"
+dependencies = [
+ "ahash",
+ "indexmap",
+ "rustc-hash",
  "serde",
  "speedy",
 ]
@@ -120,7 +131,7 @@ version = "0.1.19"
 dependencies = [
  "ahash",
  "glam",
- "kollect",
+ "kollect 0.4.0",
  "macaw",
  "mirror-mirror 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "mirror-mirror-macros 0.1.4",
@@ -151,7 +162,7 @@ dependencies = [
 name = "mirror-mirror-macros"
 version = "0.1.4"
 dependencies = [
- "kollect",
+ "kollect 0.3.2",
  "mirror-mirror 0.1.19",
  "proc-macro2",
  "quote",
