@@ -117,24 +117,6 @@ dependencies = [
 [[package]]
 name = "mirror-mirror"
 version = "0.1.19"
-dependencies = [
- "ahash",
- "glam",
- "kollect",
- "macaw",
- "mirror-mirror 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "mirror-mirror-macros 0.1.4",
- "once_cell",
- "ordered-float",
- "ron",
- "serde",
- "speedy",
- "syn",
-]
-
-[[package]]
-name = "mirror-mirror"
-version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b14e8dc2bf56db79766cf6438a1bfb33047af85a439809550101dabcd1c0c42b"
 dependencies = [
@@ -148,11 +130,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "mirror-mirror"
+version = "0.2.0"
+dependencies = [
+ "ahash",
+ "glam",
+ "kollect",
+ "macaw",
+ "mirror-mirror 0.1.19",
+ "mirror-mirror-macros 0.1.4",
+ "once_cell",
+ "ordered-float",
+ "ron",
+ "serde",
+ "speedy",
+ "syn",
+]
+
+[[package]]
 name = "mirror-mirror-macros"
 version = "0.1.4"
 dependencies = [
  "kollect",
- "mirror-mirror 0.1.19",
+ "mirror-mirror 0.2.0",
  "proc-macro2",
  "quote",
  "syn",
