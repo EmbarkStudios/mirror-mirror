@@ -51,6 +51,7 @@ impl fmt::Debug for dyn Struct {
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructValue {
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     fields: LinearMap<String, Value>,
 }
 
