@@ -22,8 +22,6 @@ __private_derive_reflect_foreign! {
     }
 }
 
-// TODO(david): `Quat`
-
 __private_derive_reflect_foreign! {
     #[reflect(crate_name(crate))]
     pub struct Mat3 {
