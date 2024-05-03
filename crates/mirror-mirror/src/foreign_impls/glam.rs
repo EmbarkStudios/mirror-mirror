@@ -1,9 +1,9 @@
-use glam::{Mat3, Vec2, Vec3, Mat4, Vec4};
+use glam::{Mat3, Mat4, Vec2, Vec3, Vec4};
 use mirror_mirror_macros::__private_derive_reflect_foreign;
 
-mod vec4;
 mod mat2;
 mod quat;
+mod vec4;
 
 __private_derive_reflect_foreign! {
     #[reflect(crate_name(crate))]
