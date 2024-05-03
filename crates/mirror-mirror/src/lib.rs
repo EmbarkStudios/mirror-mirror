@@ -252,7 +252,7 @@
     // because speedy
     clippy::not_unsafe_ptr_arg_deref,
 )]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 

@@ -126,19 +126,30 @@ impl Struct for Quat {
         )
     }
 
+    #[allow(unsafe_code)]
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        todo!()
+        #[allow(dead_code)]
+        #[cfg_attr(target_arch = "spirv", repr(simd))]
+        #[cfg_attr(not(target_arch = "spirv"), repr(C))]
+        struct Vec4Repr {
+            x: f32,
+            y: f32,
+            z: f32,
+            w: f32,
+        }
 
-        // this doesn't work with `--target x86_64-unknown-linux-gnu` :thinking:
-        // Box::new(
-        //     [
-        //         ("x", self.x.as_reflect_mut()),
-        //         ("y", self.y.as_reflect_mut()),
-        //         ("z", self.z.as_reflect_mut()),
-        //         ("w", self.w.as_reflect_mut()),
-        //     ]
-        //     .into_iter(),
-        // )
+        // SAFETY: this is how glam implements DerefMut
+        let Vec4Repr { x, y, z, w } = unsafe { &mut *(self as *mut Self).cast() };
+
+        Box::new(
+            [
+                ("x", x.as_reflect_mut()),
+                ("y", y.as_reflect_mut()),
+                ("z", z.as_reflect_mut()),
+                ("w", w.as_reflect_mut()),
+            ]
+            .into_iter(),
+        )
     }
 
     fn fields_len(&self) -> usize {

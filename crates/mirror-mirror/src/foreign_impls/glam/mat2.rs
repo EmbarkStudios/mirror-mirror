@@ -106,17 +106,24 @@ impl Struct for Mat2 {
         )
     }
 
+    #[allow(unsafe_code)]
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        todo!()
+        #[cfg_attr(not(target_arch = "spirv"), repr(C))]
+        struct Cols2Repr {
+            x_axis: Vec2,
+            y_axis: Vec2,
+        }
 
-        // this doesn't work with `--target x86_64-unknown-linux-gnu` :thinking:
-        // Box::new(
-        //     [
-        //         ("x_axis", self.x_axis.as_reflect_mut()),
-        //         ("y_axis", self.y_axis.as_reflect_mut()),
-        //     ]
-        //     .into_iter(),
-        // )
+        // SAFETY: this is how glam implements DerefMut
+        let Cols2Repr { x_axis, y_axis } = unsafe { &mut *(self as *mut Self as *mut Cols2Repr) };
+
+        Box::new(
+            [
+                ("x_axis", x_axis.as_reflect_mut()),
+                ("y_axis", y_axis.as_reflect_mut()),
+            ]
+            .into_iter(),
+        )
     }
 
     fn fields_len(&self) -> usize {
