@@ -3,6 +3,7 @@ use mirror_mirror_macros::__private_derive_reflect_foreign;
 
 mod vec4;
 mod mat2;
+mod quat;
 
 __private_derive_reflect_foreign! {
     #[reflect(crate_name(crate))]
