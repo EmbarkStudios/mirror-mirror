@@ -127,12 +127,13 @@ impl Struct for Vec4 {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
+        let [x, y, z, w] = self.as_mut();
         Box::new(
             [
-                ("x", self.x.as_reflect_mut()),
-                ("y", self.y.as_reflect_mut()),
-                ("z", self.z.as_reflect_mut()),
-                ("w", self.w.as_reflect_mut()),
+                ("x", x.as_reflect_mut()),
+                ("y", y.as_reflect_mut()),
+                ("z", z.as_reflect_mut()),
+                ("w", w.as_reflect_mut()),
             ]
             .into_iter(),
         )

@@ -127,15 +127,18 @@ impl Struct for Quat {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        Box::new(
-            [
-                ("x", self.x.as_reflect_mut()),
-                ("y", self.y.as_reflect_mut()),
-                ("z", self.z.as_reflect_mut()),
-                ("w", self.w.as_reflect_mut()),
-            ]
-            .into_iter(),
-        )
+        todo!()
+
+        // this doesn't work with `--target x86_64-unknown-linux-gnu` :thinking:
+        // Box::new(
+        //     [
+        //         ("x", self.x.as_reflect_mut()),
+        //         ("y", self.y.as_reflect_mut()),
+        //         ("z", self.z.as_reflect_mut()),
+        //         ("w", self.w.as_reflect_mut()),
+        //     ]
+        //     .into_iter(),
+        // )
     }
 
     fn fields_len(&self) -> usize {

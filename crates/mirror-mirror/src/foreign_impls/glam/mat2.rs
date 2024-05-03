@@ -107,13 +107,16 @@ impl Struct for Mat2 {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        Box::new(
-            [
-                ("x_axis", self.x_axis.as_reflect_mut()),
-                ("y_axis", self.y_axis.as_reflect_mut()),
-            ]
-            .into_iter(),
-        )
+        todo!()
+
+        // this doesn't work with `--target x86_64-unknown-linux-gnu` :thinking:
+        // Box::new(
+        //     [
+        //         ("x_axis", self.x_axis.as_reflect_mut()),
+        //         ("y_axis", self.y_axis.as_reflect_mut()),
+        //     ]
+        //     .into_iter(),
+        // )
     }
 
     fn fields_len(&self) -> usize {
