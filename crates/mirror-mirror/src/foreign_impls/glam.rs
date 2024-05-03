@@ -1,4 +1,4 @@
-use glam::{Mat3, Vec2, Vec3};
+use glam::{Mat3, Vec2, Vec3, Mat4, Vec4};
 use mirror_mirror_macros::__private_derive_reflect_foreign;
 
 mod vec4;
@@ -21,7 +21,7 @@ __private_derive_reflect_foreign! {
     }
 }
 
-// TODO(david): `Quat`, `Mat2`, `Mat4`
+// TODO(david): `Quat`
 
 __private_derive_reflect_foreign! {
     #[reflect(crate_name(crate))]
@@ -29,5 +29,15 @@ __private_derive_reflect_foreign! {
         pub x_axis: Vec3,
         pub y_axis: Vec3,
         pub z_axis: Vec3,
+    }
+}
+
+__private_derive_reflect_foreign! {
+    #[reflect(crate_name(crate))]
+    pub struct Mat4 {
+        pub x_axis: Vec4,
+        pub y_axis: Vec4,
+        pub z_axis: Vec4,
+        pub w_axis: Vec4,
     }
 }
