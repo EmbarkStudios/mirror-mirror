@@ -252,8 +252,7 @@
     // because speedy
     clippy::not_unsafe_ptr_arg_deref,
 )]
-#![cfg_attr(feature = "glam", deny(unsafe_code))]
-#![cfg_attr(not(feature = "glam"), forbid(unsafe_code))]
+#![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
