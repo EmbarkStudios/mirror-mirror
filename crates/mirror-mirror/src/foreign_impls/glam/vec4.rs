@@ -26,16 +26,16 @@ impl Reflect for Vec4 {
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(struct_) = value.as_struct() {
-            if let Some(x) = struct_.field("x").and_then(f32::from_reflect) {
+            if let Some(x) = struct_.field("x").and_then(<_>::from_reflect) {
                 self.x = x;
             }
-            if let Some(y) = struct_.field("y").and_then(f32::from_reflect) {
+            if let Some(y) = struct_.field("y").and_then(<_>::from_reflect) {
                 self.y = y;
             }
-            if let Some(z) = struct_.field("z").and_then(f32::from_reflect) {
+            if let Some(z) = struct_.field("z").and_then(<_>::from_reflect) {
                 self.z = z;
             }
-            if let Some(w) = struct_.field("w").and_then(f32::from_reflect) {
+            if let Some(w) = struct_.field("w").and_then(<_>::from_reflect) {
                 self.w = w;
             }
         }
@@ -115,26 +115,24 @@ impl Struct for Vec4 {
     }
 
     fn fields(&self) -> FieldsIter<'_> {
-        let [x, y, z, w] = self.as_ref();
         Box::new(
             [
-                ("x", x.as_reflect()),
-                ("y", y.as_reflect()),
-                ("z", z.as_reflect()),
-                ("w", w.as_reflect()),
+                ("x", self.x.as_reflect()),
+                ("y", self.y.as_reflect()),
+                ("z", self.z.as_reflect()),
+                ("w", self.w.as_reflect()),
             ]
             .into_iter(),
         )
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        let [x, y, z, w] = self.as_mut();
         Box::new(
             [
-                ("x", x.as_reflect_mut()),
-                ("y", y.as_reflect_mut()),
-                ("z", z.as_reflect_mut()),
-                ("w", w.as_reflect_mut()),
+                ("x", self.x.as_reflect_mut()),
+                ("y", self.y.as_reflect_mut()),
+                ("z", self.z.as_reflect_mut()),
+                ("w", self.w.as_reflect_mut()),
             ]
             .into_iter(),
         )
@@ -152,10 +150,10 @@ impl FromReflect for Vec4 {
         } else {
             let struct_ = reflect.as_struct()?;
             let components = (
-                f32::from_reflect(struct_.field("x")?)?,
-                f32::from_reflect(struct_.field("y")?)?,
-                f32::from_reflect(struct_.field("z")?)?,
-                f32::from_reflect(struct_.field("w")?)?,
+                <_>::from_reflect(struct_.field("x")?)?,
+                <_>::from_reflect(struct_.field("y")?)?,
+                <_>::from_reflect(struct_.field("z")?)?,
+                <_>::from_reflect(struct_.field("w")?)?,
             );
             Some(components.into())
         }
