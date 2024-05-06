@@ -59,6 +59,7 @@ impl<T> Deref for WithId<T> {
 #[cfg_attr(feature = "speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeGraph {
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) map: LinearMap<NodeId, Option<TypeNode>>,
 }
 
@@ -146,7 +147,9 @@ impl_from! { Opaque(OpaqueNode) }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructNode {
     pub(super) type_name: String,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) fields: LinearMap<String, NamedFieldNode>,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
     pub(super) default_value: Option<Value>,
@@ -191,6 +194,7 @@ fn map_docs(docs: &[&'static str]) -> Box<[String]> {
 pub struct TupleStructNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
     pub(super) default_value: Option<Value>,
@@ -221,6 +225,7 @@ impl TupleStructNode {
 pub struct EnumNode {
     pub(super) type_name: String,
     pub(super) variants: Vec<VariantNode>,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
     pub(super) default_value: Option<Value>,
@@ -259,7 +264,9 @@ pub enum VariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StructVariantNode {
     pub(super) name: String,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) fields: LinearMap<String, NamedFieldNode>,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
@@ -289,6 +296,7 @@ impl StructVariantNode {
 pub struct TupleVariantNode {
     pub(super) name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
@@ -314,6 +322,7 @@ impl TupleVariantNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitVariantNode {
     pub(super) name: String,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
@@ -338,6 +347,7 @@ impl UnitVariantNode {
 pub struct TupleNode {
     pub(super) type_name: String,
     pub(super) fields: Vec<UnnamedFieldNode>,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
@@ -366,6 +376,7 @@ impl TupleNode {
 pub struct NamedFieldNode {
     pub(super) name: String,
     pub(super) id: NodeId,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
@@ -394,6 +405,7 @@ impl NamedFieldNode {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnnamedFieldNode {
     pub(super) id: NodeId,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) docs: Box<[String]>,
 }
@@ -551,6 +563,7 @@ scalar_typed! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpaqueNode {
     pub(super) type_name: String,
+    #[cfg_attr(feature = "serde", serde(with = "kollect::linear_map::serde_as_map"))]
     pub(super) metadata: LinearMap<String, Value>,
     pub(super) default_value: Option<Value>,
 }

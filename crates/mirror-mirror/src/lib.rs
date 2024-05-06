@@ -747,7 +747,7 @@ impl Reflect for String {
 
     fn patch(&mut self, value: &dyn Reflect) {
         if let Some(value) = value.as_any().downcast_ref::<Self>() {
-            *self = value.clone();
+            self.clone_from(value);
         }
     }
 

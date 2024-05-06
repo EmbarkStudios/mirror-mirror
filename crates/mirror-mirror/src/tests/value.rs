@@ -27,5 +27,5 @@ fn hash() {
 
     assert_eq!(map.get(&1_i32.to_value()).unwrap(), &"one");
     assert_eq!(map.get(&"foo".to_owned().to_value()).unwrap(), &"two");
-    assert!(map.get(&true.to_value()).is_none());
+    assert!(!map.contains_key(&true.to_value()));
 }
