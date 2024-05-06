@@ -127,7 +127,12 @@ impl Struct for Quat {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        let repr = &mut *self;
+        #[cfg(not(any(target_feature = "sse2", target_feature = "simd128")))]
+        let repr = self;
+
+        #[cfg(any(target_feature = "sse2", target_feature = "simd128"))]
+        let repr = &mut **self;
+
         Box::new(
             [
                 ("x", repr.x.as_reflect_mut()),
