@@ -127,7 +127,7 @@ impl Struct for Quat {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        let repr = &mut **self;
+        let repr = &mut *self;
         Box::new(
             [
                 ("x", repr.x.as_reflect_mut()),

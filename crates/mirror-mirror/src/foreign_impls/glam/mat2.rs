@@ -107,7 +107,7 @@ impl Struct for Mat2 {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        let repr = &mut **self;
+        let repr = &mut *self;
         Box::new(
             [
                 ("x_axis", repr.x_axis.as_reflect_mut()),
