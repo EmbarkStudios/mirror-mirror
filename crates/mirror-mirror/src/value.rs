@@ -203,6 +203,10 @@ impl Reflect for Value {
         for_each_variant!(self, inner => inner)
     }
 
+    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+        self
+    }
+
     fn as_reflect(&self) -> &dyn Reflect {
         for_each_variant!(self, inner => inner)
     }

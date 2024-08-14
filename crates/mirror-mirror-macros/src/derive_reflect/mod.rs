@@ -87,3 +87,27 @@ pub(crate) fn expand(item: DeriveInput) -> syn::Result<TokenStream> {
         };
     })
 }
+
+fn trivial_reflect_methods() -> TokenStream {
+    quote::quote! {
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+
+        fn as_reflect(&self) -> &dyn Reflect {
+            self
+        }
+
+        fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
+            self
+        }
+
+        fn into_any(self: Box<Self>) -> Box<dyn Any> {
+            self
+        }
+    }
+}
