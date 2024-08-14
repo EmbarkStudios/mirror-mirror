@@ -15,6 +15,7 @@ mod hash_map;
 mod kollect;
 mod vec;
 mod via_scalar;
+mod vec_deque;
 
 #[cfg(feature = "glam")]
 mod glam;
