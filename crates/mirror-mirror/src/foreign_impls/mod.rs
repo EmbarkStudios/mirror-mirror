@@ -123,6 +123,10 @@ impl Reflect for Infallible {
         match *self {}
     }
 
+    fn into_any(self: Box<Self>) -> Box<dyn Any> {
+        match *self {}
+    }
+
     fn patch(&mut self, _value: &dyn Reflect) {
         match *self {}
     }

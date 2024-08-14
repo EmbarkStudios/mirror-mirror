@@ -11,6 +11,7 @@ use syn::Token;
 use super::attrs::AttrsDatabase;
 use super::attrs::ItemAttrs;
 use super::Generics;
+use crate::derive_reflect::trivial_reflect_methods;
 use crate::stringify;
 
 type Fields = Punctuated<Field, Token![,]>;
@@ -174,23 +175,11 @@ fn expand_reflect(
         where_clause,
     } = generics;
 
+    let trivial_reflect_methods = trivial_reflect_methods();
+
     quote! {
         impl #impl_generics Reflect for #ident #type_generics #where_clause {
-            fn as_any(&self) -> &dyn Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn Any {
-                self
-            }
-
-            fn as_reflect(&self) -> &dyn Reflect {
-                self
-            }
-
-            fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
-                self
-            }
+            #trivial_reflect_methods
 
             #fn_patch
             #fn_to_value
