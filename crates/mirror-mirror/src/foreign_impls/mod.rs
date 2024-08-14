@@ -14,8 +14,8 @@ mod btree_map;
 mod hash_map;
 mod kollect;
 mod vec;
-mod via_scalar;
 mod vec_deque;
+mod via_scalar;
 
 #[cfg(feature = "glam")]
 mod glam;
