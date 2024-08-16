@@ -90,7 +90,10 @@ impl SimpleTypeName {
         Some(Self { ty })
     }
 
-    pub fn new_from_type<T>() -> Self {
+    pub fn new_from_type<T>() -> Self
+    where
+        T: ?Sized,
+    {
         let name = type_name::<T>();
         Self::new(name).unwrap_or_else(|| panic!("failed to parse type name: `{name}`"))
     }
