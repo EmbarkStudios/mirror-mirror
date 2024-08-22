@@ -5,8 +5,8 @@ use core::{any::type_name, fmt};
 use alloc::borrow::Cow;
 use syn::{
     token::Mut, AngleBracketedGenericArguments, Expr, ExprLit, GenericArgument, Ident, Lit,
-    LitBool, LitFloat, LitInt, Path, PathArguments, PathSegment, Type, TypeArray, TypePath,
-    TypeReference, TypeTuple,
+    LitBool, LitFloat, LitInt, Path, PathArguments, PathSegment, TraitBound, TraitBoundModifier,
+    Type, TypeArray, TypeParamBound, TypePath, TypeReference, TypeTraitObject, TypeTuple,
 };
 
 /// A writer for simplified type names.
@@ -121,6 +121,7 @@ impl<'a, 'b> WriteAst<Type> for TypeWriter<'a, 'b> {
             Type::Path(inner) => self.write(inner),
             Type::Tuple(inner) => self.write(inner),
             Type::Reference(inner) => self.write(inner),
+            Type::TraitObject(inner) => self.write(inner),
             Type::BareFn(_)
             | Type::Group(_)
             | Type::ImplTrait(_)
@@ -130,7 +131,6 @@ impl<'a, 'b> WriteAst<Type> for TypeWriter<'a, 'b> {
             | Type::Paren(_)
             | Type::Ptr(_)
             | Type::Slice(_)
-            | Type::TraitObject(_)
             | Type::Verbatim(_)
             | _ => Err(fmt::Error),
         }
@@ -373,5 +373,39 @@ impl<'a, 'b> WriteAst<TypeReference> for TypeWriter<'a, 'b> {
 impl<'a, 'b> WriteAst<Mut> for TypeWriter<'a, 'b> {
     fn write(&mut self, _: &Mut) -> fmt::Result {
         write!(self.f, "mut")
+    }
+}
+
+impl<'a, 'b> WriteAst<TypeTraitObject> for TypeWriter<'a, 'b> {
+    fn write(&mut self, ty: &TypeTraitObject) -> fmt::Result {
+        write!(self.f, "dyn ")?;
+        match ty.bounds.last().ok_or(fmt::Error)? {
+            TypeParamBound::Trait(inner) => self.write(inner),
+            TypeParamBound::Lifetime(_) | TypeParamBound::Verbatim(_) | _ => Err(fmt::Error),
+        }
+    }
+}
+
+impl<'a, 'b> WriteAst<TraitBound> for TypeWriter<'a, 'b> {
+    fn write(&mut self, ty: &TraitBound) -> fmt::Result {
+        let TraitBound {
+            paren_token: _,
+            modifier,
+            lifetimes,
+            path,
+        } = ty;
+
+        match modifier {
+            TraitBoundModifier::None => {}
+            TraitBoundModifier::Maybe(_) => {
+                return Err(fmt::Error);
+            }
+        }
+
+        if lifetimes.is_some() {
+            return Err(fmt::Error);
+        }
+
+        self.write(path)
     }
 }

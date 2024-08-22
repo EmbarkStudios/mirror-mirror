@@ -38,6 +38,7 @@ fn works() {
     );
     // type names don't include lifetimes
     assert_eq!(simple_type_name::<Foo<'static, 10>>(), "Foo<10>");
+    assert_eq!(simple_type_name::<Box<dyn std::any::Any>>(), "Box<dyn Any>");
 }
 
 #[test]
