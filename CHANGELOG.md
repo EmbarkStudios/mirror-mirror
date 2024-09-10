@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   correctly return `Some(_)`.
 - **fixed:** `Value::as_array`, `Value::as_array_mut`, `Value::into_array` now
   correctly return `Some(_)`.
+- Extend `glam` version range to be <= 0.29
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
