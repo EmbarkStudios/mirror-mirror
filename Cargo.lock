@@ -269,10 +269,9 @@ dependencies = [
 [[package]]
 name = "speedy"
 version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da1992073f0e55aab599f4483c460598219b4f9ff0affa124b33580ab511e25a"
+source = "git+https://github.com/EmbarkStudios/speedy?branch=embark-0.8#b4d970e3ef53d5930ddacb71c3034ce31bf1be0d"
 dependencies = [
- "glam 0.25.0",
+ "glam 0.29.0",
  "memoffset",
  "speedy-derive",
 ]
@@ -280,8 +279,7 @@ dependencies = [
 [[package]]
 name = "speedy-derive"
 version = "0.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "658f2ca5276b92c3dfd65fa88316b4e032ace68f88d7570b43967784c0bac5ac"
+source = "git+https://github.com/EmbarkStudios/speedy?branch=embark-0.8#b4d970e3ef53d5930ddacb71c3034ce31bf1be0d"
 dependencies = [
  "proc-macro2",
  "quote",
