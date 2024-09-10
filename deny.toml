@@ -1,28 +1,23 @@
 [advisories]
-vulnerability = "allow"
-unmaintained = "allow"
 
 [bans]
-multiple-versions = "deny"
 deny = [
 ]
 
 skip = [
+    # two versions of glam for now since macaw is
+    # unreleased for a little while, should fix soon
+    { name = "glam" }
 ]
 
 [sources]
-unknown-registry = "deny"
-unknown-git = "allow"
 allow-registry = [
     "https://github.com/rust-lang/crates.io-index",
 ]
 
 [licenses]
-unlicensed = "deny"
-allow-osi-fsf-free = "neither"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.92
-copyleft = "deny"
 allow = [
     "Apache-2.0",
     "MIT",
