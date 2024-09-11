@@ -271,7 +271,7 @@ name = "speedy"
 version = "0.8.7"
 source = "git+https://github.com/EmbarkStudios/speedy?branch=embark-0.8#b4d970e3ef53d5930ddacb71c3034ce31bf1be0d"
 dependencies = [
- "glam 0.29.0",
+ "glam 0.25.0",
  "memoffset",
  "speedy-derive",
 ]

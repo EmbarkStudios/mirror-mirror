@@ -201,6 +201,7 @@
 //! `speedy` | Enables [`speedy`] support for most types | Yes
 //! `serde` | Enables [`serde`] support for most types | Yes
 //! `glam` | Enables impls for [`glam`] | No
+//! `glam-scalar-math` | Must be enabled if target supports SIMD but you are using `glam`'s `scalar-math` feature to disable it | No
 //! `macaw` | Enables impls for [`macaw`] | No
 //!
 //! [`speedy`]: https://crates.io/crates/speedy
