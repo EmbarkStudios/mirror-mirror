@@ -171,7 +171,7 @@ fn expand_reflect(
                         let ident = field.ident;
                         let ident_string = stringify(ident);
                         quote! {
-                            if let Some(new_value) = enum_.field(#ident_string) {
+                            if let Some(new_value) = __mirror_mirror_enum.field(#ident_string) {
                                 #ident.patch(new_value);
                             }
                         }
@@ -190,7 +190,7 @@ fn expand_reflect(
                         |(index, field)| {
                             let ident = &field.fake_ident;
                             quote! {
-                                if let Some(new_value) = enum_.field_at(#index) {
+                                if let Some(new_value) = __mirror_mirror_enum.field_at(#index) {
                                     #ident.patch(new_value);
                                 }
                             }
@@ -217,12 +217,12 @@ fn expand_reflect(
 
         if attrs.clone_opt_out {
             quote! {
-                fn patch(&mut self, value: &dyn Reflect) {
-                    if let Some(enum_) = value.reflect_ref().as_enum() {
-                        if let Some(new) = FromReflect::from_reflect(value) {
+                fn patch(&mut self, __mirror_mirror_value: &dyn Reflect) {
+                    if let Some(__mirror_mirror_enum) = __mirror_mirror_value.reflect_ref().as_enum() {
+                        if let Some(new) = FromReflect::from_reflect(__mirror_mirror_value) {
                             *self = new;
                         } else {
-                            let variant_matches = self.variant_name() == enum_.variant_name();
+                            let variant_matches = self.variant_name() == __mirror_mirror_enum.variant_name();
                             match self {
                                 #(#match_arms)*
                                 _ => {}
@@ -233,14 +233,14 @@ fn expand_reflect(
             }
         } else {
             quote! {
-                fn patch(&mut self, value: &dyn Reflect) {
-                    if let Some(new) = value.downcast_ref::<Self>() {
+                fn patch(&mut self, __mirror_mirror_value: &dyn Reflect) {
+                    if let Some(new) = __mirror_mirror_value.downcast_ref::<Self>() {
                         *self = new.clone();
-                    } else if let Some(enum_) = value.reflect_ref().as_enum() {
-                        if let Some(new) = FromReflect::from_reflect(value) {
+                    } else if let Some(__mirror_mirror_enum) = __mirror_mirror_value.reflect_ref().as_enum() {
+                        if let Some(new) = FromReflect::from_reflect(__mirror_mirror_value) {
                             *self = new;
                         } else {
-                            let variant_matches = self.variant_name() == enum_.variant_name();
+                            let variant_matches = self.variant_name() == __mirror_mirror_enum.variant_name();
                             match self {
                                 #(#match_arms)*
                                 _ => {}
@@ -264,7 +264,10 @@ fn expand_reflect(
                         let ident = &field.ident;
                         let ident_string = stringify(ident);
                         quote! {
-                            value.set_struct_field(#ident_string, #ident.to_value());
+                            __mirror_mirror_value.set_struct_field(
+                                #ident_string,
+                                #ident.to_value(),
+                            );
                         }
                     });
 
@@ -272,9 +275,9 @@ fn expand_reflect(
 
                     quote! {
                         Self::#variant_ident { #(#field_names,)* } => {
-                            let mut value = EnumValue::new_struct_variant_with_capacity(#variant_ident_string, #fields_len);
+                            let mut __mirror_mirror_value = EnumValue::new_struct_variant_with_capacity(#variant_ident_string, #fields_len);
                             #(#set_fields)*
-                            value.finish().into()
+                            __mirror_mirror_value.finish().into()
                         }
                     }
                 }
@@ -290,11 +293,11 @@ fn expand_reflect(
 
                     quote! {
                         Self::#variant_ident(#(#field_names,)*) => {
-                            let mut value = EnumValue::new_tuple_variant_with_capacity(#variant_ident_string, #fields_len);
+                            let mut __mirror_mirror_value = EnumValue::new_tuple_variant_with_capacity(#variant_ident_string, #fields_len);
                             #(
-                                value.push_tuple_field(#included_fields.to_value());
+                                __mirror_mirror_value.push_tuple_field(#included_fields.to_value());
                             )*
-                            value.finish().into()
+                            __mirror_mirror_value.finish().into()
                         }
                     }
                 }
@@ -387,21 +390,21 @@ fn expand_from_reflect(
                         if let Some(from_reflect_with) = field.from_reflect_with() {
                             quote! {
                                 #ident: {
-                                    let value = enum_.field(#ident_string)?;
+                                    let value = __mirror_mirror_enum.field(#ident_string)?;
                                     #from_reflect_with(value)?
                                 },
                             }
                         } else if attrs.clone_opt_out {
                             quote! {
                                 #ident: {
-                                    let value = enum_.field(#ident_string)?;
+                                    let value = __mirror_mirror_enum.field(#ident_string)?;
                                     FromReflect::from_reflect(value)?
                                 },
                             }
                         } else {
                             quote! {
                                 #ident: {
-                                    let value = enum_.field(#ident_string)?;
+                                    let value = __mirror_mirror_enum.field(#ident_string)?;
                                     if let Some(value) = value.downcast_ref::<#ty>() {
                                         value.to_owned()
                                     } else {
@@ -430,21 +433,21 @@ fn expand_from_reflect(
                         if let Some(from_reflect_with) = field.from_reflect_with() {
                             quote! {
                                 {
-                                    let value = enum_.field_at(#idx)?;
+                                    let value = __mirror_mirror_enum.field_at(#idx)?;
                                     #from_reflect_with(value)?
                                 },
                             }
                         } else if attrs.clone_opt_out {
                             quote! {
                                 {
-                                    let value = enum_.field_at(#idx)?;
+                                    let value = __mirror_mirror_enum.field_at(#idx)?;
                                     FromReflect::from_reflect(value)?
                                 },
                             }
                         } else {
                             quote! {
                                 {
-                                    let value = enum_.field_at(#idx)?;
+                                    let value = __mirror_mirror_enum.field_at(#idx)?;
                                     if let Some(value) = value.downcast_ref::<#ty>() {
                                         value.to_owned()
                                     } else {
@@ -480,9 +483,9 @@ fn expand_from_reflect(
 
     quote! {
         impl #impl_generics FromReflect for #ident #type_generics #where_clause {
-            fn from_reflect(reflect: &dyn Reflect) -> Option<Self> {
-                let enum_ = reflect.reflect_ref().as_enum()?;
-                match enum_.variant_name() {
+            fn from_reflect(__mirror_mirror_reflect: &dyn Reflect) -> Option<Self> {
+                let __mirror_mirror_enum = __mirror_mirror_reflect.reflect_ref().as_enum()?;
+                match __mirror_mirror_enum.variant_name() {
                     #(#match_arms)*
                     _ => None,
                 }
@@ -552,7 +555,7 @@ fn expand_enum(
                             let ident = &field.ident;
                             let ident_string = stringify(ident);
                             quote! {
-                                if name == #ident_string {
+                                if __mirror_mirror_name == #ident_string {
                                     return Some(#ident);
                                 }
                             }
@@ -575,7 +578,7 @@ fn expand_enum(
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
-            fn field(&self, name: &str) -> Option<&dyn Reflect> {
+            fn field(&self, __mirror_mirror_name: &str) -> Option<&dyn Reflect> {
                 match self {
                     #(#match_arms)*
                     _ => {}
@@ -600,7 +603,7 @@ fn expand_enum(
                             let ident = &field.ident;
                             let ident_string = stringify(ident);
                             quote! {
-                                if name == #ident_string {
+                                if __mirror_mirror_name == #ident_string {
                                     return Some(#ident);
                                 }
                             }
@@ -623,7 +626,7 @@ fn expand_enum(
 
         quote! {
             #[allow(unused_variables, unreachable_code)]
-            fn field_mut(&mut self, name: &str) -> Option<&mut dyn Reflect> {
+            fn field_mut(&mut self, __mirror_mirror_name: &str) -> Option<&mut dyn Reflect> {
                 match self {
                     #(#match_arms)*
                     _ => {}

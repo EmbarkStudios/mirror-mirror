@@ -410,3 +410,45 @@ fn default_value() {
     assert_eq!(foo_descriptor.default_value(), Some(foo_default));
     assert_eq!(bar_descriptor.default_value(), None);
 }
+
+#[test]
+fn field_named_named() {
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate), opt_out(Default))]
+    struct A {
+        name: String,
+        value: (),
+        reflect: (),
+        enum_: (),
+        struct_: (),
+    }
+
+    let mut a = A {
+        name: "foo".to_owned(),
+        value: (),
+        reflect: (),
+        enum_: (),
+        struct_: (),
+    };
+
+    assert_eq!(
+        a.as_reflect()
+            .as_struct()
+            .unwrap()
+            .field("name")
+            .unwrap()
+            .downcast_ref::<String>()
+            .unwrap(),
+        "foo"
+    );
+    assert_eq!(
+        a.as_reflect_mut()
+            .as_struct_mut()
+            .unwrap()
+            .field_mut("name")
+            .unwrap()
+            .downcast_mut::<String>()
+            .unwrap(),
+        "foo"
+    );
+}
