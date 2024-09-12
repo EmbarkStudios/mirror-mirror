@@ -505,3 +505,46 @@ fn default_value_for_enum_variant_type() {
         Foo::C { a: 0.0, b: None },
     );
 }
+
+#[test]
+fn field_named_named() {
+    #[derive(Reflect, Debug, Clone)]
+    #[reflect(crate_name(crate), opt_out(Default))]
+    enum A {
+        Struct {
+            name: String,
+        },
+        // some other field names that shouldn't collide with generated code
+        Struct2 {
+            value: (),
+            reflect: (),
+            enum_: (),
+            struct_: (),
+        },
+    }
+
+    let mut a = A::Struct {
+        name: "foo".to_owned(),
+    };
+
+    assert_eq!(
+        a.as_reflect()
+            .as_enum()
+            .unwrap()
+            .field("name")
+            .unwrap()
+            .downcast_ref::<String>()
+            .unwrap(),
+        "foo"
+    );
+    assert_eq!(
+        a.as_reflect_mut()
+            .as_enum_mut()
+            .unwrap()
+            .field_mut("name")
+            .unwrap()
+            .downcast_mut::<String>()
+            .unwrap(),
+        "foo"
+    );
+}
