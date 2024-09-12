@@ -1,3 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["crates/*"]
+
+[patch.crates-io]
+speedy = { git = "https://github.com/EmbarkStudios/speedy", branch = "embark-0.8" }

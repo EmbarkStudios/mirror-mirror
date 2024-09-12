@@ -107,10 +107,10 @@ impl Struct for Mat2 {
     }
 
     fn fields_mut(&mut self) -> FieldsIterMut<'_> {
-        #[cfg(not(any(target_feature = "sse2", target_feature = "simd128")))]
+        #[cfg(any(feature = "glam-scalar-math", not(any(target_feature = "sse2", target_feature = "simd128", target_arch = "aarch64"))))]
         let repr = self;
 
-        #[cfg(any(target_feature = "sse2", target_feature = "simd128"))]
+        #[cfg(all(not(feature = "glam-scalar-math"), any(target_feature = "sse2", target_feature = "simd128", target_arch = "aarch64")))]
         let repr = &mut **self;
 
         Box::new(

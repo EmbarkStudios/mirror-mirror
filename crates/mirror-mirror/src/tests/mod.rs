@@ -1,3 +1,5 @@
+#![allow(clippy::dbg_macro)]
+
 use crate::Reflect;
 
 mod array;
