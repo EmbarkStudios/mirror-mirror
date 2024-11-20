@@ -57,13 +57,14 @@ pub trait DescribeType: 'static {
             return Cow::Borrowed(info);
         }
 
-        let mut map = lock.write().unwrap();
-        let info = map.entry(type_id).or_insert_with(|| {
+        let type_desc = {
             let mut graph = TypeGraph::default();
             let id = Self::build(&mut graph);
             let info = TypeDescriptor::new(id, graph);
             Box::leak(Box::new(info))
-        });
+        };
+        let mut map = lock.write().unwrap();
+        let info = map.entry(type_id).or_insert(type_desc);
         Cow::Borrowed(*info)
     }
 
