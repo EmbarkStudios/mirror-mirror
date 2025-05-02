@@ -1153,7 +1153,7 @@ pub enum ScalarRef<'a> {
     String(&'a String),
 }
 
-impl<'a> ScalarRef<'a> {
+impl ScalarRef<'_> {
     pub fn as_reflect(&self) -> &dyn Reflect {
         match self {
             ScalarRef::usize(inner) => inner,
@@ -1319,7 +1319,7 @@ pub enum ScalarMut<'a> {
     String(&'a mut String),
 }
 
-impl<'a> ScalarMut<'a> {
+impl ScalarMut<'_> {
     pub fn as_reflect_mut(&mut self) -> &mut dyn Reflect {
         match self {
             ScalarMut::usize(inner) => *inner,

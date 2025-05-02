@@ -1055,7 +1055,7 @@ struct NamedField<'a> {
     attrs: InnerAttrs,
 }
 
-impl<'a> NamedField<'a> {
+impl NamedField<'_> {
     #[allow(clippy::wrong_self_convention)]
     fn from_reflect_with(&self) -> Option<&Ident> {
         self.attrs.from_reflect_with.as_ref()
@@ -1068,7 +1068,7 @@ struct UnnamedField<'a> {
     fake_ident: Ident,
 }
 
-impl<'a> UnnamedField<'a> {
+impl UnnamedField<'_> {
     #[allow(clippy::wrong_self_convention)]
     fn from_reflect_with(&self) -> Option<&Ident> {
         self.attrs.from_reflect_with.as_ref()

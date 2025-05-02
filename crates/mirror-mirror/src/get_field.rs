@@ -376,10 +376,9 @@ where
     }
 }
 
+//// Types used to disambiguate otherwise overlapping trait impls
 mod private {
     #![allow(missing_debug_implementations)]
-
-    /// Types used to disambiguate otherwise overlapping trait impls
 
     pub struct Struct;
     pub struct TupleStruct;

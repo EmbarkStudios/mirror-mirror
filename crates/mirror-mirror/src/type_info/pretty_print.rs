@@ -18,7 +18,7 @@ where
     ty: &'a T,
 }
 
-impl<'a, T> fmt::Display for RootPrettyPrinter<'a, T>
+impl<T> fmt::Display for RootPrettyPrinter<'_, T>
 where
     T: PrettyPrintRoot,
 {
@@ -33,7 +33,7 @@ impl PrettyPrintRoot for TypeDescriptor {
     }
 }
 
-impl<'a> PrettyPrintRoot for Type<'a> {
+impl PrettyPrintRoot for Type<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Type::Struct(inner) => inner.pretty_root_fmt(f),
@@ -66,7 +66,7 @@ fn simple_type_name_fmt(type_name: &str, f: &mut fmt::Formatter<'_>) -> fmt::Res
 
 const TAB: &str = "    ";
 
-impl<'a> PrettyPrintRoot for StructType<'a> {
+impl PrettyPrintRoot for StructType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("struct ")?;
         simple_type_name_fmt(self.type_name(), f)?;
@@ -87,7 +87,7 @@ impl<'a> PrettyPrintRoot for StructType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for TupleStructType<'a> {
+impl PrettyPrintRoot for TupleStructType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("struct ")?;
         simple_type_name_fmt(self.type_name(), f)?;
@@ -104,7 +104,7 @@ impl<'a> PrettyPrintRoot for TupleStructType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for TupleType<'a> {
+impl PrettyPrintRoot for TupleType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("(")?;
         let mut fields = self.field_types().peekable();
@@ -119,7 +119,7 @@ impl<'a> PrettyPrintRoot for TupleType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for EnumType<'a> {
+impl PrettyPrintRoot for EnumType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("enum ")?;
         simple_type_name_fmt(self.type_name(), f)?;
@@ -173,7 +173,7 @@ impl<'a> PrettyPrintRoot for EnumType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for ListType<'a> {
+impl PrettyPrintRoot for ListType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_char('[')?;
         simple_type_name_fmt(self.element_type().type_name(), f)?;
@@ -182,7 +182,7 @@ impl<'a> PrettyPrintRoot for ListType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for ArrayType<'a> {
+impl PrettyPrintRoot for ArrayType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_char('[')?;
         simple_type_name_fmt(self.element_type().type_name(), f)?;
@@ -193,7 +193,7 @@ impl<'a> PrettyPrintRoot for ArrayType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for MapType<'a> {
+impl PrettyPrintRoot for MapType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_char('[')?;
         simple_type_name_fmt(self.key_type().type_name(), f)?;
@@ -204,7 +204,7 @@ impl<'a> PrettyPrintRoot for MapType<'a> {
     }
 }
 
-impl<'a> PrettyPrintRoot for SetType<'a> {
+impl PrettyPrintRoot for SetType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_char('{')?;
         simple_type_name_fmt(self.element_type().type_name(), f)?;
@@ -237,7 +237,7 @@ impl PrettyPrintRoot for ScalarType {
     }
 }
 
-impl<'a> PrettyPrintRoot for OpaqueType<'a> {
+impl PrettyPrintRoot for OpaqueType<'_> {
     fn pretty_root_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         simple_type_name_fmt(self.type_name(), f)?;
         Ok(())
