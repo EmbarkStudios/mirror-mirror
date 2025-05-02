@@ -146,14 +146,14 @@ dependencies = [
 
 [[package]]
 name = "mirror-mirror"
-version = "0.2.0"
+version = "0.2.0-rc.1"
 dependencies = [
  "ahash",
  "glam 0.30.3",
  "kollect",
  "macaw",
  "mirror-mirror 0.1.21",
- "mirror-mirror-macros 0.2.0",
+ "mirror-mirror-macros 0.2.0-rc.1",
  "once_cell",
  "ron",
  "serde",
@@ -175,10 +175,10 @@ dependencies = [
 
 [[package]]
 name = "mirror-mirror-macros"
-version = "0.2.0"
+version = "0.2.0-rc.1"
 dependencies = [
  "kollect",
- "mirror-mirror 0.2.0",
+ "mirror-mirror 0.2.0-rc.1",
  "proc-macro2",
  "quote",
  "syn",
