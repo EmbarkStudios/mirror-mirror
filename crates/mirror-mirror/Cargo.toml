@@ -20,7 +20,7 @@ glam = ["dep:glam"]
 macaw = ["dep:macaw"]
 
 [dependencies]
-ahash = { version = "0.8.2", default-features = false }
+ahash = { version = "0.8.11", default-features = false }
 mirror-mirror-macros = { path = "../mirror-mirror-macros", version = "0.1.4" }
 once_cell = { version = "1.16", features = ["alloc", "race", "critical-section"], default-features = false }
 tiny-ordered-float = { version = "0.4", default-features = false }
