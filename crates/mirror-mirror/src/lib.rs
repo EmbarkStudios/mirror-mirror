@@ -203,6 +203,7 @@
 //! `glam` | Enables impls for [`glam`] | No
 //! `glam-scalar-math` | Must be enabled if target supports SIMD but you are using `glam`'s `scalar-math` feature to disable it | No
 //! `macaw` | Enables impls for [`macaw`] | No
+//! `kollect` | Enables impls for [`kollect`] | No
 //!
 //! [`speedy`]: https://crates.io/crates/speedy
 //! [`serde`]: https://crates.io/crates/serde
@@ -210,6 +211,7 @@
 //! [`bevy`]: https://crates.io/crates/bevy
 //! [`glam`]: https://crates.io/crates/glam
 //! [`macaw`]: https://crates.io/crates/macaw
+//! [`kollect`]: https://crates.io/crates/kollect
 
 #![warn(
     clippy::all,

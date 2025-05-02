@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Unreleased
 
 - **breaking:** Remove `Reflect::type_descriptor`. Instead capture the type
-  descriptor explicitly with `<T as DescribeType::type_descriptor()` ([#90])
+  descriptor explicitly with `<T as DescribeType>::type_descriptor()` ([#90])
 - **breaking:** Make `KeyPath::pop` return the popped key ([#110])
 - **breaking:** Remove `Reflect::type_id` ([#109])
 - **breaking:** `no-std` support has been removed ([#119])
@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   correctly return `Some(_)`.
 - **fixed:** `Value::as_array`, `Value::as_array_mut`, `Value::into_array` now
   correctly return `Some(_)`.
-- Extend `glam` version range to be <= 0.29
+- **breaking:** Require `glam` version from `0.28` to `0.30`
+- **breaking:** Require `glam` version to be >= `0.30.3` when `speedy` feature is enabled
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
