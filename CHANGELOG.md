@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **breaking:** `List::push` renamed to `List::try_push` ([#136])
 - **breaking:** `Map::insert` renamed to `Map::try_insert` ([#136])
 - **breaking:** `Map::remove` renamed to `Map::try_remove` ([#136])
-- **breaking:** Update to kollect 0.3 ([#138])
+- **breaking:** Update to kollect `0.5`
 - **breaking:** Add reflected sets ([#140])
 - **fixed:** Fix `<[T; N]>::from_reflect` for `Value::List`. It used to fail but now works
 - **fixed:** `Vec::as_array`, `Vec::as_array_mut`, `Vec::into_array` now
@@ -35,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#109]: https://github.com/EmbarkStudios/mirror-mirror/pull/109
 [#119]: https://github.com/EmbarkStudios/mirror-mirror/pull/119
 [#136]: https://github.com/EmbarkStudios/mirror-mirror/pull/136
-[#138]: https://github.com/EmbarkStudios/mirror-mirror/pull/138
 [#140]: https://github.com/EmbarkStudios/mirror-mirror/pull/140
 
 # 0.1.19 (26. February, 2023)
