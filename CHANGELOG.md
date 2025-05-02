@@ -37,6 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#136]: https://github.com/EmbarkStudios/mirror-mirror/pull/136
 [#140]: https://github.com/EmbarkStudios/mirror-mirror/pull/140
 
+# 0.1.20 (15. April, 2023)
+
+- **change:** Remove transitive dependencies on num-traits and ordered-float ([#143])
+
+[#143]: https://github.com/EmbarkStudios/mirror-mirror/pull/143
+
 # 0.1.19 (26. February, 2023)
 
 - Allow a `glam` version range between `0.22` and `0.25`, inclusive.
