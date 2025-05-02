@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-- None.
+# 0.1.21 (2. May, 2025)
 
-# 0.1.20 (15. April, 2023)
+- **fixed:** `StructValue` no longer has duplicate field names when inserting field twice
+
+# 0.1.20 (15. April, 2024)
 
 - **change:** Remove transitive dependencies on num-traits and ordered-float ([#143])
 
