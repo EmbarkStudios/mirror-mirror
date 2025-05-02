@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   correctly return `Some(_)`.
 - **breaking:** Require `glam` version from `0.28` to `0.30`
 - **breaking:** Require `glam` version to be >= `0.30.3` when `speedy` feature is enabled
+- **changed:** No longer require `Sized` for `SimpleTypeName::new_from_type`
+- **added:** Support pretty printing trait objects
 
 [#90]: https://github.com/EmbarkStudios/mirror-mirror/pull/90
 [#110]: https://github.com/EmbarkStudios/mirror-mirror/pull/110
