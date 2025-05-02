@@ -43,9 +43,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "critical-section"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7059fff8937831a9ae6f0fe4d658ffabf58f2ca96aa9dec1c889f936f705f216"
+checksum = "790eea4361631c5e7d22598ecd5723ff611904e3344ce8720784c93e3d83d40b"
 
 [[package]]
 name = "equivalent"
@@ -131,9 +131,9 @@ dependencies = [
 
 [[package]]
 name = "mirror-mirror"
-version = "0.1.20"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdca851230f7292fb2d3bc36b20aa8c25f6a8975e1652ea24b738596f9c645ef"
+checksum = "ce46b22b6b229dc16c1b01990353e6e849d067dfcb7c1dd77dddb38983b22ada"
 dependencies = [
  "ahash",
  "mirror-mirror-macros 0.1.4",
@@ -152,7 +152,7 @@ dependencies = [
  "glam 0.30.3",
  "kollect",
  "macaw",
- "mirror-mirror 0.1.20",
+ "mirror-mirror 0.1.21",
  "mirror-mirror-macros 0.2.0",
  "once_cell",
  "ron",

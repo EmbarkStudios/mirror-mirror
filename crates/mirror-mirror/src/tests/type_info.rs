@@ -274,19 +274,18 @@ fn basic_hash() {
 }
 
 // TODO: (@fu5ha) enable this with stable_hash and stable_eq functions
-/*
 // we should guarantee deterministic hash of `TypeDescriptor` stays static across compatible versions.
 // if we need to update this test, then we also likely need to release a new semver breaking version
 #[test]
 fn basic_static_hash() {
     use crate::STATIC_RANDOM_STATE;
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Default, Reflect, Clone, Debug)]
     #[reflect(crate_name(crate))]
     struct Foo {
         a: i32,
     }
 
-    #[derive(Reflect, Clone, Debug)]
+    #[derive(Default, Reflect, Clone, Debug)]
     #[reflect(crate_name(crate))]
     struct Bar {
         b: bool,
@@ -298,15 +297,14 @@ fn basic_static_hash() {
     let foo_hash = STATIC_RANDOM_STATE.hash_one(&foo_desc);
 
     eprintln!("{:#?}", foo_desc);
-    assert_eq!(foo_hash, 2782098737032956938); // precomputed hash of Foo descriptor
+    assert_eq!(foo_hash, 4657325414717586457); // precomputed hash of Foo descriptor
 
     let bar_desc = <Bar as DescribeType>::type_descriptor().into_owned();
     let bar_hash = STATIC_RANDOM_STATE.hash_one(&bar_desc);
 
     eprintln!("{:#?}", bar_desc);
-    assert_eq!(bar_hash, 3542944026927454911); // precomputed hash of Bar descriptor
+    assert_eq!(bar_hash, 11082174673177877468); // precomputed hash of Bar descriptor
 }
-*/
 
 #[test]
 fn has_default_value() {
