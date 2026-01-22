@@ -7,6 +7,7 @@ use core::cmp::Ordering;
 use core::fmt;
 use core::hash::Hash;
 use core::hash::Hasher;
+use core::net::{Ipv4Addr,Ipv6Addr};
 use kollect::LinearSet;
 
 use kollect::LinearMap;
@@ -61,6 +62,8 @@ pub enum Value {
     List(Vec<Value>),
     Set(LinearSet<Value>),
     Map(LinearMap<Value, Value>),
+    Ipv4Addr(Ipv4Addr),
+    Ipv6Addr(Ipv6Addr),
 }
 
 impl FromReflect for Value {
@@ -95,6 +98,8 @@ enum OrdEqHashValue<'a> {
     List(&'a [Value]),
     Set(&'a LinearSet<Value>),
     Map(&'a LinearMap<Value, Value>),
+    Ipv4Addr(Ipv4Addr),
+    Ipv6Addr(Ipv6Addr),
 }
 
 impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
@@ -123,6 +128,8 @@ impl<'a> From<&'a Value> for OrdEqHashValue<'a> {
             Value::List(inner) => OrdEqHashValue::List(inner),
             Value::Set(inner) => OrdEqHashValue::Set(inner),
             Value::Map(inner) => OrdEqHashValue::Map(inner),
+            Value::Ipv4Addr(inner) => OrdEqHashValue::Ipv4Addr(*inner),
+            Value::Ipv6Addr(inner) => OrdEqHashValue::Ipv6Addr(*inner),
         }
     }
 }
@@ -182,6 +189,8 @@ macro_rules! for_each_variant {
             Value::List($inner) => $expr,
             Value::Set($inner) => $expr,
             Value::Map($inner) => $expr,
+            Value::Ipv4Addr($inner) => $expr,
+            Value::Ipv6Addr($inner) => $expr,
         }
     };
 }
@@ -261,6 +270,8 @@ impl Reflect for Value {
             Value::List(inner) => ReflectOwned::List(Box::new(inner)),
             Value::Set(inner) => ReflectOwned::Set(Box::new(inner)),
             Value::Map(inner) => ReflectOwned::Map(Box::new(inner)),
+            Value::Ipv4Addr(_) => todo!(),
+            Value::Ipv6Addr(_) => todo!(),
         }
     }
 
@@ -289,6 +300,8 @@ impl Reflect for Value {
             Value::List(inner) => ReflectRef::List(inner),
             Value::Set(inner) => ReflectRef::Set(inner),
             Value::Map(inner) => ReflectRef::Map(inner),
+            Value::Ipv4Addr(_) => todo!(),
+            Value::Ipv6Addr(_) => todo!(),
         }
     }
 
@@ -317,6 +330,8 @@ impl Reflect for Value {
             Value::List(inner) => ReflectMut::List(inner),
             Value::Set(inner) => ReflectMut::Set(inner),
             Value::Map(inner) => ReflectMut::Map(inner),
+            Value::Ipv4Addr(_) => todo!(),
+            Value::Ipv6Addr(_) => todo!(),
         }
     }
 
@@ -385,4 +400,5 @@ from_impls! {
     f32 f64
     bool char String
     TupleValue TupleStructValue
+    Ipv4Addr Ipv6Addr
 }
