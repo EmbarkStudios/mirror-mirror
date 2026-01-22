@@ -1,4 +1,5 @@
 use core::convert::Infallible;
+use core::net::{IpAddr};
 use core::ops::Range;
 use core::ops::RangeFrom;
 use core::ops::RangeFull;
@@ -88,6 +89,15 @@ __private_derive_reflect_foreign! {
         Idx: FromReflect + DescribeType,
     {
         end: Idx,
+    }
+}
+
+__private_derive_reflect_foreign! {
+    #[reflect(opt_out(Clone, Debug, Default), crate_name(crate))]
+    enum IpAddr
+    {
+        V4(Ipv4Addr),
+        V6(Ipv6Addr),
     }
 }
 

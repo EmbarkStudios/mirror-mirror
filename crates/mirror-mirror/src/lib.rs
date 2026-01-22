@@ -265,6 +265,7 @@ use alloc::boxed::Box;
 use alloc::string::String;
 use core::any::Any;
 use core::fmt;
+use core::net::{Ipv4Addr,Ipv6Addr};
 
 use crate::enum_::VariantField;
 use crate::enum_::VariantKind;
@@ -748,6 +749,7 @@ impl_for_core_types! {
     i8 i16 i32 i64 i128
     f32 f64
     bool char
+    Ipv4Addr Ipv6Addr
 }
 
 impl Reflect for String {
@@ -979,6 +981,8 @@ pub enum ScalarOwned {
     f32(f32),
     f64(f64),
     String(String),
+    Ipv4Addr(Ipv4Addr),
+    Ipv6Addr(Ipv6Addr),
 }
 
 impl ScalarOwned {
@@ -1000,6 +1004,8 @@ impl ScalarOwned {
             ScalarOwned::f32(inner) => inner,
             ScalarOwned::f64(inner) => inner,
             ScalarOwned::String(inner) => inner,
+            ScalarOwned::Ipv4Addr(inner) => inner,
+            ScalarOwned::Ipv6Addr(inner) => inner,
         }
     }
 
@@ -1021,6 +1027,8 @@ impl ScalarOwned {
             ScalarOwned::f32(inner) => inner,
             ScalarOwned::f64(inner) => inner,
             ScalarOwned::String(inner) => inner,
+            ScalarOwned::Ipv4Addr(inner) => inner,
+            ScalarOwned::Ipv6Addr(inner) => inner,
         }
     }
 }
@@ -1151,6 +1159,8 @@ pub enum ScalarRef<'a> {
     f32(f32),
     f64(f64),
     String(&'a String),
+    Ipv4Addr(Ipv4Addr),
+    Ipv6Addr(Ipv6Addr),
 }
 
 impl ScalarRef<'_> {
@@ -1172,6 +1182,8 @@ impl ScalarRef<'_> {
             ScalarRef::f32(inner) => inner,
             ScalarRef::f64(inner) => inner,
             ScalarRef::String(inner) => *inner,
+            ScalarRef::Ipv4Addr(inner) => inner,
+            ScalarRef::Ipv6Addr(inner) => inner,
         }
     }
 }
@@ -1317,6 +1329,8 @@ pub enum ScalarMut<'a> {
     f32(&'a mut f32),
     f64(&'a mut f64),
     String(&'a mut String),
+    Ipv4Addr(&'a mut Ipv4Addr),
+    Ipv6Addr(&'a mut Ipv6Addr),
 }
 
 impl ScalarMut<'_> {
@@ -1338,6 +1352,8 @@ impl ScalarMut<'_> {
             ScalarMut::f32(inner) => *inner,
             ScalarMut::f64(inner) => *inner,
             ScalarMut::String(inner) => *inner,
+            ScalarMut::Ipv4Addr(inner) => *inner,
+            ScalarMut::Ipv6Addr(inner) => *inner,
         }
     }
 
@@ -1359,6 +1375,8 @@ impl ScalarMut<'_> {
             ScalarMut::f32(inner) => *inner,
             ScalarMut::f64(inner) => *inner,
             ScalarMut::String(inner) => *inner,
+            ScalarMut::Ipv4Addr(inner) => *inner,
+            ScalarMut::Ipv6Addr(inner) => *inner,
         }
     }
 }
@@ -1450,6 +1468,8 @@ pub fn reflect_debug(value: &dyn Reflect, f: &mut core::fmt::Formatter<'_>) -> c
             ScalarRef::f32(inner) => scalar_debug(&inner, f),
             ScalarRef::f64(inner) => scalar_debug(&inner, f),
             ScalarRef::String(inner) => scalar_debug(&inner, f),
+            ScalarRef::Ipv4Addr(inner) => scalar_debug(&inner, f),
+            ScalarRef::Ipv6Addr(inner) => scalar_debug(&inner, f),
         },
         ReflectRef::Opaque(_) => {
             write!(f, "{}", value.type_name())

@@ -232,6 +232,8 @@ impl PrettyPrintRoot for ScalarType {
             ScalarType::f32 => f.write_str("f32")?,
             ScalarType::f64 => f.write_str("f64")?,
             ScalarType::String => f.write_str("String")?,
+            ScalarType::Ipv4Addr => f.write_str("Ipv4Addr")?,
+            ScalarType::Ipv6Addr => f.write_str("Ipv6Addr")?,
         }
         Ok(())
     }

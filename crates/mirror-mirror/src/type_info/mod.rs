@@ -262,6 +262,8 @@ impl<'a> Type<'a> {
                     ScalarNode::f32 => ScalarType::f32,
                     ScalarNode::f64 => ScalarType::f64,
                     ScalarNode::String => ScalarType::String,
+                    ScalarNode::Ipv4Addr => ScalarType::Ipv4Addr,
+                    ScalarNode::Ipv6Addr => ScalarType::Ipv6Addr,
                 };
                 Type::Scalar(node)
             }
@@ -362,6 +364,8 @@ impl<'a> Type<'a> {
                 ScalarType::f32 => <f32 as DescribeType>::type_descriptor(),
                 ScalarType::f64 => <f64 as DescribeType>::type_descriptor(),
                 ScalarType::String => <String as DescribeType>::type_descriptor(),
+                ScalarType::Ipv4Addr => <core::net::Ipv4Addr as DescribeType>::type_descriptor(),
+                ScalarType::Ipv6Addr => <core::net::Ipv6Addr as DescribeType>::type_descriptor(),
             },
             Type::Opaque(inner) => Cow::Owned(inner.into_type_descriptor()),
         }
@@ -624,6 +628,8 @@ pub enum ScalarType {
     f32,
     f64,
     String,
+    Ipv4Addr,
+    Ipv6Addr,
 }
 
 impl ScalarType {
@@ -645,6 +651,8 @@ impl ScalarType {
             ScalarType::f32 => type_name::<f32>(),
             ScalarType::f64 => type_name::<f64>(),
             ScalarType::String => type_name::<String>(),
+            ScalarType::Ipv4Addr => type_name::<core::net::Ipv4Addr>(),
+            ScalarType::Ipv6Addr => type_name::<core::net::Ipv6Addr>(),
         }
     }
 
@@ -670,6 +678,8 @@ impl ScalarType {
             ScalarType::f32 => f32::default().to_value(),
             ScalarType::f64 => f64::default().to_value(),
             ScalarType::String => String::default().to_value(),
+            ScalarType::Ipv4Addr => core::net::Ipv4Addr::LOCALHOST.to_value(),
+            ScalarType::Ipv6Addr => core::net::Ipv6Addr::LOCALHOST.to_value(),
         }
     }
 
