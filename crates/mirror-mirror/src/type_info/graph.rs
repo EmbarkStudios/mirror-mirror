@@ -6,6 +6,7 @@ use core::any::type_name;
 use core::any::TypeId;
 use core::hash::Hash;
 use core::hash::Hasher;
+use core::net::{Ipv4Addr,Ipv6Addr};
 use core::ops::Deref;
 use kollect::LinearMap;
 
@@ -537,6 +538,8 @@ pub enum ScalarNode {
     f32,
     f64,
     String,
+    Ipv4Addr,
+    Ipv6Addr,
 }
 
 macro_rules! scalar_typed {
@@ -556,6 +559,7 @@ scalar_typed! {
     i8 i16 i32 i64 i128
     f32 f64
     bool char String
+    Ipv4Addr Ipv6Addr
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

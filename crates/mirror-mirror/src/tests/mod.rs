@@ -6,6 +6,7 @@ mod array;
 mod enum_;
 mod key_path;
 mod list;
+mod ipaddr;
 mod map;
 mod meta;
 mod simple_type_name;
